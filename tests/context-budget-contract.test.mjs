@@ -54,3 +54,21 @@ test("minimum context budget remains a hard total cap", async () => {
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("context changed paths preserve the first path character", async () => {
+  const root = await fixture();
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [contextScript, "changed path contract", "--root", root, "--provider", "local", "--json"],
+      { cwd: repositoryRoot, encoding: "utf8" },
+    );
+
+    assert.equal(result.status, 0, result.stderr);
+    const parsed = JSON.parse(result.stdout);
+    assert.ok(parsed.git.changedPaths.includes("AGENTS.md"));
+    assert.ok(parsed.git.changedPaths.includes("CONTEXT.md"));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

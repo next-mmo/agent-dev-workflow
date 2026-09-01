@@ -1,7 +1,7 @@
 # PRD-0000: Master PRD Index
 
 > Status: living doc  
-> Updated: 2026-09-01
+> Updated: 2026-09-02
 
 ## Repos / Architecture
 
@@ -20,6 +20,7 @@
 | PRD      | Title                 | Status   | Summary                                                                     |
 | :------- | :-------------------- | :------- | :-------------------------------------------------------------------------- |
 | **0001** | Counter Core Features | **done** | Stateful counter, preset/custom step controls, localStorage persistence, theme toggle, accessible step selection, and one-level undo |
+| **0002** | Counter History | **done** | Persistent accessible list of the latest ten count-changing actions with explicit clear control |
 
 <!-- markdownlint-enable MD013 -->
 
