@@ -2,10 +2,16 @@ import { execFileSync } from "node:child_process";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { estimateTokens, trimToBudget } from "./context/providers/common.mjs";
+import { retrieveGraphify } from "./context/providers/graphify.mjs";
+import { retrieveOpenViking } from "./context/providers/openviking.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultRoot = path.resolve(scriptDirectory, "..");
 const DEFAULT_BUDGET = 1500;
+const MIN_CONTEXT_BUDGET = 500;
+const DEFAULT_PROVIDER_TIMEOUT = 8000;
+const MIN_LOCAL_BUDGET = 500;
 const STOP_WORDS = new Set([
   "the", "and", "for", "with", "from", "this", "that", "into", "when", "what",
   "where", "which", "your", "our", "their", "have", "has", "will", "would",
@@ -14,7 +20,15 @@ const STOP_WORDS = new Set([
 ]);
 
 function parseArgs(argv) {
-  const options = { level: 0, json: false, budget: DEFAULT_BUDGET, root: defaultRoot, scope: [] };
+  const options = {
+    level: 0,
+    json: false,
+    budget: DEFAULT_BUDGET,
+    root: defaultRoot,
+    scope: [],
+    provider: process.env.AGENT_CONTEXT_PROVIDER || "auto",
+    providerTimeout: DEFAULT_PROVIDER_TIMEOUT,
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--json") options.json = true;
@@ -25,25 +39,32 @@ function parseArgs(argv) {
       options.level = value;
     } else if (arg === "--budget") {
       const value = Number(argv[++index]);
-      if (!Number.isInteger(value) || value < 200) throw new Error("--budget must be an integer >= 200");
+      if (!Number.isInteger(value) || value < MIN_CONTEXT_BUDGET) {
+        throw new Error(`--budget must be an integer >= ${MIN_CONTEXT_BUDGET}`);
+      }
       options.budget = value;
     } else if (arg === "--root") {
       options.root = path.resolve(argv[++index] || "");
+    } else if (arg === "--provider") {
+      options.provider = String(argv[++index] || "").toLowerCase();
+    } else if (arg === "--provider-timeout") {
+      const value = Number(argv[++index]);
+      if (!Number.isInteger(value) || value < 50) throw new Error("--provider-timeout must be an integer >= 50 milliseconds");
+      options.providerTimeout = value;
     } else if (arg.startsWith("--")) {
       throw new Error(`unknown option: ${arg}`);
     } else {
       options.scope.push(arg);
     }
   }
+  if (!["auto", "local", "graphify", "openviking", "all"].includes(options.provider)) {
+    throw new Error("--provider must be auto, local, graphify, openviking, or all");
+  }
   return options;
 }
 
 function normalizePath(value) {
   return value.split(path.sep).join("/");
-}
-
-function estimateTokens(value) {
-  return Math.max(1, Math.ceil(String(value || "").length / 4));
 }
 
 async function readText(root, relativePath) {
@@ -188,19 +209,58 @@ async function collectDocuments(root) {
   return documents;
 }
 
-async function buildContext(options) {
-  const root = options.root;
-  const branch = git(root, ["branch", "--show-current"]) || "unavailable";
-  const status = git(root, ["status", "--short"]);
-  const changedPaths = status.split(/\r?\n/).filter(Boolean).map((line) => line.slice(3).trim()).filter(Boolean);
+function providerNames(mode) {
+  if (mode === "local") return [];
+  if (mode === "graphify") return ["graphify"];
+  if (mode === "openviking") return ["openviking"];
+  if (mode === "all") return ["graphify", "openviking"];
+  // Auto is privacy-preserving: use the local Graphify snapshot when present,
+  // but never send the user's scope to a configured remote memory service implicitly.
+  return ["graphify"];
+}
+
+function allocateProviderBudgets(totalBudget, names) {
+  const reserve = Math.max(0, totalBudget - MIN_LOCAL_BUDGET - 120);
+  const desired = {
+    graphify: Math.min(450, Math.floor(totalBudget * 0.30)),
+    openviking: Math.min(300, Math.floor(totalBudget * 0.20)),
+  };
+  const requested = names.map((name) => [name, desired[name] || 0]);
+  const desiredTotal = requested.reduce((sum, [, budget]) => sum + budget, 0);
+  if (desiredTotal <= reserve) return Object.fromEntries(requested);
+  if (reserve <= 0 || desiredTotal <= 0) return Object.fromEntries(names.map((name) => [name, 0]));
+  const scale = reserve / desiredTotal;
+  return Object.fromEntries(requested.map(([name, budget]) => [name, Math.floor(budget * scale)]));
+}
+
+async function retrieveProviders({ options, root, scope, changedPaths }) {
+  const names = providerNames(options.provider);
+  const budgets = allocateProviderBudgets(options.budget, names);
+  const providers = [];
+  for (const name of names) {
+    if (name === "graphify") {
+      providers.push(await retrieveGraphify({
+        root,
+        scope,
+        budgetTokens: budgets.graphify,
+        timeoutMs: options.providerTimeout,
+        changedPaths,
+      }));
+    } else if (name === "openviking") {
+      providers.push(await retrieveOpenViking({
+        root,
+        scope,
+        budgetTokens: budgets.openviking,
+        timeoutMs: options.providerTimeout,
+      }));
+    }
+  }
+  return providers;
+}
+
+async function buildLocalContext({ options, root, branch, changedPaths, scope, localBudget }) {
   const documents = await collectDocuments(root);
   const active = documents.filter((document) => document.kind === "active-task");
-
-  const explicitScope = options.scope.join(" ").trim();
-  const fallbackScope = active.map((task) => `${task.title} ${summarize(task.content, 350)}`).join(" ")
-    || changedPaths.join(" ")
-    || path.basename(root);
-  const scope = explicitScope || fallbackScope;
   const terms = tokenize(scope);
   const ruleHints = classifyRuleHints(terms);
 
@@ -214,15 +274,9 @@ async function buildContext(options) {
     if (index) selected.push(index);
   }
 
-  const result = {
-    schemaVersion: 1,
-    level: options.level,
-    budgetTokens: options.budget,
-    root: normalizePath(root),
-    repository: path.basename(root),
-    scope,
-    terms,
-    git: { branch, changedPaths },
+  const local = {
+    branch,
+    changedPaths,
     activeTasks: active.map((task) => ({ path: task.path, title: task.title, status: statusOf(task.content, "active") })),
     ruleHints,
     selected: selected.map((document) => ({
@@ -236,19 +290,107 @@ async function buildContext(options) {
   };
 
   if (options.level >= 1) {
-    let remainingChars = Math.max(0, options.budget * 4 - JSON.stringify(result).length - 600);
+    let remainingChars = Math.max(0, localBudget * 4 - JSON.stringify(local).length - 400);
     for (const document of selected) {
       if (remainingChars < 200) break;
       const maxChars = Math.min(options.level === 2 ? document.content.length : 2200, remainingChars);
       const content = options.level === 2
         ? document.content.slice(0, maxChars)
         : relevantExcerpt(document.content, terms, maxChars);
-      result.documents.push({ path: document.path, content });
+      local.documents.push({ path: document.path, content });
       remainingChars -= content.length + document.path.length + 80;
     }
   }
+  return { ...local, estimatedTokens: estimateTokens(JSON.stringify(local)) };
+}
 
-  result.estimatedTokens = estimateTokens(JSON.stringify(result));
+function enforceBudget(result) {
+  const update = () => {
+    result.estimatedTokens = estimateTokens(JSON.stringify(result));
+    return result.estimatedTokens - result.budgetTokens;
+  };
+  let over = update();
+  if (over <= 0) return;
+
+  for (let index = result.providers.length - 1; index >= 0 && over > 0; index -= 1) {
+    const provider = result.providers[index];
+    if (!provider.content) continue;
+    provider.content = trimToBudget(provider.content, Math.max(0, provider.estimatedTokens - over - 8));
+    provider.estimatedTokens = provider.content ? estimateTokens(provider.content) : 0;
+    over = update();
+  }
+  for (let index = result.documents.length - 1; index >= 0 && over > 0; index -= 1) {
+    const document = result.documents[index];
+    const current = estimateTokens(document.content);
+    document.content = trimToBudget(document.content, Math.max(0, current - over - 8));
+    if (!document.content) result.documents.splice(index, 1);
+    over = update();
+  }
+  for (let index = result.selected.length - 1; index >= 0 && over > 0; index -= 1) {
+    const item = result.selected[index];
+    const current = estimateTokens(item.summary);
+    item.summary = trimToBudget(item.summary, Math.max(8, current - over - 4));
+    over = update();
+  }
+  update();
+}
+
+async function buildContext(options) {
+  const root = options.root;
+  const branch = git(root, ["branch", "--show-current"]) || "unavailable";
+  const status = git(root, ["status", "--short"]);
+  const changedPaths = status.split(/\r?\n/).filter(Boolean).map((line) => line.slice(3).trim()).filter(Boolean);
+  const documents = await collectDocuments(root);
+  const active = documents.filter((document) => document.kind === "active-task");
+
+  const explicitScope = options.scope.join(" ").trim();
+  const fallbackScope = active.map((task) => `${task.title} ${summarize(task.content, 350)}`).join(" ")
+    || changedPaths.join(" ")
+    || path.basename(root);
+  const scope = explicitScope || fallbackScope;
+
+  const providers = await retrieveProviders({ options, root, scope, changedPaths });
+  const externalTokens = providers.reduce((sum, provider) => sum + (provider.estimatedTokens || 0), 0);
+  const localBudget = Math.max(300, options.budget - externalTokens - 150);
+  const local = await buildLocalContext({ options, root, branch, changedPaths, scope, localBudget });
+
+  const result = {
+    schemaVersion: 2,
+    level: options.level,
+    budgetTokens: options.budget,
+    localBudgetTokens: localBudget,
+    providerMode: options.provider,
+    root: normalizePath(root),
+    repository: path.basename(root),
+    scope,
+    terms: tokenize(scope),
+    git: { branch, changedPaths },
+    activeTasks: local.activeTasks,
+    ruleHints: local.ruleHints,
+    selected: local.selected,
+    documents: local.documents,
+    providers: [
+      {
+        name: "local",
+        status: "ok",
+        authority: "repository-first",
+        budgetTokens: localBudget,
+        estimatedTokens: local.estimatedTokens,
+      },
+      ...providers,
+    ],
+    budgetExceeded: false,
+    authorityOrder: [
+      "current code and fresh checks",
+      "active task and human decisions",
+      "affected PRD and tracked evidence",
+      "Graphify derived code graph",
+      "OpenViking recalled memory/resources",
+      "chat history",
+    ],
+  };
+
+  enforceBudget(result);
   result.budgetExceeded = result.estimatedTokens > options.budget;
   return result;
 }
@@ -262,6 +404,7 @@ function renderText(result) {
     `- Level: L${result.level}`,
     `- Scope: ${result.scope}`,
     `- Estimated tokens: ~${result.estimatedTokens}/${result.budgetTokens}`,
+    `- Provider mode: ${result.providerMode}`,
     `- Rule hints: ${result.ruleHints.join(", ") || "context"}`,
   ];
 
@@ -270,13 +413,26 @@ function renderText(result) {
   if (result.activeTasks.length === 0) lines.push("- None detected.");
   else for (const task of result.activeTasks) lines.push(`- ${task.title} (${task.status}) — ${task.path}`);
 
-  lines.push("", "## Ranked context", "");
+  lines.push("", "## Ranked repository context", "");
   for (const document of result.selected) {
     lines.push(`- [${document.kind}] ${document.path} — score ${document.score}: ${document.summary}`);
   }
 
+  const external = result.providers.filter((provider) => provider.name !== "local");
+  if (external.length) {
+    lines.push("", "## Optional provider evidence", "");
+    for (const provider of external) {
+      lines.push(`### ${provider.name}: ${provider.status}`);
+      lines.push(`- Authority: ${provider.authority}`);
+      if (provider.freshness) lines.push(`- Freshness: ${provider.freshness}`);
+      if (provider.reason) lines.push(`- Note: ${provider.reason}`);
+      if (provider.content) lines.push("", provider.content.trim());
+      lines.push("");
+    }
+  }
+
   if (result.documents.length) {
-    lines.push("", "## Loaded excerpts", "");
+    lines.push("", "## Loaded repository excerpts", "");
     for (const document of result.documents) {
       lines.push(`### ${document.path}`, "", document.content.trim(), "");
     }

@@ -6,7 +6,8 @@ Treat text after a command as the exact scope. Report the selected mode and do n
 | :--- | :--- |
 | `/kb:help` | List namespaced commands and explain they are skill conventions. |
 | `/kb:status` | Read-only task, PRD, branch, checks, blockers, and changes. |
-| `/kb:context` | Generate the smallest useful L0/L1 context pack; do not change files. |
+| `/kb:context` | Generate the smallest useful context pack; optional providers remain bounded/advisory. |
+| `/kb:impact` | Prefer Graphify impact context (`--provider graphify --level 1`); fall back to local inspection when unavailable. |
 | `/kb:report` | Generate local ignored HTML/JSON workflow snapshot; never publish it. |
 | `/kb:todo` | Create/refine a backlog task; no implementation. |
 | `/kb:plan` | Define outcome, acceptance, non-goals, risk, baseline, verification, recovery. |

@@ -49,7 +49,21 @@ npm run context -- "deep recovery" --full --budget 5000
 npm run context -- "api contract" --json
 ```
 
-The default context budget is approximately 1,500 tokens. Estimates use characters/4 and are a regression signal, not model billing data. The pack is advisory; current code, active tasks, PRDs, tests, and human decisions stay canonical.
+The default total context budget is approximately 1,500 tokens. Estimates use characters/4 and are a regression signal, not model billing data. The pack is advisory; current code, active tasks, PRDs, tests, and human decisions stay canonical.
+
+### Optional context providers
+
+Local retrieval is mandatory. Graphify and OpenViking are optional CLI integrations that share the same total budget:
+
+```bash
+npm run context -- "code impact" --provider graphify --level 1
+npm run context -- "prior decision" --provider openviking
+npm run context -- "architecture" --provider all --level 1
+```
+
+`auto` can use Graphify only when `graphify-out/graph.json` already exists; it never builds the graph. OpenViking is explicit because its configured target may be remote; the adapter performs only `ov find` reads. Provider errors/timeouts return advisory status and preserve local context.
+
+Custom/wrapped CLI locations can use `GRAPHIFY_BIN`, `GRAPHIFY_BIN_ARGS`, `GRAPHIFY_GRAPH`, `OPENVIKING_BIN`, and `OPENVIKING_BIN_ARGS`. `*_BIN_ARGS` values are JSON string arrays. Do not put secrets or API keys in command arguments.
 
 ## Workflow consistency
 
