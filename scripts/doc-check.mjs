@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultRoot = path.resolve(scriptDirectory, "..");
-const DEFAULT_BUDGET_FILE = "docs/doc-budgets.json";
+const DEFAULT_BUDGET_FILE = ".agents/docs/doc-budgets.json";
 
 function parseArgs(argv) {
   const options = { root: defaultRoot, json: false, budgetFile: DEFAULT_BUDGET_FILE };
@@ -109,7 +109,7 @@ async function run(options) {
   }
 
   const sources = new Set(["README.md", "AGENTS.md", "CONTEXT.md"]);
-  for (const directory of ["docs", ".agents/skills", "scripts", "tests"]) {
+  for (const directory of [".agents/docs", ".agents/skills", "scripts", "tests"]) {
     for (const file of await markdownFiles(options.root, directory)) sources.add(file);
   }
 
