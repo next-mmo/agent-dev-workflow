@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { collectChangeScope } from "./change-scope.mjs";
 import { estimateTokens, trimToBudget } from "./context/providers/common.mjs";
 import { retrieveGraphify } from "./context/providers/graphify.mjs";
 import { retrieveOpenViking } from "./context/providers/openviking.mjs";
@@ -28,6 +29,8 @@ function parseArgs(argv) {
     scope: [],
     provider: process.env.AGENT_CONTEXT_PROVIDER || "auto",
     providerTimeout: DEFAULT_PROVIDER_TIMEOUT,
+    base: "",
+    head: "HEAD",
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -51,6 +54,10 @@ function parseArgs(argv) {
       const value = Number(argv[++index]);
       if (!Number.isInteger(value) || value < 50) throw new Error("--provider-timeout must be an integer >= 50 milliseconds");
       options.providerTimeout = value;
+    } else if (arg === "--base") {
+      options.base = String(argv[++index] || "");
+    } else if (arg === "--head") {
+      options.head = String(argv[++index] || "");
     } else if (arg.startsWith("--")) {
       throw new Error(`unknown option: ${arg}`);
     } else {
@@ -60,6 +67,7 @@ function parseArgs(argv) {
   if (!["auto", "local", "graphify", "openviking", "all"].includes(options.provider)) {
     throw new Error("--provider must be auto, local, graphify, openviking, or all");
   }
+  if (options.head !== "HEAD" && !options.base) throw new Error("--head requires --base <verified-ref>");
   return options;
 }
 
@@ -177,12 +185,13 @@ function relevantExcerpt(markdown, terms, maxChars = 2200) {
   return output.slice(0, maxChars);
 }
 
-function classifyRuleHints(terms) {
-  const joined = terms.join(" ");
+function classifyRuleHints(terms, changedPaths = []) {
+  const joined = `${terms.join(" ")} ${changedPaths.join(" ")}`.toLowerCase();
   const hints = new Set(["context"]);
   if (/auth|security|secret|permission|credential|session|login|identity|authorization/.test(joined)) hints.add("security");
   if (/release|deploy|production|rollback|migration/.test(joined)) hints.add("release");
   if (/test|verify|accept|bug|regression|ui|accessib/.test(joined)) hints.add("verification");
+  if (/\.github|flaky|concurr|race|timeout|subprocess|worker|socket|port|network|cleanup|teardown|async/.test(joined)) hints.add("reliability");
   if (/plan|design|implement|refactor|feature|api|data/.test(joined)) hints.add("delivery");
   if (/suggest|policy|workflow|rule|governance/.test(joined)) hints.add("governance");
   return [...hints];
@@ -215,8 +224,6 @@ function providerNames(mode) {
   if (mode === "graphify") return ["graphify"];
   if (mode === "openviking") return ["openviking"];
   if (mode === "all") return ["graphify", "openviking"];
-  // Auto is privacy-preserving: use the local Graphify snapshot when present,
-  // but never send the user's scope to a configured remote memory service implicitly.
   return ["graphify"];
 }
 
@@ -263,7 +270,7 @@ async function buildLocalContext({ options, root, branch, changedPaths, scope, l
   const documents = await collectDocuments(root);
   const active = documents.filter((document) => document.kind === "active-task");
   const terms = tokenize(scope);
-  const ruleHints = classifyRuleHints(terms);
+  const ruleHints = classifyRuleHints(terms, changedPaths);
 
   const ranked = documents
     .map((document) => ({ ...document, score: scoreDocument(document, terms, changedPaths) }))
@@ -340,7 +347,11 @@ async function buildContext(options) {
   const root = options.root;
   const branch = git(root, ["branch", "--show-current"]) || "unavailable";
   const status = git(root, ["status", "--short"], { trim: false });
-  const changedPaths = status.split(/\r?\n/).filter(Boolean).map((line) => line.slice(3).trim()).filter(Boolean);
+  const worktreeChangedPaths = status.split(/\r?\n/).filter(Boolean).map((line) => line.slice(3).trim()).filter(Boolean);
+  const outgoing = options.base
+    ? collectChangeScope({ root, base: options.base, head: options.head })
+    : null;
+  const changedPaths = outgoing?.paths.all || worktreeChangedPaths;
   const documents = await collectDocuments(root);
   const active = documents.filter((document) => document.kind === "active-task");
 
@@ -356,7 +367,7 @@ async function buildContext(options) {
   const local = await buildLocalContext({ options, root, branch, changedPaths, scope, localBudget });
 
   const result = {
-    schemaVersion: 2,
+    schemaVersion: 4,
     level: options.level,
     budgetTokens: options.budget,
     localBudgetTokens: localBudget,
@@ -365,7 +376,18 @@ async function buildContext(options) {
     repository: path.basename(root),
     scope,
     terms: tokenize(scope),
-    git: { branch, changedPaths },
+    git: {
+      branch,
+      changedPaths,
+      ...(outgoing ? {
+        outgoing: {
+          base: outgoing.input.base,
+          head: outgoing.input.head,
+          mergeBaseSha: outgoing.resolved.mergeBaseSha,
+          committedPaths: outgoing.paths.committed,
+        },
+      } : {}),
+    },
     activeTasks: local.activeTasks,
     ruleHints: local.ruleHints,
     selected: local.selected,
@@ -381,13 +403,20 @@ async function buildContext(options) {
       ...providers,
     ],
     budgetExceeded: false,
-    authorityOrder: [
-      "current code and fresh checks",
-      "active task and human decisions",
-      "affected PRD and tracked evidence",
-      "Graphify derived code graph",
-      "OpenViking recalled memory/resources",
-      "chat history",
+    decisionAuthority: [
+      "human decision + approved acceptance",
+      "active task change contract",
+      "affected current PRD",
+      "accepted/applied workflow policy",
+      "completed-task/history rationale",
+    ],
+    observationEvidence: [
+      "current source/config + real entry path",
+      "fresh checks + external observation",
+      "exact Git/outgoing scope",
+      "Graphify derived relationships",
+      "OpenViking/completed-task recall",
+      "generated context/chat/local memory",
     ],
   };
 
@@ -409,6 +438,9 @@ function renderText(result) {
     `- Rule hints: ${result.ruleHints.join(", ") || "context"}`,
   ];
 
+  if (result.git.outgoing) {
+    lines.push(`- Outgoing base: ${result.git.outgoing.base} (merge base ${result.git.outgoing.mergeBaseSha.slice(0, 12)})`);
+  }
   if (result.git.changedPaths.length) lines.push(`- Changed paths: ${result.git.changedPaths.join(", ")}`);
   lines.push("", "## Active task", "");
   if (result.activeTasks.length === 0) lines.push("- None detected.");
