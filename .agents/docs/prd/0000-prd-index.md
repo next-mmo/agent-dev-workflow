@@ -1,32 +1,25 @@
 # PRD-0000: Master PRD Index
 
 > Status: living doc  
-> Updated: 2026-09-01
+> Updated: 2026-09-02
 
 ## Repos / Architecture
 
-<!-- markdownlint-disable MD013 -->
-
-| Layer      | Role             | Tech Stack                                        |
-| :--------- | :--------------- | :------------------------------------------------ |
+| Layer | Role | Tech Stack |
+| :--- | :--- | :--- |
 | **Client** | UI & Local State | Vanilla JS / CSS3 / HTML5 (No Framework Overhead) |
-
-<!-- markdownlint-enable MD013 -->
 
 ## PRD Index
 
-<!-- markdownlint-disable MD013 -->
-
-| PRD      | Title                 | Status   | Summary                                                                     |
-| :------- | :-------------------- | :------- | :-------------------------------------------------------------------------- |
+| PRD | Title | Status | Summary |
+| :--- | :--- | :--- | :--- |
 | **0001** | Counter Core Features | **done** | Stateful counter, preset/custom step controls, localStorage persistence, theme toggle, accessible step selection, and one-level undo |
+| **0002** | Counter History | **done** | Persistent accessible list of the latest ten count-changing actions with explicit clear control |
 
-<!-- markdownlint-enable MD013 -->
+## Authority
 
-## Precedence Order
+PRDs define approved product requirements; they do not prove current implementation state. Use the decision-authority and observation-evidence orders in [`../../../CONTEXT.md`](../../../CONTEXT.md) when reconciling a PRD with active tasks, current code, tests, or runtime evidence.
 
-1. Code on branch
-2. Active task file (`docs/tasks/wip-*.md` / `blocked-*.md`)
-3. PRD (`docs/prd/00xx-*.md`)
-4. Completed increment record (`docs/tasks/done/done-*.md`)
-5. Chat / Discussion
+- Active workflow task: `.agents/docs/tasks/wip-*.md` or `blocked-*.md`.
+- Product requirements: `.agents/docs/prd/00xx-*.md`.
+- Completed evidence: `.agents/docs/tasks/done/done-*.md`.
