@@ -4,74 +4,86 @@
 
 - Node.js `^20.19.0 || >=22.12.0`
 - npm
+- Git (workflow/context checks inspect repository state)
 
-Vite 8 is installed as a local development dependency. Run `node --version` before installing dependencies when setting up a new environment.
-
-## Install
-
-```bash
-npm install
-```
+Vite 8 is a local development dependency. Prefer `npm ci` for the locked dependency set; use `npm install` only when intentionally updating the lockfile.
 
 ## Run locally
-
-Start the Vite development server:
 
 ```bash
 npm run dev
 ```
 
-The app is available at <http://localhost:5173>. To use another development port, set `PORT`:
-
-```bash
-PORT=8080 npm run dev
-```
-
-On Windows PowerShell, use `$env:PORT = 8080` before running `npm run dev`.
+The app defaults to <http://localhost:5173>. Set `PORT` for another development port. On Windows PowerShell use `$env:PORT = 8080` before `npm run dev`.
 
 ## Build and preview
 
-Create the deployable static site in `dist/`:
-
 ```bash
 npm run build
-```
-
-Preview that production build locally:
-
-```bash
 npm run preview
 ```
 
-The preview server defaults to port `4173`. Set `PREVIEW_PORT` to use another port. `vite preview` is intended for local verification; production hosting should serve the generated `dist/` directory.
+Preview defaults to port `4173`; set `PREVIEW_PORT` to override it. Production hosting should serve `dist/` rather than use `vite preview`.
 
 ## Test
-
-Run the state and persistence unit tests with:
 
 ```bash
 npm test
 ```
 
-The tests use Node's built-in test runner and do not require the Vite development server.
+Tests use Node's built-in runner. Workflow-tool tests create temporary fixture repositories and require no dev server.
+
+## Smart context
+
+Generate a compact L0 context pack before non-trivial agent work:
+
+```bash
+npm run context -- "session timeout"
+```
+
+Escalate only when needed:
+
+```bash
+npm run context -- "session timeout" --level 1
+npm run context -- "deep recovery" --full --budget 5000
+npm run context -- "api contract" --json
+```
+
+The default total context budget is approximately 1,500 tokens. Estimates use characters/4 and are a regression signal, not model billing data. The pack is advisory; current code, active tasks, PRDs, tests, and human decisions stay canonical.
+
+### Optional context providers
+
+Local retrieval is mandatory. Graphify and OpenViking are optional CLI integrations that share the same total budget:
+
+```bash
+npm run context -- "code impact" --provider graphify --level 1
+npm run context -- "prior decision" --provider openviking
+npm run context -- "architecture" --provider all --level 1
+```
+
+`auto` can use Graphify only when `graphify-out/graph.json` already exists; it never builds the graph. OpenViking is explicit because its configured target may be remote; the adapter performs only `ov find` reads. Provider errors/timeouts return advisory status and preserve local context.
+
+Custom/wrapped CLI locations can use `GRAPHIFY_BIN`, `GRAPHIFY_BIN_ARGS`, `GRAPHIFY_GRAPH`, `OPENVIKING_BIN`, and `OPENVIKING_BIN_ARGS`. `*_BIN_ARGS` values are JSON string arrays. Do not put secrets or API keys in command arguments.
+
+## Workflow consistency
+
+Run mechanical lifecycle, link, suggestion-state, and context-budget checks:
+
+```bash
+npm run workflow:check
+node scripts/workflow-check.mjs --strict-budget
+```
+
+The normal command treats token-budget overruns as warnings; `--strict-budget` fails them. Structural errors such as multiple active tasks, lifecycle/status mismatches, broken tracked Markdown links, or applied suggestions without a recorded decision always fail.
 
 ## Workflow report
-
-Generate a local HTML and JSON snapshot of the repository workflow state:
 
 ```bash
 npm run report
 ```
 
-Open `report/index.html` in a browser. The report is a single-page view with a
-navigation sidebar; select any tracked markdown document (instructions,
-context, workflow or development guides, PRDs, tasks, or proposals) to read it
-rendered in place, or use the dashboard to see Git state and task/PRD
-summaries. The generated `report/` directory is ignored by Git and is not a
-canonical source of requirements or evidence. Markdown is rendered by
-`scripts/report.mjs` itself — no runtime dependency or network connection is
-needed.
+Open `report/index.html`. It is a generated, ignored convenience view of Git/task/PRD/workflow sources, not canonical evidence. `scripts/report.mjs` is self-contained and requires no network connection at runtime.
 
 ## Project entry point
 
-The root `index.html` is Vite's HTML entry point. It references `src/main.js`, which imports the counter state module. Vite processes these source references during development and bundles them into `dist/` during a production build.
+The root `index.html` references `src/main.js`, which imports the counter state module. Vite processes these source references during development and bundles them into `dist/` for production.
