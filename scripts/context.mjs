@@ -9,6 +9,7 @@ import { retrieveOpenViking } from "./context/providers/openviking.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultRoot = path.resolve(scriptDirectory, "..");
+const DOCS_ROOT = ".agents/docs";
 const DEFAULT_BUDGET = 1500;
 const MIN_CONTEXT_BUDGET = 500;
 const DEFAULT_PROVIDER_TIMEOUT = 8000;
@@ -206,12 +207,12 @@ async function collectDocuments(root) {
 
   await add("AGENTS.md", "instruction");
   await add("CONTEXT.md", "context");
-  await add("docs/prd/0000-prd-index.md", "prd-index");
+  await add(`${DOCS_ROOT}/prd/0000-prd-index.md`, "prd-index");
 
-  for (const file of await markdownFiles(root, "docs/prd")) {
+  for (const file of await markdownFiles(root, `${DOCS_ROOT}/prd`)) {
     if (!file.endsWith("0000-prd-index.md")) await add(file, "prd");
   }
-  for (const file of await markdownFiles(root, "docs/tasks")) {
+  for (const file of await markdownFiles(root, `${DOCS_ROOT}/tasks`)) {
     if (/\/((wip|blocked)-[^/]+\.md)$/.test(`/${file}`)) await add(file, "active-task");
     else if (/\/(todo-[^/]+\.md)$/.test(`/${file}`)) await add(file, "todo-task");
   }
@@ -366,13 +367,14 @@ async function buildContext(options) {
   const local = await buildLocalContext({ options, root, branch, changedPaths, scope, localBudget });
 
   const result = {
-    schemaVersion: 4,
+    schemaVersion: 5,
     level: options.level,
     budgetTokens: options.budget,
     localBudgetTokens: localBudget,
     providerMode: options.provider,
     root: normalizePath(root),
     repository: path.basename(root),
+    docsRoot: DOCS_ROOT,
     scope,
     terms: tokenize(scope),
     git: {
@@ -430,6 +432,7 @@ function renderText(result) {
     "",
     `- Repository: ${result.repository}`,
     `- Branch: ${result.git.branch}`,
+    `- Docs root: ${result.docsRoot}`,
     `- Level: L${result.level}`,
     `- Scope: ${result.scope}`,
     `- Estimated tokens: ~${result.estimatedTokens}/${result.budgetTokens}`,
