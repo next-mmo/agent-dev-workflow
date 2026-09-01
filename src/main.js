@@ -4,6 +4,8 @@ const state = CounterState.loadFromStorage();
 const countDisplay = document.querySelector('#count-display');
 const themeButton = document.querySelector('#btn-theme');
 const undoButton = document.querySelector('#btn-undo');
+const historyList = document.querySelector('#count-history');
+const clearHistoryButton = document.querySelector('#btn-clear-history');
 const stepButtons = [...document.querySelectorAll('[data-step]')];
 const customStepForm = document.querySelector('#custom-step-form');
 const customStepInput = document.querySelector('#custom-step');
@@ -31,6 +33,32 @@ function render({ count, step, theme, undoCount }) {
   state.saveToStorage();
 }
 
+function formatCount(value) {
+  return Number(value).toLocaleString();
+}
+
+function renderHistory(history) {
+  historyList.replaceChildren();
+  clearHistoryButton.disabled = history.length === 0;
+  historyList.setAttribute('aria-label', history.length === 0 ? 'No count history' : 'Recent count history');
+
+  if (history.length === 0) {
+    const emptyItem = document.createElement('li');
+    emptyItem.className = 'history-empty';
+    emptyItem.textContent = 'No count actions yet.';
+    historyList.append(emptyItem);
+    return;
+  }
+
+  history.forEach(({ action, before, after }) => {
+    const item = document.createElement('li');
+    item.className = 'history-item';
+    const label = action.charAt(0).toUpperCase() + action.slice(1);
+    item.textContent = `${label}: ${formatCount(before)} → ${formatCount(after)}`;
+    historyList.append(item);
+  });
+}
+
 const actions = {
   increment: () => state.increment(),
   decrement: () => state.decrement(),
@@ -47,6 +75,8 @@ for (const [id, action] of [
 ]) {
   document.querySelector(`#${id}`).addEventListener('click', action);
 }
+
+clearHistoryButton.addEventListener('click', () => state.clearHistory());
 
 stepButtons.forEach((button) => {
   button.addEventListener('click', () => {
@@ -100,5 +130,9 @@ window.addEventListener('keydown', (event) => {
   action();
 });
 
-state.subscribe(render);
+state.subscribe((snapshot) => {
+  render(snapshot);
+  renderHistory(snapshot.history);
+});
 render(state.toJSON());
+renderHistory(state.history);

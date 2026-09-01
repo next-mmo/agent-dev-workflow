@@ -114,6 +114,52 @@ input[aria-invalid='true'] {
   line-height: 1;
 }
 
+.history-section {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.history-heading h2 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.history-heading button {
+  padding: 0.35rem 0.55rem;
+  font-size: 0.8rem;
+}
+
+.count-history {
+  display: grid;
+  gap: 0.35rem;
+  max-height: 10rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.history-item,
+.history-empty {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--control);
+}
+
+.history-empty {
+  text-align: center;
+  font-style: italic;
+}
+
 .step-selector-group {
   display: grid;
   gap: 0.5rem;

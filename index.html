@@ -18,6 +18,16 @@
       <div id="count-display" class="count-display" aria-live="polite">0</div>
     </section>
 
+    <section class="history-section" aria-labelledby="history-title">
+      <div class="history-heading">
+        <h2 id="history-title">Count History</h2>
+        <button id="btn-clear-history" type="button" aria-label="Clear Count History" disabled>Clear</button>
+      </div>
+      <ol id="count-history" class="count-history" aria-label="No count history">
+        <li class="history-empty">No count actions yet.</li>
+      </ol>
+    </section>
+
     <section class="step-selector-group">
       <span class="group-label">Step Size</span>
       <div class="step-buttons">
