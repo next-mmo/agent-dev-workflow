@@ -4,7 +4,7 @@ Humans own workflow policy. Agents may propose reusable improvements but may not
 
 ## Suggestions
 
-- Search `docs/suggestions/` before creating a proposal.
+- Search `.agents/docs/suggestions/` before creating a proposal.
 - Separate facts, inference, recommendation, tradeoffs, exceptions, and validation.
 - Keep a proposal `proposed` until a human decision is recorded.
 - After explicit approval, apply it in tracked work, record evidence, and mark it `applied` only when canonical changes are present and verified.
