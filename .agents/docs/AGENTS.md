@@ -1,6 +1,6 @@
-# AGENTS.md — Documentation
+# AGENTS.md — Workflow Documentation
 
-These rules apply under `docs/` and supplement the root standing orders. Use the prose skill for editorial judgment; keep this file as compact placement/ownership policy.
+These rules apply under `.agents/docs/` and supplement the root standing orders. Use the prose skill for editorial judgment; keep this file as compact placement/ownership policy.
 
 ## One home per fact
 
@@ -29,8 +29,9 @@ Put each durable fact in the document whose job owns it; elsewhere, link rather 
 
 - Prefer direct concrete terms over metaphorical framework language when an exact API, field, operation, path, or rule can be named.
 - Keep root/subtree standing orders short and link to the owning detailed document.
-- Use relative Markdown links for repository references so `workflow:check`/documentation checks can verify them.
+- Use relative Markdown links for repository references so workflow/documentation checks can verify them.
 - Do not hand-maintain an inventory when source or a generated report is the real authority.
+- Do not recreate a root `docs/` directory for Agent Workflow Scrum artifacts; `.agents/docs/` is the canonical workflow-document root.
 
 ## Budget discipline
 
