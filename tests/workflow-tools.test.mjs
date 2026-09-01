@@ -101,3 +101,33 @@ test("workflow checker rejects multiple active tasks", async () => {
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("workflow checker rejects broken tracked markdown links", async () => {
+  const root = await fixture();
+  try {
+    await writeFile(path.join(root, "AGENTS.md"), "# Agent Instructions\nRead [missing](missing.md).\n", "utf8");
+    const result = spawnSync(process.execPath, [checkScript, "--root", root, "--json"], { encoding: "utf8" });
+    assert.notEqual(result.status, 0);
+    const parsed = JSON.parse(result.stdout);
+    assert.ok(parsed.errors.some((error) => error.includes("broken markdown link")));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("workflow checker rejects applied suggestions without a human decision", async () => {
+  const root = await fixture();
+  try {
+    await writeFile(
+      path.join(root, "docs/suggestions/0001-policy.md"),
+      "# Suggestion\n> **Status:** applied\n\n## Human Decision\n- **Decision:** pending\n",
+      "utf8",
+    );
+    const result = spawnSync(process.execPath, [checkScript, "--root", root, "--json"], { encoding: "utf8" });
+    assert.notEqual(result.status, 0);
+    const parsed = JSON.parse(result.stdout);
+    assert.ok(parsed.errors.some((error) => error.includes("non-pending human decision")));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

@@ -18,6 +18,8 @@ Inspect current Git state and affected code before edits. Load only the referenc
 - suggestions/policy/external actions: [governance](references/governance.md)
 - `/kb:*` routing: [commands](references/commands.md)
 
+All `references/...` links resolve from canonical `.agents/skills/agent-workflow-scrum/`, including when a generated adapter renders this router.
+
 ## Command Namespace
 
 Only `/kb:` belongs to this skill. Supported commands:

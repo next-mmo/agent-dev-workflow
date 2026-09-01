@@ -124,7 +124,9 @@ async function run(options) {
   }
 
   const linkSources = [
+    "README.md",
     "AGENTS.md",
+    "docs/development.md",
     "CONTEXT.md",
     "docs/agent-workflow.md",
     "docs/tasks/README.md",
