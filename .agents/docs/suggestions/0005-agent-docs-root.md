@@ -1,6 +1,6 @@
 # Suggestion 0005: Use `.agents/docs/` as the Workflow Documentation Root
 
-> **Status:** accepted  
+> **Status:** applied  
 > **Created:** 2026-09-02  
 > **Proposed by:** Human user  
 > **Decision owner:** Human  
@@ -37,14 +37,15 @@ Keeping reusable skills under `.agents/` while storing PRDs, tasks, suggestions,
 
 ## Human Decision
 
-- **Decision:** accepted
+- **Decision:** accepted and applied
 - **Decided by:** Human user
 - **Date:** 2026-09-02
 - **Rationale:** User explicitly requested removing the separate workflow docs layout and moving it to `.agents/docs`.
 
 ## Application Evidence
 
-- Implementation is tracked in task 0020.
-- Root workflow artifacts have been relocated to `.agents/docs/`; router/checker/report/planner/fixtures use the new root.
-- A negative documentation-control test allows `docs/product-guide.md` but rejects legacy `docs/tasks/` workflow artifacts.
-- Final test/build/CI evidence is pending before this suggestion becomes `applied`.
+- Implementation is tracked in task 0022.
+- Root workflow artifacts were relocated to `.agents/docs/`; context/scope/planning/check/report tooling and fixtures use the new root.
+- Counter History and the newer context changed-path fix from `main` were preserved while their workflow artifacts were reconciled into the new namespace.
+- Documentation governance allows application-owned `docs/product-guide.md` but rejects legacy workflow paths such as `docs/tasks/`.
+- GitHub Actions run `33545458510` passed 39/39 tests, Vite production build, strict workflow/context checks, documentation budgets/links/namespace checks, and canonical skill audit.
