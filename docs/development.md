@@ -55,6 +55,18 @@ npm test
 
 The tests use Node's built-in test runner and do not require the Vite development server.
 
+## Workflow report
+
+Generate a local HTML and JSON snapshot of the repository workflow state:
+
+```bash
+npm run report
+```
+
+Open `report/index.html` in a browser. The generated `report/`
+directory is ignored by Git and is not a canonical source of requirements or
+evidence.
+
 ## Project entry point
 
 The root `index.html` is Vite's HTML entry point. It references `src/main.js`, which imports the counter state module. Vite processes these source references during development and bundles them into `dist/` during a production build.

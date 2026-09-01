@@ -15,6 +15,8 @@ or full-stack application.
 - A tracked CONTEXT.md memory contract shared across supported agents.
 - Namespaced /kb:<command> workflow commands that avoid collisions with host IDE
   commands or other agents.
+- A local HTML/JSON workflow report generated from Git, PRDs, tasks, and shared
+  context sources.
 - A target initializer for ChatGPT, Codex, Claude, and Cursor.
 - Risk-scaled task records with acceptance criteria and evidence ledgers.
 - PRD and task synchronization for product behavior changes.
@@ -32,6 +34,7 @@ or full-stack application.
 - [Create or update a skill](#create-or-update-a-skill)
 - [Initialize agent targets](#initialize-agent-targets)
 - [Use the workflow commands](#use-the-workflow-commands)
+- [Generate a workflow report](#generate-a-workflow-report)
 - [Development commands](#development-commands)
 - [Verification checklist](#verification-checklist)
 - [Release and deployment boundary](#release-and-deployment-boundary)
@@ -187,6 +190,7 @@ Copy these items from this repository into the existing project:
 ~~~text
 .agents/
 scripts/skill.sh
+scripts/report.mjs
 AGENTS.md
 CONTEXT.md
 CLAUDE.md
@@ -202,6 +206,7 @@ On macOS, Linux, Git Bash, or WSL, an example is:
 cp -R /path/to/agent-dev-workflow/.agents .
 mkdir -p scripts docs/tasks docs/suggestions
 cp /path/to/agent-dev-workflow/scripts/skill.sh scripts/
+cp /path/to/agent-dev-workflow/scripts/report.mjs scripts/
 cp /path/to/agent-dev-workflow/AGENTS.md .
 cp /path/to/agent-dev-workflow/CONTEXT.md .
 cp /path/to/agent-dev-workflow/CLAUDE.md .
@@ -217,6 +222,7 @@ On Windows PowerShell, use equivalent commands such as:
 Copy-Item -Recurse -Force C:\path\to\agent-dev-workflow\.agents .
 New-Item -ItemType Directory -Force scripts, docs\tasks, docs\suggestions
 Copy-Item C:\path\to\agent-dev-workflow\scripts\skill.sh scripts\
+Copy-Item C:\path\to\agent-dev-workflow\scripts\report.mjs scripts\
 Copy-Item C:\path\to\agent-dev-workflow\AGENTS.md .
 Copy-Item C:\path\to\agent-dev-workflow\CONTEXT.md .
 Copy-Item C:\path\to\agent-dev-workflow\CLAUDE.md .
@@ -455,6 +461,7 @@ Only the /kb: namespace belongs to this project skill. Bare /plan, /todo,
 | --- | --- |
 | /kb:help | Show the namespaced workflow commands |
 | /kb:status | Report task, PRD, branch, checks, blockers, and uncommitted changes |
+| /kb:report | Generate a local HTML and JSON workflow snapshot under `report/` |
 | /kb:todo | Create or refine a backlog task without implementing it |
 | /kb:plan | Define outcome, acceptance, non-goals, risk, verification, and recovery |
 | /kb:define | Clarify the change contract and acceptance criteria |
@@ -480,6 +487,27 @@ The guarded aliases /kb:reset, /kb:clean, /kb:delete, /kb:deploy, and
 /kb:publish never grant permission to discard data, change production, or affect
 an external system. Route them through the relevant safety gate.
 
+## Generate a workflow report
+
+Create a local snapshot for a human, reviewer, or developer to open in a
+browser:
+
+~~~bash
+npm run report
+~~~
+
+The command runs `scripts/report.mjs` and writes:
+
+- `report/index.html` — a standalone, responsive report with Git state,
+  active and completed tasks, indexed PRDs, and links to tracked source docs.
+- `report/report.json` — the same snapshot in a machine-readable format.
+
+The output is intentionally ignored by Git. It is a convenience view, not a
+replacement for the tracked PRDs, tasks, evidence ledgers, `CONTEXT.md`, or
+human decisions. Open `report/index.html` in a browser after generating
+it. The report uses embedded CSS and local links, so it does not require a
+network connection or a running dev server.
+
 ## Development commands
 
 These commands apply to this Counter/Vite demo. A migrated project must replace
@@ -492,6 +520,7 @@ them with its own commands and update AGENTS.md.
 | npm test | Run Node's built-in counter state tests |
 | npm run build | Create the production bundle in dist/ |
 | npm run preview | Preview the production bundle locally on port 4173 |
+| npm run report | Generate the local HTML/JSON workflow report in report/ |
 | bash scripts/skill.sh init all | Generate supported local agent adapters |
 | bash scripts/skill.sh check | Audit canonical skills and present adapters |
 
@@ -524,6 +553,7 @@ Use the smallest checklist that matches the change risk.
 - Run bash scripts/skill.sh init all.
 - Run bash scripts/skill.sh check all after initializing generated adapters.
 - Confirm generated adapter paths are ignored.
+- Run npm run report and confirm report/ is ignored.
 - Review the generated output for unsupported claims or permission expansion.
 
 ### Full-stack change
@@ -598,6 +628,10 @@ failures from failures introduced by the workflow files, then record both in the
 active task. Do not mark a criterion passed because the failure is unrelated.
 
 ## Repository map
+
+The root `report/` directory is generated locally and ignored by Git. The
+tracked workflow source remains under `.agents/skills/`, `scripts/`, and
+`docs/`.
 
 ~~~text
 .
