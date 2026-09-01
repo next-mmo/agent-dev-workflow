@@ -9,20 +9,21 @@ import { fileURLToPath } from "node:url";
 const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(testDirectory, "..");
 const docCheck = path.join(repositoryRoot, "scripts/doc-check.mjs");
+const docsRoot = ".agents/docs";
 
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "agent-doc-check-"));
-  await mkdir(path.join(root, "docs"), { recursive: true });
-  await writeFile(path.join(root, "AGENTS.md"), "# Agents\nRead [docs](docs/guide.md).\n", "utf8");
-  await writeFile(path.join(root, "docs/guide.md"), "# Guide\nUseful current-state guidance.\n", "utf8");
-  await writeFile(path.join(root, "docs/doc-budgets.json"), JSON.stringify({
+  await mkdir(path.join(root, docsRoot), { recursive: true });
+  await writeFile(path.join(root, "AGENTS.md"), "# Agents\nRead [guide](.agents/docs/guide.md).\n", "utf8");
+  await writeFile(path.join(root, docsRoot, "guide.md"), "# Guide\nUseful current-state guidance.\n", "utf8");
+  await writeFile(path.join(root, docsRoot, "doc-budgets.json"), JSON.stringify({
     "AGENTS.md": 100,
-    "docs/guide.md": 100,
+    [`${docsRoot}/guide.md`]: 100,
   }, null, 2), "utf8");
   return root;
 }
 
-test("documentation checker accepts bounded docs and valid relative links", async () => {
+test("documentation checker accepts bounded .agents docs and valid relative links", async () => {
   const root = await fixture();
   try {
     const output = execFileSync(process.execPath, [docCheck, "--root", root, "--json"], { encoding: "utf8" });
@@ -34,10 +35,10 @@ test("documentation checker accepts bounded docs and valid relative links", asyn
   }
 });
 
-test("documentation checker rejects budget overflow and broken links", async () => {
+test("documentation checker rejects budget overflow and broken links under .agents docs", async () => {
   const root = await fixture();
   try {
-    await writeFile(path.join(root, "AGENTS.md"), `# Agents\n${"x".repeat(500)}\n[missing](docs/missing.md)\n`, "utf8");
+    await writeFile(path.join(root, "AGENTS.md"), `# Agents\n${"x".repeat(500)}\n[missing](.agents/docs/missing.md)\n`, "utf8");
     const result = spawnSync(process.execPath, [docCheck, "--root", root, "--json"], { encoding: "utf8" });
     assert.notEqual(result.status, 0);
     const parsed = JSON.parse(result.stdout);

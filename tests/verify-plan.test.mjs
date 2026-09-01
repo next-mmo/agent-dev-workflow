@@ -6,6 +6,8 @@ import path from "node:path";
 import test from "node:test";
 import { buildVerificationPlan } from "../scripts/verify-plan.mjs";
 
+const docsRoot = ".agents/docs";
+
 function git(root, ...args) {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
 }
@@ -44,6 +46,7 @@ test("product changes select tests and build without inventing unrelated checks"
 
     const plan = await buildVerificationPlan({ root, base: baseSha });
     const commands = plan.checks.map((item) => item.command);
+    assert.equal(plan.docsRoot, docsRoot);
     assert.ok(commands.includes("npm test"));
     assert.ok(commands.includes("npm run build"));
     assert.ok(!commands.includes("scripts/skill.sh check"));
@@ -69,6 +72,25 @@ test("skill changes select workflow, docs, and adapter checks but skip product b
     assert.ok(commands.includes("scripts/skill.sh check"));
     assert.ok(!commands.includes("npm run build"));
     assert.ok(plan.layers.workflow.includes(".agents/skills/example/SKILL.md"));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test(".agents docs changes select workflow and documentation checks", async () => {
+  const { root, baseSha } = await fixture();
+  try {
+    await mkdir(path.join(root, docsRoot), { recursive: true });
+    await writeFile(path.join(root, docsRoot, "architecture.md"), "# Architecture\n", "utf8");
+    git(root, "add", ".");
+    git(root, "commit", "-qm", "agent docs");
+
+    const plan = await buildVerificationPlan({ root, base: baseSha });
+    const commands = plan.checks.map((item) => item.command);
+    assert.ok(commands.includes("npm run workflow:check -- --strict-budget"));
+    assert.ok(commands.includes("npm run docs:check"));
+    assert.ok(plan.layers.docs.includes(`${docsRoot}/architecture.md`));
+    assert.ok(plan.layers.workflow.includes(`${docsRoot}/architecture.md`));
   } finally {
     await rm(root, { recursive: true, force: true });
   }

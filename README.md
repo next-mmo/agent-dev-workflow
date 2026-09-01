@@ -1,23 +1,21 @@
 # Agent Workflow Scrum
 
-Agent Workflow Scrum is a repository-first delivery workflow for humans and coding agents. It keeps product scope, tasks, PRDs, implementation, verification evidence, reviews, and human decisions connected without forcing every agent to load the whole project history into every prompt.
+Agent Workflow Scrum is a repository-first delivery workflow for humans and coding agents. It keeps scope, requirements, implementation, verification evidence, review, and human decisions connected while keeping default agent context small.
 
-The included Counter App is only an executable demo. The workflow is designed to move into an existing frontend, backend, or full-stack repository.
+The Counter App is only an executable demo. The workflow is intended to move into existing frontend, backend, desktop, or full-stack repositories.
 
-## What this adds
+## Core design
 
-- `.agents/skills/` as the canonical cross-agent skill source.
-- `AGENTS.md` + `CONTEXT.md` as compact durable project instructions/memory.
-- Bounded L0/L1/L2 context routing with `npm run context`.
-- Explicit outgoing-change scope with `npm run change:scope` so clean committed branches are not mistaken for unchanged work.
-- Diff-driven verification planning with `npm run verify:plan` to avoid reflexively running every check.
-- Optional Graphify code-graph and OpenViking recall providers under the same token budget.
-- On-demand reliability rules for async/resource-owning tests and CI rather than loading them on every task.
-- Namespaced `/kb:*` workflow commands that avoid host-command collisions.
-- Tracked PRDs, WIP/done tasks, evidence ledgers, and human-approved workflow suggestions.
-- `npm run workflow:check` for task lifecycle, suggestion decision, Markdown-link, and context-budget drift.
-- Claude/Cursor adapters generated from the same canonical skill source.
-- A local navigable HTML/JSON workflow report.
+- `.agents/skills/` — canonical executable agent guidance.
+- `.agents/docs/` — all workflow-owned long-form docs and durable artifacts: architecture, testing, PRDs, tasks, suggestions, development guidance, and evidence.
+- `AGENTS.md` + `CONTEXT.md` — compact standing orders and shared authority/recovery contract.
+- `npm run context` — bounded L0/L1/L2 context routing.
+- `npm run change:scope` — exact committed + dirty outgoing scope from an explicitly verified base.
+- `npm run verify:plan` — smallest known verification set for the exact scope.
+- Optional Graphify code-graph retrieval and explicit OpenViking semantic recall under the same token budget.
+- `npm run workflow:check` + `npm run docs:check` — mechanical lifecycle, link, and standing-context budget checks.
+
+The repository deliberately has **no root `docs/` tree**. Agent Workflow Scrum documentation belongs under `.agents/docs/` so the workflow has one obvious namespace.
 
 ## Quick start
 
@@ -29,23 +27,21 @@ npm test
 npm run build
 ```
 
-Run the demo with:
+Run the demo:
 
 ```bash
 npm run dev
 ```
 
-The Counter App demonstrates local state/persistence, configurable steps, one-level undo, theme switching, and accessible interaction. Product code is replaceable; the workflow pack is the reusable part.
+## Smart context
 
-## Smart agent context
-
-For non-trivial work, do **not** start by dumping every workflow document into the model. Generate a small routing pack first:
+Start non-trivial work with a small routing pack instead of dumping the whole repository history into the model:
 
 ```bash
 npm run context -- "add session timeout"
 ```
 
-The default L0 pack contains branch/change signals, the active task, ranked PRD/docs, rule hints, and bounded optional-provider evidence. Escalate only when required:
+Escalate only when needed:
 
 ```bash
 npm run context -- "add session timeout" --level 1
@@ -54,128 +50,110 @@ npm run context -- "deep recovery" --full --budget 5000
 npm run context -- "api contract" --json
 ```
 
-The default budget is roughly 1,500 heuristic tokens. Estimates use characters/4, so they are a regression signal rather than billing data. Generated context is disposable and advisory: current code, fresh checks, the active task, affected PRD, and human decisions stay authoritative. Tests are evidence too; stale tests do not automatically override an approved contract.
+The default budget is about 1,500 heuristic tokens. Generated context is advisory. Human decisions, the active task, PRD requirements, current code, and fresh observed evidence remain distinct sources with explicit roles; see [CONTEXT.md](CONTEXT.md).
 
-When `--base` is supplied, the router includes committed paths from the verified merge base to `HEAD` plus staged, unstaged, and untracked paths. Without `--base`, startup stays lightweight and uses only current worktree signals. See [CONTEXT.md](CONTEXT.md) and the [context-routing reference](.agents/skills/agent-workflow-scrum/references/context-routing.md).
+When `--base` is supplied, the router includes committed merge-base-to-head paths plus staged, unstaged, and untracked paths. Without `--base`, startup stays lightweight and uses current worktree signals only.
 
 ### Optional providers
 
-Local repository routing is always available. Providers are additive and failure-safe:
-
 ```bash
-# Default: local + Graphify when graphify-out/graph.json exists.
-# OpenViking is never queried implicitly.
+# local + Graphify when a local graph already exists
 npm run context -- "change auth middleware"
 
-# Force Graphify for code impact/dependencies.
+# force Graphify
 npm run context -- "change auth middleware" --provider graphify --level 1
 
-# Explicit semantic recall from the configured OpenViking server.
+# explicit OpenViking recall
 npm run context -- "why did we choose redis" --provider openviking
 
-# Compose local + Graphify + OpenViking under one total budget.
+# compose all providers under one total budget
 npm run context -- "change auth architecture" --provider all --level 1
 ```
 
-Provider modes are `auto`, `local`, `graphify`, `openviking`, and `all`. `auto` is privacy-preserving: it can use an existing local Graphify snapshot, but it will not send scope text to OpenViking. Selecting `openviking` or `all` is the explicit opt-in for that read-only retrieval.
+`auto` may use an existing local Graphify snapshot but never sends scope text to OpenViking. OpenViking is read-only and explicit because its configured target may be remote. Provider failure, timeout, or absence degrades to local repository context.
 
-Graphify integration expects an existing `graphify-out/graph.json` and calls `graphify query` with a bounded provider budget. It never rebuilds the graph automatically; refresh Graphify after meaningful code changes. OpenViking integration uses read-only `ov find` across memory/resource/skill types, normalizes results to URI/score/summary, and has a timeout fuse. Neither provider can approve or override tracked requirements.
-
-See the full [provider contract](.agents/skills/agent-workflow-scrum/references/providers.md).
+Provider details: [`.agents/skills/agent-workflow-scrum/references/providers.md`](.agents/skills/agent-workflow-scrum/references/providers.md).
 
 ## Scope-aware verification
 
-A clean worktree is not evidence that a feature branch has no changes. Before PR review, push verification, or final handoff, verify the live PR base/stack parent and pass it explicitly:
+A clean worktree does not mean a feature branch has no outgoing changes. Before PR review, push verification, or final handoff, verify the live target branch/stack parent and pass it explicitly:
 
 ```bash
 npm run change:scope -- --base origin/main
 npm run verify:plan -- --base origin/main
 ```
 
-`change:scope` is read-only and factual. It resolves base/head plus their unique merge base, then reports committed, staged, unstaged, and untracked paths separately. It **never guesses or fetches the base** because upstream configuration is not reliable for new branches or stacked PRs.
+`change:scope` never guesses or fetches a base. It reports resolved base/head/merge-base IDs and committed, staged, unstaged, and untracked paths separately.
 
-`verify:plan` consumes that factual scope and selects the smallest known checks for the affected surfaces. For example, workflow-only changes can avoid an unnecessary product build, while product/build changes select product tests/build. Filename mapping cannot see dynamic loading, configuration, subprocesses, workers, providers, or external services, so agents still add the narrowest boundary-specific evidence when needed.
+`verify:plan` maps that factual scope to the smallest known checks. It remains guidance: filenames cannot prove dynamic loading, configuration, subprocess, provider, network, or external-system reachability, so semantic boundary verification is still required.
 
-For flaky/async/resource-owning tests or CI changes, load the [reliability reference](.agents/skills/agent-workflow-scrum/references/reliability.md). Prefer atomic resource allocation, deterministic synchronization, exact global-state restoration, cleanup to quiescence, and negative controls over sleeps/retries/blanket serialization.
+## Workflow loop
 
-## Delivery loop
-
-Use the smallest path that matches risk:
-
-1. **Discover/context** — generate L0 context and inspect current Git/code/checks.
+1. **Context** — generate L0 and inspect Git/code/current checks.
 2. **Define** — outcome, acceptance, non-goals, risk, verification, recovery.
-3. **Implement** — one small reviewable vertical slice.
-4. **Verify** — verify outgoing scope, select narrow checks, then prove the real user/API/data boundary as relevant.
-5. **Review** — compare the exact final outgoing diff/evidence with the change contract.
-6. **Sync/handoff** — task, PRD, evidence, risks, skipped checks, human decisions.
+3. **Implement** — smallest reviewable vertical slice.
+4. **Verify** — exact outgoing scope + narrow checks + real user/service boundary.
+5. **Review** — compare final diff/evidence against the change contract.
+6. **Sync/handoff** — task, PRD, evidence, risks, skipped checks, decisions.
 7. **Learn** — propose reusable workflow improvements; humans approve policy.
 
-Full risk and quality guidance lives in [docs/agent-workflow.md](docs/agent-workflow.md). Detailed skill rules are loaded on demand from `.agents/skills/agent-workflow-scrum/references/`.
+Detailed delivery rules: [`.agents/docs/agent-workflow.md`](.agents/docs/agent-workflow.md). Architecture and ownership: [`.agents/docs/architecture.md`](.agents/docs/architecture.md).
 
-## Workflow commands
-
-The project owns only the `/kb:` namespace. Important commands include:
+## Important `/kb:` commands
 
 ```text
 /kb:context   smallest relevant context pack
-/kb:scope     explicit committed + dirty outgoing change scope
-/kb:impact    Graphify-first code impact context; local fallback
-/kb:status    current task/PRD/branch/check state
+/kb:scope     exact committed + dirty outgoing scope
+/kb:impact    Graphify-first code impact; local fallback
+/kb:status    task/PRD/branch/check state
 /kb:plan      outcome, acceptance, risk, verification, recovery
 /kb:implement implement the approved active task
-/kb:verify    scope-aware smallest sufficient verification plan
+/kb:verify    smallest sufficient verification plan
 /kb:test      automated verification
-/kb:accept    user-boundary acceptance
-/kb:review    independent read-only review against exact base/head
+/kb:accept    real user/service-boundary acceptance
+/kb:review    independent read-only final review
 /kb:sync      reconcile code/task/PRD/evidence
 /kb:handoff   outcome/evidence/risks/decisions
 /kb:done      close only after evidence passes
 ```
 
-See the complete [command reference](.agents/skills/agent-workflow-scrum/references/commands.md). Bare `/plan`, `/help`, etc. remain available to the host agent/IDE.
+Full command reference: [`.agents/skills/agent-workflow-scrum/references/commands.md`](.agents/skills/agent-workflow-scrum/references/commands.md).
 
-## Workflow checks
+## Checks
 
 ```bash
 npm run workflow:check
-node scripts/workflow-check.mjs --strict-budget
+npm run docs:check
+npm test
+npm run build
 bash scripts/skill.sh check
 ```
 
-`workflow:check` fails structural errors such as multiple active WIP/blocked tasks, lifecycle/status mismatches, broken tracked Markdown links, or accepted/applied suggestions without a recorded human decision. Normal mode warns on context-budget drift; `--strict-budget` fails it.
-
-For outgoing verification, first establish the exact diff:
+For outgoing work first establish scope:
 
 ```bash
 npm run change:scope -- --base <verified-ref>
 npm run verify:plan -- --base <verified-ref>
 ```
 
-Then run the selected product/workflow checks. The demo exposes:
-
-```bash
-npm test
-npm run build
-```
-
 ## Agent adapters
 
-`.agents/skills/` is canonical. Generate local adapters after cloning or changing a skill:
+`.agents/skills/` is canonical.
 
 ```bash
 bash scripts/skill.sh init all
 bash scripts/skill.sh check all
 ```
 
-- ChatGPT/Codex use the canonical Agent Skills layout directly.
-- Claude copies the skill directory into ignored `.claude/skills/`.
-- Cursor generates ignored `.cursor/rules/` and `.cursor/commands/` adapters.
+- ChatGPT/Codex consume the canonical Agent Skills layout directly.
+- Claude gets generated ignored `.claude/skills/` adapters.
+- Cursor gets generated ignored `.cursor/rules/` and `.cursor/commands/` adapters.
 
 Never edit generated adapters as the source of truth.
 
-## Use this in an existing project
+## Move into another repository
 
-Copy the workflow foundation, then adapt project-specific instructions instead of copying Counter requirements:
+Copy the workflow foundation:
 
 ```text
 .agents/
@@ -185,46 +163,32 @@ scripts/context/providers/
 scripts/change-scope.mjs
 scripts/verify-plan.mjs
 scripts/workflow-check.mjs
+scripts/doc-check.mjs
 scripts/report.mjs
 AGENTS.md
 CONTEXT.md
 CLAUDE.md
-docs/agent-workflow.md
-docs/tasks/
-docs/suggestions/
 ```
 
-Then:
-
-1. Merge `AGENTS.md` with the target repo's runtime, package manager, test/build, architecture, and safety rules.
-2. Create/update the product PRD index and first affected PRD.
-3. Remove/archive Counter-specific PRDs/tasks if Counter is not the product.
-4. Initialize adapters with `bash scripts/skill.sh init all`.
-5. Wire `change:scope`, `verify:plan`, and `workflow:check` into the target package manager/CI if it is not npm-based.
-6. Create one WIP task for the first non-trivial change and capture baseline evidence.
-7. Keep optional providers optional; do not make Graphify/OpenViking installation a prerequisite for the local workflow.
-
-See [docs/development.md](docs/development.md) for this repository's runtime commands.
+Then adapt runtime/build/test rules in `AGENTS.md`, replace demo PRDs/tasks under `.agents/docs/`, initialize agent adapters, and wire the scripts into the target package manager/CI. Keep Graphify and OpenViking optional.
 
 ## Repository map
 
 ```text
-.agents/skills/                     canonical agent skills + focused references
-AGENTS.md                            compact repository instructions
-CONTEXT.md                           durable memory/authority/recovery contract
-docs/agent-workflow.md              universal risk-scaled delivery model
-docs/prd/                           product requirements and precedence
-docs/tasks/                         TODO/WIP/BLOCKED recovery state
-docs/tasks/done/                    verified increment evidence
-docs/suggestions/                   human-governed workflow improvements
-scripts/context.mjs                 progressive context router
-scripts/context/providers/          optional Graphify/OpenViking provider adapters
-scripts/change-scope.mjs            explicit base/head + dirty-layer scope report
-scripts/verify-plan.mjs             smallest-known verification selector
-scripts/workflow-check.mjs          deterministic workflow consistency checks
-scripts/skill.sh                    agent adapter generation/drift audit
-scripts/report.mjs                  local navigable HTML/JSON snapshot
-src/ + tests/                       executable Counter demo
+.agents/
+  docs/                            architecture, testing, PRDs, tasks, suggestions, evidence
+  skills/                          canonical agent skills + focused references
+AGENTS.md                          compact standing repository instructions
+CONTEXT.md                         durable authority/recovery/context contract
+scripts/context.mjs               progressive context router
+scripts/context/providers/        optional Graphify/OpenViking adapters
+scripts/change-scope.mjs          exact outgoing-scope report
+scripts/verify-plan.mjs           scope-aware verification selector
+scripts/workflow-check.mjs        workflow consistency checks
+scripts/doc-check.mjs             doc/link/token-budget checks
+scripts/skill.sh                  agent adapter generation/drift audit
+scripts/report.mjs                local workflow report
+src/ + tests/                     executable Counter demo
 ```
 
 ## Safety boundary

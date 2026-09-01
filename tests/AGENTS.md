@@ -13,4 +13,4 @@ These rules apply under `tests/` and supplement the root standing orders.
 - Preserve platform semantics. Explicitly skip a genuinely unsupported platform case with a reason instead of weakening the assertion for all platforms.
 - Report skipped, timed-out, retried, or environment-blocked checks as such; never label them passed.
 
-See [`../docs/testing.md`](../docs/testing.md) and the reliability reference for deeper guidance when the test owns async or host resources.
+See [`.agents/docs/testing.md`](../.agents/docs/testing.md) and the reliability reference for deeper guidance when the test owns async or host resources.

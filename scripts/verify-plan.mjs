@@ -3,6 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { collectChangeScope } from "./change-scope.mjs";
 
+const DOCS_ROOT = ".agents/docs";
+
 async function exists(filePath) {
   try {
     await access(filePath);
@@ -31,7 +33,7 @@ function inferRiskHints(paths) {
   if (/auth|security|secret|credential|permission|payment|session|identity/.test(joined)) hints.add("security");
   if (/migration|release|deploy|production|rollback/.test(joined)) hints.add("release");
   if (/\.github\/|test|spec|worker|subprocess|process|server|socket|network|port|async|concurr|race|timeout|teardown|cleanup/.test(joined)) hints.add("reliability");
-  if (/docs\/|readme|agents\.md|context\.md|\.agents\/skills/.test(joined)) hints.add("docs");
+  if (/\.agents\/docs\/|readme|agents\.md|context\.md|\.agents\/skills/.test(joined)) hints.add("docs");
   return [...hints];
 }
 
@@ -69,7 +71,6 @@ export async function buildVerificationPlan({ root = process.cwd(), base, head =
     /^AGENTS\.md$/,
     /^CONTEXT\.md$/,
     /^\.agents\//,
-    /^docs\/(?:tasks|suggestions)\//,
     /^scripts\/(?:context|workflow-check|change-scope|verify-plan|doc-check)/,
   ]);
   const skillsTouched = matchesAny(paths, [/^\.agents\/skills\//]);
@@ -93,7 +94,7 @@ export async function buildVerificationPlan({ root = process.cwd(), base, head =
     /^README\.md$/,
     /^AGENTS\.md$/,
     /^CONTEXT\.md$/,
-    /^docs\//,
+    /^\.agents\/docs\//,
     /^\.agents\/skills\/.*\.md$/,
     /^(?:scripts|tests)\/AGENTS\.md$/,
   ]);
@@ -107,7 +108,7 @@ export async function buildVerificationPlan({ root = process.cwd(), base, head =
   }
 
   if (docsTouched && scripts["docs:check"]) {
-    addCheck(checks, "docs", "npm run docs:check", "Documentation/instruction prose changed; enforce standing budgets and repository-relative links.");
+    addCheck(checks, "docs", "npm run docs:check", `Documentation/instruction prose under ${DOCS_ROOT} or standing instructions changed; enforce budgets and repository-relative links.`);
   }
 
   if (skillsTouched && await exists(path.join(scope.repositoryRoot, "scripts/skill.sh"))) {
@@ -135,7 +136,7 @@ export async function buildVerificationPlan({ root = process.cwd(), base, head =
   }
 
   if (docsTouched) {
-    manualReview.push("Semantically review changed prose against its owning code/behavior and documentation tier; a green budget/link check does not prove accuracy or correct placement.");
+    manualReview.push(`Semantically review changed prose against its owning code/behavior and ${DOCS_ROOT} ownership tier; a green budget/link check does not prove accuracy or placement.`);
   }
   if (ciTouched) {
     manualReview.push("Inspect the real CI job/worker topology and confirm the changed workflow still exercises the intended checks on supported platforms.");
@@ -151,7 +152,8 @@ export async function buildVerificationPlan({ root = process.cwd(), base, head =
   manualReview.push("Tests and historical workflow notes are evidence, not absolute authority; reconcile them with current code, approved acceptance criteria, and explicit human decisions.");
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
+    docsRoot: DOCS_ROOT,
     repositoryRoot: scope.repositoryRoot,
     input: scope.input,
     resolved: scope.resolved,
@@ -184,6 +186,7 @@ function renderText(plan) {
     `- Head: ${plan.input.head} (${plan.resolved.headSha.slice(0, 12)})`,
     `- Merge base: ${plan.resolved.mergeBaseSha.slice(0, 12)}`,
     `- Changed paths: ${plan.paths.all.length}`,
+    `- Docs root: ${plan.docsRoot}`,
     `- Risk hints: ${plan.riskHints.join(", ") || "none"}`,
     "",
     "## Selected checks",
