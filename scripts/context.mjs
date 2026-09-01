@@ -102,13 +102,14 @@ async function markdownFiles(root, directory, recursive = false) {
   }
 }
 
-function git(root, args) {
+function git(root, args, { trim = true } = {}) {
   try {
-    return execFileSync("git", args, {
+    const output = execFileSync("git", args, {
       cwd: root,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
-    }).trim();
+    });
+    return trim ? output.trim() : output.replace(/[\r\n]+$/, "");
   } catch {
     return "";
   }
@@ -346,7 +347,7 @@ function enforceBudget(result) {
 async function buildContext(options) {
   const root = options.root;
   const branch = git(root, ["branch", "--show-current"]) || "unavailable";
-  const status = git(root, ["status", "--short"]);
+  const status = git(root, ["status", "--short"], { trim: false });
   const worktreeChangedPaths = status.split(/\r?\n/).filter(Boolean).map((line) => line.slice(3).trim()).filter(Boolean);
   const outgoing = options.base
     ? collectChangeScope({ root, base: options.base, head: options.head })
