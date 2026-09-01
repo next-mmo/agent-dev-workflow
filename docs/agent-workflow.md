@@ -129,8 +129,10 @@
 - For APIs, verify success, validation, authorization, failure and retry paths.
 - For data changes, prove forward migration, compatibility and rollback.
 - For deployment work, name the health signal and rollback trigger.
-- For a human-readable repository snapshot, run `npm run report`; treat the
-  generated `report/` files as a convenience view, not canonical evidence.
+- For a human-readable repository snapshot, run `npm run report`; the
+  generated `report/index.html` lets a reader navigate and view rendered
+  workflow sources in place, but treat the `report/` files as a convenience
+  view, not canonical evidence.
 
 ## Learning Loop
 

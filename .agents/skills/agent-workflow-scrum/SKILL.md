@@ -29,7 +29,7 @@ that it is unsupported and suggest `/kb:help`.
 | :--- | :--- |
 | `/kb:help` | List these prefixes and explain that they are skill conventions. |
 | `/kb:status` | Report task, PRD, branch, checks, blockers, and uncommitted changes; read-only. |
-| `/kb:report` | Generate a local HTML and JSON workflow snapshot under `report/`; never publish it. |
+| `/kb:report` | Generate a navigable local HTML and JSON workflow snapshot under `report/`; never publish it. |
 | `/kb:todo` | Create or refine a root `todo-*.md` backlog task; do not implement it. |
 | `/kb:plan` | Define outcome, acceptance, non-goals, risk, baseline, verification, and recovery. |
 | `/kb:define` | Clarify or update the change contract and acceptance criteria; do not broaden scope. |
@@ -103,8 +103,9 @@ Use the repository's package manager and scripts. In this project, that means
 `npm`, with commands defined in `docs/development.md`.
 
 For a human-readable snapshot, run `npm run report` (or `node
-scripts/report.mjs`). It writes ignored files to `report/`; tracked PRDs,
-tasks, evidence, and context remain canonical.
+scripts/report.mjs`). It writes ignored files to `report/`; the report is a
+navigable single-page view that renders tracked workflow sources in place, but
+tracked PRDs, tasks, evidence, and context remain canonical.
 
 ## Risk-scaled delivery
 

@@ -63,9 +63,14 @@ Generate a local HTML and JSON snapshot of the repository workflow state:
 npm run report
 ```
 
-Open `report/index.html` in a browser. The generated `report/`
-directory is ignored by Git and is not a canonical source of requirements or
-evidence.
+Open `report/index.html` in a browser. The report is a single-page view with a
+navigation sidebar; select any tracked markdown document (instructions,
+context, workflow or development guides, PRDs, tasks, or proposals) to read it
+rendered in place, or use the dashboard to see Git state and task/PRD
+summaries. The generated `report/` directory is ignored by Git and is not a
+canonical source of requirements or evidence. Markdown is rendered by
+`scripts/report.mjs` itself — no runtime dependency or network connection is
+needed.
 
 ## Project entry point
 

@@ -498,15 +498,20 @@ npm run report
 
 The command runs `scripts/report.mjs` and writes:
 
-- `report/index.html` — a standalone, responsive report with Git state,
-  active and completed tasks, indexed PRDs, and links to tracked source docs.
-- `report/report.json` — the same snapshot in a machine-readable format.
+- `report/index.html` — a standalone, responsive, single-page report with a
+  navigation sidebar and a dashboard summarizing Git state, active and
+  completed tasks, and indexed PRDs. Any tracked markdown source (instructions,
+  context, workflow and development guides, PRDs, tasks, and proposals) is
+  rendered in place: click a sidebar entry or table link to read that document
+  inside the report.
+- `report/report.json` — the same snapshot plus a machine-readable `documents`
+  index in a structured format.
 
 The output is intentionally ignored by Git. It is a convenience view, not a
 replacement for the tracked PRDs, tasks, evidence ledgers, `CONTEXT.md`, or
 human decisions. Open `report/index.html` in a browser after generating
-it. The report uses embedded CSS and local links, so it does not require a
-network connection or a running dev server.
+it. The report uses embedded CSS and no external assets or network requests,
+so it does not require a network connection or a running dev server.
 
 ## Development commands
 
