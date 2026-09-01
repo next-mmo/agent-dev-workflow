@@ -46,14 +46,17 @@ function addCheck(checks, id, command, reason, strength = "required") {
   checks.push({ id, command, reason, strength });
 }
 
+function workflowToolingTouched(paths) {
+  return paths.some((file) => /^(?:\.agents\/scripts|scripts)\/(?:context(?:-core)?\.mjs|context\/.*|change-scope(?:-core)?\.mjs|verify-plan(?:-core)?\.mjs|workflow-check(?:-core)?\.mjs|doc-check(?:-core)?\.mjs)$/.test(file));
+}
+
 export async function buildVerificationPlan(options = {}) {
   const plan = await buildCoreVerificationPlan(options);
   const root = plan.repositoryRoot;
   const paths = plan.paths.all;
   const scripts = await packageScripts(root);
 
-  const toolingTouched = paths.some((file) => /^(?:\.agents\/scripts|scripts)\/(?:context(?:-core)?(?:\.mjs|\/)|change-scope(?:-core)?\.mjs|verify-plan(?:-core)?\.mjs|workflow-check(?:-core)?\.mjs|doc-check(?:-core)?\.mjs)$/.test(file));
-  if (toolingTouched) {
+  if (workflowToolingTouched(paths)) {
     const focused = await focusedWorkflowTests(root);
     if (focused.length) {
       addCheck(

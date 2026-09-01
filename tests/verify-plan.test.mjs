@@ -15,7 +15,10 @@ function git(root, ...args) {
 
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "agent-verify-plan-"));
-  await mkdir(path.join(root, ".agents/scripts"), { recursive: true });
+  await Promise.all([
+    mkdir(path.join(root, ".agents/scripts"), { recursive: true }),
+    mkdir(path.join(root, "tests"), { recursive: true }),
+  ]);
   await writeFile(path.join(root, "package.json"), JSON.stringify({
     type: "module",
     scripts: {
@@ -26,6 +29,7 @@ async function fixture() {
     },
   }, null, 2), "utf8");
   await writeFile(path.join(root, skillScript), "#!/bin/sh\nexit 0\n", "utf8");
+  await writeFile(path.join(root, "tests/context-providers.test.mjs"), "// fixture focused test\n", "utf8");
   await writeFile(path.join(root, "README.md"), "# Fixture\n", "utf8");
   git(root, "init", "-q");
   git(root, "config", "user.email", "test@example.com");
@@ -92,6 +96,24 @@ test(".agents docs changes select workflow and documentation checks", async () =
     assert.ok(commands.includes("npm run docs:check"));
     assert.ok(plan.layers.docs.includes(`${docsRoot}/architecture.md`));
     assert.ok(plan.layers.workflow.includes(`${docsRoot}/architecture.md`));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("provider changes under .agents scripts select focused workflow regressions", async () => {
+  const { root, baseSha } = await fixture();
+  try {
+    const provider = path.join(root, ".agents/scripts/context/providers/example.mjs");
+    await mkdir(path.dirname(provider), { recursive: true });
+    await writeFile(provider, "export const provider = true;\n", "utf8");
+    git(root, "add", ".");
+    git(root, "commit", "-qm", "provider");
+
+    const plan = await buildVerificationPlan({ root, base: baseSha });
+    const commands = plan.checks.map((item) => item.command);
+    assert.ok(commands.some((command) => command.includes("node --test") && command.includes("tests/context-providers.test.mjs")));
+    assert.ok(plan.layers.providers.includes(".agents/scripts/context/providers/example.mjs"));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
