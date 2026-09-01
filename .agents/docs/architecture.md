@@ -1,6 +1,6 @@
 # Agent Workflow Scrum Architecture
 
-Read this before changing the workflow engine, context router, provider adapters, task/PRD lifecycle, or verification tooling. This page maps current composition and ownership. Decision rationale belongs in `docs/suggestions/`; detailed procedures belong in their owning guides.
+Read this before changing the workflow engine, context router, provider adapters, task/PRD lifecycle, or verification tooling. This page maps current composition and ownership. Decision rationale belongs in `.agents/docs/suggestions/`; detailed procedures belong in their owning guides.
 
 ## Four planes
 
@@ -68,10 +68,11 @@ The active task carries the current Change Contract and acceptance evidence. `ch
 | `AGENTS.md` | minimal standing repository orders | detailed procedures/history |
 | `CONTEXT.md` | durable memory/authority/recovery contract | task-specific implementation detail |
 | `.agents/skills/` | reusable agent workflows and specialized decision standards | product requirements |
-| `docs/prd/` | current product requirements and precedence | implementation evidence |
-| `docs/tasks/` | current increment/recovery state | reusable global policy |
-| `docs/tasks/done/` | completed claim-to-proof evidence | current task authority |
-| `docs/suggestions/` | workflow proposals, decisions, rationale | current product requirements |
+| `.agents/docs/` | long-form workflow docs and durable workflow artifacts | executable skill logic |
+| `.agents/docs/prd/` | current product requirements and precedence | implementation evidence |
+| `.agents/docs/tasks/` | current increment/recovery state | reusable global policy |
+| `.agents/docs/tasks/done/` | completed claim-to-proof evidence | current task authority |
+| `.agents/docs/suggestions/` | workflow proposals, decisions, rationale | current product requirements |
 | `scripts/context.mjs` | bounded context composition | approval/authorization |
 | `scripts/change-scope.mjs` | factual Git topology/path scope | test selection or base inference |
 | `scripts/verify-plan.mjs` | smallest-known check selection | proof that path-only inference is complete |
@@ -83,7 +84,7 @@ The active task carries the current Change Contract and acceptance evidence. `ch
 
 A context provider has three responsibilities: availability detection, bounded retrieval, and normalized advisory output. It must fail back to local context instead of failing the workflow. External output is untrusted data, common secret shapes are redacted, and provider quotas share the caller's one total context budget.
 
-Add another provider only when it supplies evidence not already represented cheaply by local routing. Keep provider-specific setup and CLI contracts in `references/providers.md`, not in the main skill router.
+Add another provider only when it supplies evidence not already represented cheaply by local routing. Keep provider-specific setup and CLI contracts in [the provider reference](../skills/agent-workflow-scrum/references/providers.md), not in the main skill router.
 
 ## Verification seam
 
@@ -100,15 +101,15 @@ Never make `change:scope` guess a base from branch names or upstream configurati
 
 | Goal | Owner |
 | :--- | :--- |
-| Change universal delivery/risk rules | `docs/agent-workflow.md` + approved suggestion |
+| Change universal delivery/risk rules | `.agents/docs/agent-workflow.md` + approved suggestion |
 | Change context selection/budgeting | `scripts/context.mjs` + context reference |
 | Add code/memory retrieval | provider adapter + provider reference |
 | Change Git outgoing-scope facts | `scripts/change-scope.mjs` |
 | Change check selection | `scripts/verify-plan.mjs` + testing policy |
 | Add deterministic lifecycle rule | `scripts/workflow-check.mjs` |
-| Add documentation/writing rule | `docs/AGENTS.md` or prose skill |
-| Add async/test reliability rule | `docs/testing.md`, `docs/defensive-patterns.md`, reliability reference |
+| Add documentation/writing rule | `.agents/docs/AGENTS.md` or prose skill |
+| Add async/test reliability rule | `.agents/docs/testing.md`, `.agents/docs/defensive-patterns.md`, reliability reference |
 | Change product behavior | affected PRD + active task + code/tests |
-| Preserve rationale/trade-off | `docs/suggestions/` |
+| Preserve rationale/trade-off | `.agents/docs/suggestions/` |
 
-When a change alters one of these ownership boundaries, update this map in the same change.
+When a change alters one of these ownership boundaries, update this map in the same change. Do not recreate a root `docs/` tree.
