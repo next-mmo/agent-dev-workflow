@@ -8,25 +8,37 @@
 
 ## Goal
 
-Make `.agents/` the single namespace for Agent Workflow Scrum's reusable skills, long-form workflow documentation, PRDs, tasks, suggestions, and evidence, eliminating the split between `.agents/` and a root `docs/` tree.
+Make `.agents/` the single reusable namespace for Agent Workflow Scrum's skills and durable workflow documentation/artifacts, eliminating the split between `.agents/` and legacy root `docs/` workflow paths without taking ownership of application documentation.
 
 ## Change Contract
 
-- **Human outcome:** the repository has no root `docs/` directory; agents find all workflow-owned durable documentation and artifacts under `.agents/docs/` without broken routing, checks, tests, or links.
-- **Acceptance evidence:** root tree has no `docs/`; `.agents/docs/` contains the prior documentation/artifact tree; context, scope, verification, workflow/doc checks, report generation, skills, and fixtures use the new root; fresh CI passes tests/build/checks.
-- **Non-goals:** do not move product source/tests into `.agents/`, change Graphify/OpenViking behavior, or make external providers mandatory.
+- **Human outcome:** agents find workflow-owned architecture, guidance, PRDs, tasks, suggestions, and evidence under `.agents/docs/` without broken routing, checks, tests, or links.
+- **Acceptance evidence:** canonical workflow files use `.agents/docs/`; root legacy workflow paths are absent; context, scope, verification, workflow/doc checks, report generation, skills, and fixtures use the new root; documentation governance rejects reintroduced legacy workflow paths but permits unrelated application docs; fresh CI passes tests/build/checks.
+- **Non-goals:** do not move `.agents/skills/`, product source/tests, or host application documentation into `.agents/docs/`; do not change Graphify/OpenViking behavior; do not rewrite historical evidence solely to erase old path mentions.
 - **Affected layers:** repository layout, standing instructions, context router, scope/verification/check/report scripts, skills, tests, CI-visible documentation links/budgets.
-- **Risk:** standard workflow migration; stale literal paths can silently disable retrieval or checks, so regression fixtures must run without a root `docs/` tree.
-- **Baseline:** workflow guidance/artifacts were split across `.agents/` and `docs/`.
-- **Verification plan:** complete test suite, build, strict workflow/context budgets, documentation budgets/links, skill audit, root-tree inspection, fresh PR CI.
-- **Recovery:** revert the relocation commit/tree and restore the prior `docs/` paths.
+- **Risk:** stale literal paths can silently disable retrieval or checks; over-broad namespace enforcement could incorrectly reject application-owned docs.
+- **Baseline:** Agent Workflow Scrum guidance/artifacts were split across `.agents/` and root `docs/`.
+- **Verification plan:** complete test suite, build, strict workflow/context budgets, documentation namespace/budget/link checks, skill audit, tree inspection, fresh PR CI.
+- **Recovery:** revert the relocation and restore the prior workflow artifact paths.
 
 ## Acceptance Criteria
 
-- [x] Root `docs/` tree is removed and previous content exists under `.agents/docs/`.
-- [x] Root instructions and shared context declare `.agents/docs/` canonical and forbid recreating root `docs/` for workflow artifacts.
+- [x] Workflow-owned root `docs/` paths are removed and prior content exists under `.agents/docs/`.
+- [x] Root README/instructions/shared context declare `.agents/docs/` canonical for workflow artifacts.
 - [x] Context routing reads PRDs/tasks from `.agents/docs/` and exposes `docsRoot` in its schema.
 - [x] Change-scope and verification planning classify `.agents/docs/` changes correctly.
 - [x] Workflow/doc checks and report generation read `.agents/docs/`.
-- [x] Core regression fixtures work without a root `docs/` directory.
-- [ ] Fresh final tests/build/checks and CI evidence are recorded.
+- [x] Canonical skill/document links use the relocated paths.
+- [x] Core regression fixtures work without a root workflow `docs/` tree.
+- [x] Documentation governance rejects legacy `docs/tasks|prd|suggestions/...` workflow paths while allowing unrelated application docs.
+- [ ] Fresh final tests/build/workflow/docs/skill checks and CI evidence are recorded.
+
+## Evidence Ledger
+
+| Claim | Evidence | Result |
+| :--- | :--- | :--- |
+| Namespace move | feature-branch tree and PR diff | Passed |
+| Consumers migrated | context/scope/plan/check/report sources + fixtures | Passed by inspection; automated run pending |
+| Host application docs remain allowed | negative-control fixture with `docs/product-guide.md` | Test implemented; run pending |
+| Legacy workflow paths are rejected | negative-control fixture with `docs/tasks/todo-legacy.md` | Test implemented; run pending |
+| Full regression/build/check suite | GitHub Actions on final tree | Pending |
