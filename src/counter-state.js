@@ -2,27 +2,40 @@ const STORAGE_KEY = 'counter_app_state';
 
 export class CounterState {
   constructor(initial = {}) {
-    const { count = 0, step = 1, theme = 'dark' } = initial ?? {};
+    const { count = 0, step = 1, theme = 'dark', undoCount = null } = initial ?? {};
     this.count = Number.isFinite(count) ? count : 0;
     this.step = Number.isFinite(step) && step > 0 ? step : 1;
     this.theme = theme === 'light' ? 'light' : 'dark';
+    this.undoCount = Number.isFinite(undoCount) ? undoCount : null;
     this.listeners = new Set();
   }
 
   increment() {
+    this.undoCount = this.count;
     this.count += this.step;
     this.notify();
     return this.count;
   }
 
   decrement() {
+    this.undoCount = this.count;
     this.count -= this.step;
     this.notify();
     return this.count;
   }
 
   reset() {
+    if (this.count === 0) return this.count;
+    this.undoCount = this.count;
     this.count = 0;
+    this.notify();
+    return this.count;
+  }
+
+  undo() {
+    if (this.undoCount === null) return this.count;
+    this.count = this.undoCount;
+    this.undoCount = null;
     this.notify();
     return this.count;
   }
@@ -52,7 +65,12 @@ export class CounterState {
   }
 
   toJSON() {
-    return { count: this.count, step: this.step, theme: this.theme };
+    return {
+      count: this.count,
+      step: this.step,
+      theme: this.theme,
+      undoCount: this.undoCount,
+    };
   }
 
   saveToStorage(storage = globalThis.localStorage, key = STORAGE_KEY) {

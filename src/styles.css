@@ -49,9 +49,33 @@ button:hover {
   filter: brightness(1.08);
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+input {
+  min-width: 0;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--control);
+  color: inherit;
+  font: inherit;
+}
+
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+input[aria-invalid='true'] {
+  border-color: #ef4444;
 }
 
 .counter-card {
@@ -95,6 +119,24 @@ button:focus-visible {
   gap: 0.5rem;
 }
 
+.custom-step-form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.custom-step-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+}
+
+.field-error {
+  min-height: 1.2em;
+  margin: 0;
+  color: #fca5a5;
+  font-size: 0.8rem;
+}
+
 .group-label,
 .shortcuts-hint {
   color: var(--muted);
@@ -127,6 +169,11 @@ button:focus-visible {
 }
 
 .btn-reset {
+  grid-column: 1 / -1;
+  background: transparent;
+}
+
+.btn-undo {
   grid-column: 1 / -1;
   background: transparent;
 }

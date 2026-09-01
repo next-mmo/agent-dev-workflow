@@ -8,6 +8,17 @@
 - Destructive, production, infrastructure, auth, or external-system writes
   require explicit scope and a rollback path.
 
+## Shared Context and Memory
+
+- Read [`CONTEXT.md`](CONTEXT.md) before non-trivial work. It is the tracked,
+  cross-agent context map for terminology, authority, recovery, and handoff.
+- Chat history, personal memory, and agent-local memory are helpful recall
+  layers, not the source of truth for team requirements or decisions.
+- Use tracked PRDs, tasks, evidence, and decisions to carry work between
+  Codex, ChatGPT, Claude, Cursor, and future sessions.
+- Keep `.agents/skills/` canonical; regenerate or check target adapters with
+  `scripts/skill.sh` instead of editing generated files directly.
+
 ## Package Manager
 
 - Use **npm**: `npm ci`, `npm run dev`, `npm test`, `npm run build`.
@@ -39,3 +50,8 @@
 ## Commit Attribution
 
 - AI commits include `Co-Authored-By: <agent name> <agent-email>`.
+
+workflow & inspired ref:
+https://github.com/everyinc/compound-engineering-plugin
+https://github.com/bmad-code-org/bmad-method
+https://github.com/YSAA1/harness-workflow

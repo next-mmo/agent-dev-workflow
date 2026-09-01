@@ -19,7 +19,7 @@
 
 | PRD      | Title                 | Status   | Summary                                                                     |
 | :------- | :-------------------- | :------- | :-------------------------------------------------------------------------- |
-| **0001** | Counter Core Features | **done** | Stateful counter, step controls, localStorage persistence, and theme toggle |
+| **0001** | Counter Core Features | **done** | Stateful counter, preset/custom step controls, localStorage persistence, theme toggle, accessible step selection, and one-level undo |
 
 <!-- markdownlint-enable MD013 -->
 

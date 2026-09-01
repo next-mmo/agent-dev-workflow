@@ -21,21 +21,33 @@
     <section class="step-selector-group">
       <span class="group-label">Step Size</span>
       <div class="step-buttons">
-        <button class="step-btn active" data-step="1">1</button>
-        <button class="step-btn" data-step="5">5</button>
-        <button class="step-btn" data-step="10">10</button>
-        <button class="step-btn" data-step="50">50</button>
+        <button class="step-btn active" data-step="1" aria-pressed="true">1</button>
+        <button class="step-btn" data-step="5" aria-pressed="false">5</button>
+        <button class="step-btn" data-step="10" aria-pressed="false">10</button>
+        <button class="step-btn" data-step="50" aria-pressed="false">50</button>
       </div>
+    </section>
+
+    <section class="custom-step-group">
+      <form id="custom-step-form" class="custom-step-form" novalidate>
+        <label class="group-label" for="custom-step">Custom Step Size</label>
+        <div class="custom-step-controls">
+          <input id="custom-step" name="custom-step" type="number" min="0.1" step="any" inputmode="decimal" value="1" aria-describedby="custom-step-error" />
+          <button id="btn-apply-step" type="submit">Apply</button>
+        </div>
+        <p id="custom-step-error" class="field-error" role="alert" aria-live="polite"></p>
+      </form>
     </section>
 
     <section class="action-buttons-grid">
       <button id="btn-dec" class="btn-action btn-dec" aria-label="Decrement Count">−</button>
       <button id="btn-inc" class="btn-action btn-inc" aria-label="Increment Count">+</button>
+      <button id="btn-undo" class="btn-undo" aria-label="Undo Last Count Action" disabled>Undo (Z)</button>
       <button id="btn-reset" class="btn-reset" aria-label="Reset Count to Zero">Reset to 0 (R)</button>
     </section>
 
     <footer class="shortcuts-hint">
-      Shortcuts: <code>↑ / +</code> Inc &nbsp;•&nbsp; <code>↓ / -</code> Dec &nbsp;•&nbsp; <code>R</code> Reset
+      Shortcuts: <code>↑ / +</code> Inc &nbsp;•&nbsp; <code>↓ / -</code> Dec &nbsp;•&nbsp; <code>R</code> Reset &nbsp;•&nbsp; <code>Z</code> Undo
     </footer>
   </main>
 
