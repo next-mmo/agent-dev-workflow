@@ -8,12 +8,12 @@
   },
   "scripts": {
     "dev": "vite",
-    "report": "node scripts/report.mjs",
-    "context": "node scripts/context.mjs",
-    "change:scope": "node scripts/change-scope.mjs",
-    "verify:plan": "node scripts/verify-plan.mjs",
-    "workflow:check": "node scripts/workflow-check.mjs",
-    "docs:check": "node scripts/doc-check.mjs",
+    "report": "node .agents/scripts/report.mjs",
+    "context": "node .agents/scripts/context.mjs",
+    "change:scope": "node .agents/scripts/change-scope.mjs",
+    "verify:plan": "node .agents/scripts/verify-plan.mjs",
+    "workflow:check": "node .agents/scripts/workflow-check.mjs",
+    "docs:check": "node .agents/scripts/doc-check.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test tests/*.test.cjs tests/*.test.mjs"

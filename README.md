@@ -7,6 +7,7 @@ The Counter App is only an executable demo. The workflow is intended to move int
 ## Core design
 
 - `.agents/skills/` — canonical executable agent guidance.
+- `.agents/scripts/` — dependency-light workflow tooling, context providers, checks, and adapter helpers.
 - `.agents/docs/` — all workflow-owned long-form docs and durable artifacts: architecture, testing, PRDs, tasks, suggestions, development guidance, and evidence.
 - `AGENTS.md` + `CONTEXT.md` — compact standing orders and shared authority/recovery contract.
 - `npm run context` — bounded L0/L1/L2 context routing.
@@ -126,7 +127,7 @@ npm run workflow:check
 npm run docs:check
 npm test
 npm run build
-bash scripts/skill.sh check
+bash .agents/scripts/skill.sh check
 ```
 
 For outgoing work first establish scope:
@@ -141,8 +142,8 @@ npm run verify:plan -- --base <verified-ref>
 `.agents/skills/` is canonical.
 
 ```bash
-bash scripts/skill.sh init all
-bash scripts/skill.sh check all
+bash .agents/scripts/skill.sh init all
+bash .agents/scripts/skill.sh check all
 ```
 
 - ChatGPT/Codex consume the canonical Agent Skills layout directly.
@@ -157,38 +158,33 @@ Copy the workflow foundation:
 
 ```text
 .agents/
-scripts/skill.sh
-scripts/context.mjs
-scripts/context/providers/
-scripts/change-scope.mjs
-scripts/verify-plan.mjs
-scripts/workflow-check.mjs
-scripts/doc-check.mjs
-scripts/report.mjs
+  docs/
+  scripts/
+  skills/
 AGENTS.md
 CONTEXT.md
 CLAUDE.md
 ```
 
-Then adapt runtime/build/test rules in `AGENTS.md`, replace demo PRDs/tasks under `.agents/docs/`, initialize agent adapters, and wire the scripts into the target package manager/CI. Keep Graphify and OpenViking optional.
+Then adapt runtime/build/test rules in `AGENTS.md`, replace demo PRDs/tasks under `.agents/docs/`, initialize agent adapters, and wire `.agents/scripts/` into the target package manager/CI. Keep Graphify and OpenViking optional.
 
 ## Repository map
 
 ```text
 .agents/
   docs/                            architecture, testing, PRDs, tasks, suggestions, evidence
+  scripts/context.mjs              progressive context router
+  scripts/context/providers/       optional Graphify/OpenViking adapters
+  scripts/change-scope.mjs         exact outgoing-scope report
+  scripts/verify-plan.mjs          scope-aware verification selector
+  scripts/workflow-check.mjs       workflow consistency checks
+  scripts/doc-check.mjs            doc/link/token-budget checks
+  scripts/skill.sh                 agent adapter generation/drift audit
+  scripts/report.mjs               local workflow report
   skills/                          canonical agent skills + focused references
-AGENTS.md                          compact standing repository instructions
-CONTEXT.md                         durable authority/recovery/context contract
-scripts/context.mjs               progressive context router
-scripts/context/providers/        optional Graphify/OpenViking adapters
-scripts/change-scope.mjs          exact outgoing-scope report
-scripts/verify-plan.mjs           scope-aware verification selector
-scripts/workflow-check.mjs        workflow consistency checks
-scripts/doc-check.mjs             doc/link/token-budget checks
-scripts/skill.sh                  agent adapter generation/drift audit
-scripts/report.mjs                local workflow report
-src/ + tests/                     executable Counter demo
+AGENTS.md                           compact standing repository instructions
+CONTEXT.md                          durable authority/recovery/context contract
+src/ + tests/                      executable Counter demo
 ```
 
 ## Safety boundary

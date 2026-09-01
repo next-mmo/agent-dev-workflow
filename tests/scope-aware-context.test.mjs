@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(testDirectory, "..");
-const contextScript = path.join(repositoryRoot, "scripts/context.mjs");
+const contextScript = path.join(repositoryRoot, ".agents/scripts/context.mjs");
 const docsRoot = ".agents/docs";
 
 function git(root, ...args) {

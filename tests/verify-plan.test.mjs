@@ -4,9 +4,10 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { buildVerificationPlan } from "../scripts/verify-plan.mjs";
+import { buildVerificationPlan } from "../.agents/scripts/verify-plan.mjs";
 
 const docsRoot = ".agents/docs";
+const skillScript = ".agents/scripts/skill.sh";
 
 function git(root, ...args) {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
@@ -14,17 +15,17 @@ function git(root, ...args) {
 
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "agent-verify-plan-"));
-  await mkdir(path.join(root, "scripts"), { recursive: true });
+  await mkdir(path.join(root, ".agents/scripts"), { recursive: true });
   await writeFile(path.join(root, "package.json"), JSON.stringify({
     type: "module",
     scripts: {
       test: "node --test",
       build: "echo build",
-      "workflow:check": "node scripts/check.mjs",
-      "docs:check": "node scripts/doc-check.mjs",
+      "workflow:check": "node .agents/scripts/check.mjs",
+      "docs:check": "node .agents/scripts/doc-check.mjs",
     },
   }, null, 2), "utf8");
-  await writeFile(path.join(root, "scripts/skill.sh"), "#!/bin/sh\nexit 0\n", "utf8");
+  await writeFile(path.join(root, skillScript), "#!/bin/sh\nexit 0\n", "utf8");
   await writeFile(path.join(root, "README.md"), "# Fixture\n", "utf8");
   git(root, "init", "-q");
   git(root, "config", "user.email", "test@example.com");
@@ -49,7 +50,7 @@ test("product changes select tests and build without inventing unrelated checks"
     assert.equal(plan.docsRoot, docsRoot);
     assert.ok(commands.includes("npm test"));
     assert.ok(commands.includes("npm run build"));
-    assert.ok(!commands.includes("scripts/skill.sh check"));
+    assert.ok(!commands.includes(`${skillScript} check`));
     assert.ok(!commands.includes("npm run docs:check"));
     assert.ok(plan.layers.product.includes("src/app.js"));
   } finally {
@@ -69,7 +70,7 @@ test("skill changes select workflow, docs, and adapter checks but skip product b
     const commands = plan.checks.map((item) => item.command);
     assert.ok(commands.includes("npm run workflow:check -- --strict-budget"));
     assert.ok(commands.includes("npm run docs:check"));
-    assert.ok(commands.includes("scripts/skill.sh check"));
+    assert.ok(commands.includes(`${skillScript} check`));
     assert.ok(!commands.includes("npm run build"));
     assert.ok(plan.layers.workflow.includes(".agents/skills/example/SKILL.md"));
   } finally {
