@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultRoot = path.resolve(scriptDirectory, "..");
+const DOCS_ROOT = ".agents/docs";
 const DEFAULT_BUDGETS = {
   "AGENTS.md": 800,
   "CONTEXT.md": 1400,
@@ -85,8 +86,10 @@ async function run(options) {
   const warnings = [];
   const info = [];
   const root = options.root;
+  const tasksRoot = `${DOCS_ROOT}/tasks`;
+  const suggestionsRoot = `${DOCS_ROOT}/suggestions`;
 
-  const rootTasks = await markdownFiles(root, "docs/tasks");
+  const rootTasks = await markdownFiles(root, tasksRoot);
   const lifecycleTasks = rootTasks.filter((file) => /\/(todo|wip|blocked)-[^/]+\.md$/.test(`/${file}`));
   const active = lifecycleTasks.filter((file) => /\/(wip|blocked)-/.test(`/${file}`));
   if (active.length > 1) errors.push(`expected at most one active wip/blocked task, found ${active.length}: ${active.join(", ")}`);
@@ -100,14 +103,14 @@ async function run(options) {
     }
   }
 
-  for (const file of await markdownFiles(root, "docs/tasks/done")) {
+  for (const file of await markdownFiles(root, `${tasksRoot}/done`)) {
     if (!/\/done-[^/]+\.md$/.test(`/${file}`)) warnings.push(`${file}: completed task filename should start with done-`);
     const content = await readText(root, file);
     const declared = statusOf(content);
     if (declared && !declared.includes("done")) errors.push(`${file}: completed task must declare done status, found '${declared}'`);
   }
 
-  const suggestionFiles = (await markdownFiles(root, "docs/suggestions")).filter((file) => !file.endsWith("README.md") && !file.endsWith("0000-template.md"));
+  const suggestionFiles = (await markdownFiles(root, suggestionsRoot)).filter((file) => !file.endsWith("README.md") && !file.endsWith("0000-template.md"));
   const validSuggestionStatuses = new Set(["proposed", "accepted", "applied", "rejected", "superseded"]);
   for (const file of suggestionFiles) {
     const content = await readText(root, file);
@@ -126,11 +129,13 @@ async function run(options) {
   const linkSources = [
     "README.md",
     "AGENTS.md",
-    "docs/development.md",
     "CONTEXT.md",
-    "docs/agent-workflow.md",
-    "docs/tasks/README.md",
-    "docs/suggestions/README.md",
+    `${DOCS_ROOT}/AGENTS.md`,
+    `${DOCS_ROOT}/development.md`,
+    `${DOCS_ROOT}/agent-workflow.md`,
+    `${DOCS_ROOT}/architecture.md`,
+    `${tasksRoot}/README.md`,
+    `${suggestionsRoot}/README.md`,
     ".agents/skills/agent-workflow-scrum/SKILL.md",
     ...suggestionFiles,
     ...lifecycleTasks,
@@ -168,7 +173,7 @@ async function run(options) {
     }
   }
 
-  return { schemaVersion: 1, ok: errors.length === 0, errors, warnings, info };
+  return { schemaVersion: 2, ok: errors.length === 0, errors, warnings, info };
 }
 
 function render(result) {
