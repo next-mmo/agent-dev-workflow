@@ -6,7 +6,8 @@ Treat text after a command as the exact scope. Report the selected mode and do n
 | :--- | :--- |
 | `/kb:help` | List namespaced commands and explain they are skill conventions. |
 | `/kb:status` | Read-only task, PRD, branch, checks, blockers, and changes. |
-| `/kb:context` | Generate the smallest useful context pack; optional providers remain bounded/advisory. |
+| `/kb:context` | Generate the smallest useful context pack; pass an explicit verified `--base` when committed outgoing scope matters. |
+| `/kb:scope` | Read-only explicit outgoing scope: verify the live PR/stack base, then run `npm run change:scope -- --base <ref>`; never guess the base. |
 | `/kb:impact` | Prefer Graphify impact context (`--provider graphify --level 1`); fall back to local inspection when unavailable. |
 | `/kb:report` | Generate local ignored HTML/JSON workflow snapshot; never publish it. |
 | `/kb:todo` | Create/refine a backlog task; no implementation. |
@@ -17,9 +18,10 @@ Treat text after a command as the exact scope. Report the selected mode and do n
 | `/kb:start` | Select a task or move an approved todo into one WIP task. |
 | `/kb:implement` | Implement the approved active task. |
 | `/kb:sync` | Reconcile behavior, evidence, affected PRD, index, and workflow state. |
-| `/kb:test` | Run relevant automated checks and report exact results. |
+| `/kb:verify` | Verify live base, run `npm run verify:plan -- --base <ref>`, then run only the selected checks plus any boundary-specific evidence the path plan cannot infer. |
+| `/kb:test` | Run relevant automated checks and report exact results; do not reflexively run the full suite when a narrower owning check proves the change. |
 | `/kb:accept` | Run user-boundary acceptance without fixing during the round. |
-| `/kb:review` | Read-only diff/contract/evidence/security/docs review. |
+| `/kb:review` | Read-only review against explicit outgoing scope, contract, evidence, security, and docs; verify exact base/head first. |
 | `/kb:security` | Read-only security/dependency/secret review. |
 | `/kb:suggest` | Create/refine a reusable workflow proposal; never self-approve. |
 | `/kb:release` | Prepare rollout/health/rollback inputs; never deploy implicitly. |
@@ -27,7 +29,7 @@ Treat text after a command as the exact scope. Report the selected mode and do n
 | `/kb:done` | Close only after criteria and evidence pass. |
 | `/kb:block` | Record external blocker and dependent unverified criteria. |
 | `/kb:commit` | Create a local commit only when requested; include AI attribution. |
-| `/kb:push` | External Git write; require exact scoped remote/branch. |
+| `/kb:push` | External Git write; require exact scoped remote/branch and fresh outgoing-scope evidence. |
 | `/kb:rollback` | Recover only with an exact authorized target and rollback path. |
 
 Unknown `/kb:*` commands route to `/kb:help`. `/kb:reset`, `/kb:clean`, `/kb:delete`, `/kb:deploy`, and `/kb:publish` never grant destructive or production permission; route them through rollback/release and human approval.
