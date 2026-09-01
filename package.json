@@ -10,7 +10,10 @@
     "dev": "vite",
     "report": "node scripts/report.mjs",
     "context": "node scripts/context.mjs",
+    "change:scope": "node scripts/change-scope.mjs",
+    "verify:plan": "node scripts/verify-plan.mjs",
     "workflow:check": "node scripts/workflow-check.mjs",
+    "docs:check": "node scripts/doc-check.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test tests/*.test.cjs tests/*.test.mjs"
