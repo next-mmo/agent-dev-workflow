@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <title>Counter App — Workflow Example</title>
+  <link rel="stylesheet" href="./src/styles.css" />
+</head>
+<body>
+  <main class="counter-card" role="region" aria-label="Interactive Counter">
+    <header class="counter-header">
+      <h1 class="counter-title">Counter App</h1>
+      <button id="btn-theme" class="theme-toggle-btn" aria-label="Toggle Theme">☀️</button>
+    </header>
+
+    <section class="display-section">
+      <div id="count-display" class="count-display" aria-live="polite">0</div>
+    </section>
+
+    <section class="step-selector-group">
+      <span class="group-label">Step Size</span>
+      <div class="step-buttons">
+        <button class="step-btn active" data-step="1">1</button>
+        <button class="step-btn" data-step="5">5</button>
+        <button class="step-btn" data-step="10">10</button>
+        <button class="step-btn" data-step="50">50</button>
+      </div>
+    </section>
+
+    <section class="action-buttons-grid">
+      <button id="btn-dec" class="btn-action btn-dec" aria-label="Decrement Count">−</button>
+      <button id="btn-inc" class="btn-action btn-inc" aria-label="Increment Count">+</button>
+      <button id="btn-reset" class="btn-reset" aria-label="Reset Count to Zero">Reset to 0 (R)</button>
+    </section>
+
+    <footer class="shortcuts-hint">
+      Shortcuts: <code>↑ / +</code> Inc &nbsp;•&nbsp; <code>↓ / -</code> Dec &nbsp;•&nbsp; <code>R</code> Reset
+    </footer>
+  </main>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "name": "counter-app",
+  "version": "1.0.0",
+  "description": "Lightweight, stateful counter app with theme toggle and persistence",
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test tests/*.test.cjs"
+  },
+  "keywords": [
+    "counter",
+    "workflow",
+    "example"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^8.0.0"
+  }
+}
