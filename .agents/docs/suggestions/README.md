@@ -1,5 +1,7 @@
 # Workflow Suggestions
 
+Suggestions are durable Agent Workflow Scrum policy records and live only under `.agents/docs/suggestions/`.
+
 ## Purpose
 
 - Capture reusable, evidence-backed improvements to agent delivery.
@@ -10,12 +12,10 @@
 
 - Use `NNNN-kebab-case-title.md`.
 - Reserve `0000-template.md` as the proposal template.
-- Search this directory before creating a file; strengthen or supersede an
-  existing proposal instead of duplicating it.
+- Search this directory before creating a file; strengthen or supersede an existing proposal instead of duplicating it.
+- Do not create workflow suggestions under a root `docs/` tree.
 
 ## Status
-
-<!-- markdownlint-disable MD013 -->
 
 | Status | Meaning | Authority |
 | :--- | :--- | :--- |
@@ -24,8 +24,6 @@
 | `applied` | Approved change is in canonical docs or automation | Agent may apply after approval |
 | `rejected` | Human declines the proposal | Human decision only |
 | `superseded` | A newer proposal replaces it | Human approval or documented prior decision |
-
-<!-- markdownlint-enable MD013 -->
 
 ## Proposal Rules
 
