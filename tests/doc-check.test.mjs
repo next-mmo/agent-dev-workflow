@@ -9,20 +9,25 @@ import { fileURLToPath } from "node:url";
 const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(testDirectory, "..");
 const docCheck = path.join(repositoryRoot, "scripts/doc-check.mjs");
+const docsRoot = ".agents/docs";
 
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "agent-doc-check-"));
-  await mkdir(path.join(root, "docs"), { recursive: true });
-  await writeFile(path.join(root, "AGENTS.md"), "# Agents\nRead [docs](docs/guide.md).\n", "utf8");
-  await writeFile(path.join(root, "docs/guide.md"), "# Guide\nUseful current-state guidance.\n", "utf8");
-  await writeFile(path.join(root, "docs/doc-budgets.json"), JSON.stringify({
+  await mkdir(path.join(root, docsRoot), { recursive: true });
+  await writeFile(path.join(root, "AGENTS.md"), "# Agents\nRead [guide](.agents/docs/guide.md).\n", "utf8");
+  await writeFile(path.join(root, docsRoot, "guide.md"), "# Guide\nUseful current-state guidance.\n", "utf8");
+  await writeFile(path.join(root, docsRoot, "doc-budgets.json"), JSON.stringify({
     "AGENTS.md": 100,
-    "docs/guide.md": 100,
+    [`${docsRoot}/guide.md`]: 100,
   }, null, 2), "utf8");
   return root;
 }
 
-test("documentation checker accepts bounded docs and valid relative links", async () => {
+function run(root) {
+  return spawnSync(process.execPath, [docCheck, "--root", root, "--json"], { encoding: "utf8" });
+}
+
+test("documentation checker accepts bounded .agents docs and valid relative links", async () => {
   const root = await fixture();
   try {
     const output = execFileSync(process.execPath, [docCheck, "--root", root, "--json"], { encoding: "utf8" });
@@ -34,15 +39,35 @@ test("documentation checker accepts bounded docs and valid relative links", asyn
   }
 });
 
-test("documentation checker rejects budget overflow and broken links", async () => {
+test("documentation checker rejects budget overflow and broken links under .agents docs", async () => {
   const root = await fixture();
   try {
-    await writeFile(path.join(root, "AGENTS.md"), `# Agents\n${"x".repeat(500)}\n[missing](docs/missing.md)\n`, "utf8");
-    const result = spawnSync(process.execPath, [docCheck, "--root", root, "--json"], { encoding: "utf8" });
+    await writeFile(path.join(root, "AGENTS.md"), `# Agents\n${"x".repeat(500)}\n[missing](.agents/docs/missing.md)\n`, "utf8");
+    const result = run(root);
     assert.notEqual(result.status, 0);
     const parsed = JSON.parse(result.stdout);
     assert.ok(parsed.errors.some((error) => error.includes("exceeds documentation budget")));
     assert.ok(parsed.errors.some((error) => error.includes("broken relative link")));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("documentation checker rejects legacy workflow artifacts in root docs but allows application docs", async () => {
+  const root = await fixture();
+  try {
+    await mkdir(path.join(root, "docs"), { recursive: true });
+    await writeFile(path.join(root, "docs/product-guide.md"), "# Product Guide\nApplication-owned docs are allowed.\n", "utf8");
+    const allowed = run(root);
+    assert.equal(allowed.status, 0, allowed.stderr);
+
+    await mkdir(path.join(root, "docs/tasks"), { recursive: true });
+    await writeFile(path.join(root, "docs/tasks/todo-legacy.md"), "# Legacy Workflow Task\n", "utf8");
+    const rejected = run(root);
+    assert.notEqual(rejected.status, 0);
+    const parsed = JSON.parse(rejected.stdout);
+    assert.ok(parsed.errors.some((error) => error.includes("legacy Agent Workflow Scrum docs")));
+    assert.ok(parsed.errors.some((error) => error.includes("docs/tasks")));
   } finally {
     await rm(root, { recursive: true, force: true });
   }

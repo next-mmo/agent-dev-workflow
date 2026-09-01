@@ -3,11 +3,11 @@
   "CONTEXT.md": 1400,
   ".agents/skills/agent-workflow-scrum/SKILL.md": 900,
   ".agents/skills/agent-workflow-prose/SKILL.md": 1000,
-  "docs/AGENTS.md": 900,
-  "docs/architecture.md": 1800,
-  "docs/development.md": 1600,
-  "docs/testing.md": 1200,
-  "docs/defensive-patterns.md": 1000,
+  ".agents/docs/AGENTS.md": 900,
+  ".agents/docs/architecture.md": 1800,
+  ".agents/docs/development.md": 1600,
+  ".agents/docs/testing.md": 1200,
+  ".agents/docs/defensive-patterns.md": 1000,
   "scripts/AGENTS.md": 700,
   "tests/AGENTS.md": 700
 }

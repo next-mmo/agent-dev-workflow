@@ -11,7 +11,7 @@ Optimize for the human outcome, the smallest safe change, and the smallest suffi
 
 For non-trivial work, generate L0 context with `npm run context -- "<scope>"`. Escalate to L1 only when necessary and to L2/`--full` only for explicit deep review or unresolved conflicts. For review/push of committed work, verify the live base and pass `--base <ref>` so clean-worktree commits are included. Follow [context routing](references/context-routing.md).
 
-Read [`docs/architecture.md`](../../../docs/architecture.md) before changing workflow/context/provider/verification ownership or extension points. Local repository retrieval is always on; Graphify/OpenViking remain optional. Follow [provider rules](references/providers.md).
+Read [`.agents/docs/architecture.md`](../../docs/architecture.md) before changing workflow/context/provider/verification ownership or extension points. `.agents/docs/` owns durable workflow documentation, PRDs, tasks, suggestions, and evidence; do not recreate a root `docs/` tree. Local repository retrieval is always on; Graphify/OpenViking remain optional. Follow [provider rules](references/providers.md).
 
 Inspect current Git state and affected code before edits. Load only the reference/skill needed for the current mode:
 

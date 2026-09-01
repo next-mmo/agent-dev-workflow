@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(testDirectory, "..");
 const contextScript = path.join(repositoryRoot, "scripts/context.mjs");
+const docsRoot = ".agents/docs";
 
 function git(root, ...args) {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
@@ -16,10 +17,10 @@ function git(root, ...args) {
 
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "agent-scope-context-"));
-  await mkdir(path.join(root, "docs/prd"), { recursive: true });
+  await mkdir(path.join(root, docsRoot, "prd"), { recursive: true });
   await writeFile(path.join(root, "AGENTS.md"), "# Instructions\nUse repository evidence.\n", "utf8");
   await writeFile(path.join(root, "CONTEXT.md"), "# Context\nAuthentication is security sensitive.\n", "utf8");
-  await writeFile(path.join(root, "docs/prd/0000-prd-index.md"), "# PRD Index\n", "utf8");
+  await writeFile(path.join(root, docsRoot, "prd/0000-prd-index.md"), "# PRD Index\n", "utf8");
   git(root, "init", "-q");
   git(root, "config", "user.email", "test@example.com");
   git(root, "config", "user.name", "Test");
@@ -34,7 +35,7 @@ async function fixture() {
   return { root, baseSha };
 }
 
-test("context with explicit base sees committed branch changes and keeps authority axes separate", async () => {
+test("context with explicit base sees committed branch changes, .agents docs, and separate authority axes", async () => {
   const { root, baseSha } = await fixture();
   try {
     const output = execFileSync(
@@ -43,7 +44,8 @@ test("context with explicit base sees committed branch changes and keeps authori
       { cwd: repositoryRoot, encoding: "utf8" },
     );
     const result = JSON.parse(output);
-    assert.equal(result.schemaVersion, 4);
+    assert.equal(result.schemaVersion, 5);
+    assert.equal(result.docsRoot, docsRoot);
     assert.deepEqual(result.git.changedPaths, ["src/auth-session.js"]);
     assert.deepEqual(result.git.outgoing.committedPaths, ["src/auth-session.js"]);
     assert.equal(result.git.outgoing.base, baseSha);

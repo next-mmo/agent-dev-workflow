@@ -3,13 +3,11 @@
 > Status: done  
 > Created: 2026-09-02  
 > Updated: 2026-09-02  
-> Related Tasks: `docs/tasks/done/done-0019-0001-counter-history.md`
+> Related Tasks: `.agents/docs/tasks/done/done-0021-0001-counter-history.md`
 
 ## 1. Problem Statement
 
-Users can change the count quickly, but cannot review what they just did. A
-small local history gives feedback and makes reset/undo behavior easier to
-understand without adding a server dependency.
+Users can change the count quickly, but cannot review what they just did. A small local history gives feedback and makes reset/undo behavior easier to understand without adding a server dependency.
 
 ## 2. Product Requirements
 

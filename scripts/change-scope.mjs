@@ -2,8 +2,9 @@ import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const FORMAT_VERSION = 1;
+const FORMAT_VERSION = 2;
 const MAX_BUFFER = 32 * 1024 * 1024;
+const DOCS_ROOT = ".agents/docs";
 
 function runGit(cwd, args, { binary = false, context = "git command failed" } = {}) {
   const result = spawnSync("git", ["-C", cwd, "-c", "core.fsmonitor=false", ...args], {
@@ -83,14 +84,15 @@ function diffPaths(root, args, context) {
 
 function pathLayers(file) {
   const value = file.replaceAll("\\", "/");
+  const docsPrefix = `${DOCS_ROOT.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/`;
   const layers = new Set();
   if (/^(src\/|index\.html$|public\/)/.test(value)) layers.add("product");
   if (/^tests\/|\.(?:test|spec)\.[cm]?[jt]sx?$/.test(value)) layers.add("tests");
-  if (/^(README\.md$|docs\/)/.test(value)) layers.add("docs");
-  if (/^docs\/prd\//.test(value)) layers.add("prd");
-  if (/^docs\/tasks\//.test(value)) layers.add("tasks");
-  if (/^docs\/suggestions\//.test(value)) layers.add("governance");
-  if (/^(AGENTS\.md$|CONTEXT\.md$|\.agents\/|scripts\/(?:context|workflow-check|change-scope|verify-plan))/.test(value)) layers.add("workflow");
+  if (value === "README.md" || value.startsWith(`${DOCS_ROOT}/`)) layers.add("docs");
+  if (new RegExp(`^${docsPrefix}prd/`).test(value)) layers.add("prd");
+  if (new RegExp(`^${docsPrefix}tasks/`).test(value)) layers.add("tasks");
+  if (new RegExp(`^${docsPrefix}suggestions/`).test(value)) layers.add("governance");
+  if (/^(AGENTS\.md$|CONTEXT\.md$|\.agents\/|scripts\/(?:context|workflow-check|change-scope|verify-plan|doc-check))/.test(value)) layers.add("workflow");
   if (/^scripts\/context\/providers\//.test(value)) layers.add("providers");
   if (/^\.github\//.test(value)) layers.add("ci");
   if (/^(package(?:-lock)?\.json$|pnpm-lock\.yaml$|yarn\.lock$|Cargo\.(?:toml|lock)$|go\.(?:mod|sum)$|pyproject\.toml$)/.test(value)) layers.add("dependencies");
@@ -129,6 +131,7 @@ export function collectChangeScope({ root = process.cwd(), base, head = "HEAD" }
   return {
     formatVersion: FORMAT_VERSION,
     repositoryRoot: repoRoot,
+    docsRoot: DOCS_ROOT,
     input: { base, head },
     resolved: { baseSha, headSha, mergeBaseSha },
     paths: { ...paths, all },

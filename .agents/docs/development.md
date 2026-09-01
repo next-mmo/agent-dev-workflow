@@ -8,6 +8,15 @@
 
 Vite 8 is a local development dependency. Prefer `npm ci` for the locked dependency set; use `npm install` only when intentionally updating the lockfile.
 
+## Repository documentation layout
+
+Agent Workflow Scrum keeps its reusable material under `.agents/`:
+
+- `.agents/skills/` — executable/reusable agent guidance;
+- `.agents/docs/` — architecture, delivery/testing guidance, PRDs, tasks, suggestions, and evidence.
+
+Do not create Agent Workflow Scrum artifacts under a root `docs/` tree. A repository adopting this workflow may still keep its own application/product documentation in `docs/`; only workflow-owned artifacts are reserved for `.agents/docs/`.
+
 ## Run locally
 
 ```bash
@@ -89,16 +98,18 @@ The plan is a routing aid. File paths cannot prove behavior reached only through
 
 For async/resource-owning tests or CI, use `.agents/skills/agent-workflow-scrum/references/reliability.md`: allocate resources atomically, synchronize on observable state rather than sleeps, restore global state exactly, and await teardown to quiescence.
 
-## Workflow consistency
+## Workflow and documentation consistency
 
-Run mechanical lifecycle, link, suggestion-state, and context-budget checks:
+Run mechanical lifecycle, suggestion-state, link, namespace, and context-budget checks:
 
 ```bash
 npm run workflow:check
 node scripts/workflow-check.mjs --strict-budget
+npm run docs:check
+bash scripts/skill.sh check
 ```
 
-The normal command treats token-budget overruns as warnings; `--strict-budget` fails them. Structural errors such as multiple active tasks, lifecycle/status mismatches, broken tracked Markdown links, or applied suggestions without a recorded decision always fail.
+`workflow:check` validates task/suggestion lifecycle and core context budgets. `docs:check` validates standing-document budgets, repository-relative links, and rejects legacy Agent Workflow Scrum artifacts under root `docs/` while allowing application-owned documentation there.
 
 ## Workflow report
 

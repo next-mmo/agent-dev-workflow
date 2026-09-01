@@ -10,24 +10,25 @@ const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(testDirectory, "..");
 const contextScript = path.join(repositoryRoot, "scripts/context.mjs");
 const checkScript = path.join(repositoryRoot, "scripts/workflow-check.mjs");
+const docsRoot = ".agents/docs";
 
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "agent-workflow-"));
   await Promise.all([
-    mkdir(path.join(root, "docs/tasks/done"), { recursive: true }),
-    mkdir(path.join(root, "docs/prd"), { recursive: true }),
-    mkdir(path.join(root, "docs/suggestions"), { recursive: true }),
+    mkdir(path.join(root, docsRoot, "tasks/done"), { recursive: true }),
+    mkdir(path.join(root, docsRoot, "prd"), { recursive: true }),
+    mkdir(path.join(root, docsRoot, "suggestions"), { recursive: true }),
     mkdir(path.join(root, ".agents/skills/agent-workflow-scrum/references"), { recursive: true }),
   ]);
   const files = {
     "AGENTS.md": "# Agent Instructions\nRead [CONTEXT.md](CONTEXT.md).\n",
     "CONTEXT.md": "# Context\nAuthentication work is high risk. Use the active task and relevant PRD.\n",
-    "docs/agent-workflow.md": "# Workflow\n",
-    "docs/tasks/README.md": "# Tasks\n",
-    "docs/prd/0000-prd-index.md": "# PRD Index\n- [Auth](0001-auth.md)\n",
-    "docs/prd/0001-auth.md": "# Authentication\nSessions expire safely. Authorization denial paths must be tested.\n",
-    "docs/tasks/wip-0001-0001-auth.md": "# Task Auth\n> **Status:** wip\nImplement session timeout and verify authorization.\n",
-    "docs/suggestions/README.md": "# Suggestions\n",
+    [`${docsRoot}/agent-workflow.md`]: "# Workflow\n",
+    [`${docsRoot}/tasks/README.md`]: "# Tasks\n",
+    [`${docsRoot}/prd/0000-prd-index.md`]: "# PRD Index\n- [Auth](0001-auth.md)\n",
+    [`${docsRoot}/prd/0001-auth.md`]: "# Authentication\nSessions expire safely. Authorization denial paths must be tested.\n",
+    [`${docsRoot}/tasks/wip-0001-0001-auth.md`]: "# Task Auth\n> **Status:** wip\nImplement session timeout and verify authorization.\n",
+    [`${docsRoot}/suggestions/README.md`]: "# Suggestions\n",
     ".agents/skills/agent-workflow-scrum/SKILL.md": "---\nname: agent-workflow-scrum\ndescription: test\n---\n# Skill\nSee [context](references/context-routing.md).\n",
     ".agents/skills/agent-workflow-scrum/references/context-routing.md": "# Context Routing\n",
   };
@@ -52,6 +53,7 @@ test("context router prioritizes active task and security rules", async () => {
   const root = await fixture();
   try {
     const result = runJson(contextScript, ["session timeout", "--root", root]);
+    assert.equal(result.docsRoot, docsRoot);
     assert.equal(result.activeTasks.length, 1);
     assert.equal(result.selected[0].kind, "active-task");
     assert.ok(result.ruleHints.includes("security"));
@@ -88,7 +90,7 @@ test("workflow checker rejects multiple active tasks", async () => {
   const root = await fixture();
   try {
     await writeFile(
-      path.join(root, "docs/tasks/blocked-0002-0001-other.md"),
+      path.join(root, docsRoot, "tasks/blocked-0002-0001-other.md"),
       "# Other\n> **Status:** blocked\nWaiting for a decision.\n",
       "utf8",
     );
@@ -119,7 +121,7 @@ test("workflow checker rejects applied suggestions without a human decision", as
   const root = await fixture();
   try {
     await writeFile(
-      path.join(root, "docs/suggestions/0001-policy.md"),
+      path.join(root, docsRoot, "suggestions/0001-policy.md"),
       "# Suggestion\n> **Status:** applied\n\n## Human Decision\n- **Decision:** pending\n",
       "utf8",
     );
