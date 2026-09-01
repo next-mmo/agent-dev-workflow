@@ -9,20 +9,21 @@ import { fileURLToPath } from "node:url";
 const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(testDirectory, "..");
 const contextScript = path.join(repositoryRoot, "scripts/context.mjs");
+const docsRoot = ".agents/docs";
 
 async function fixture({ graph = false } = {}) {
   const root = await mkdtemp(path.join(os.tmpdir(), "agent-context-provider-"));
   await Promise.all([
-    mkdir(path.join(root, "docs/tasks"), { recursive: true }),
-    mkdir(path.join(root, "docs/prd"), { recursive: true }),
+    mkdir(path.join(root, docsRoot, "tasks"), { recursive: true }),
+    mkdir(path.join(root, docsRoot, "prd"), { recursive: true }),
     mkdir(path.join(root, "graphify-out"), { recursive: true }),
   ]);
   const files = {
     "AGENTS.md": "# Agent Instructions\nUse repository evidence.\n",
     "CONTEXT.md": "# Context\nAuthentication sessions are high risk.\n",
-    "docs/prd/0000-prd-index.md": "# PRD Index\nAuth\n",
-    "docs/prd/0001-auth.md": "# Auth PRD\nSession timeout and authorization.\n",
-    "docs/tasks/wip-0001-0001-auth.md": "# Auth Task\n> **Status:** wip\nImplement session timeout.\n",
+    [`${docsRoot}/prd/0000-prd-index.md`]: "# PRD Index\nAuth\n",
+    [`${docsRoot}/prd/0001-auth.md`]: "# Auth PRD\nSession timeout and authorization.\n",
+    [`${docsRoot}/tasks/wip-0001-0001-auth.md`]: "# Auth Task\n> **Status:** wip\nImplement session timeout.\n",
   };
   if (graph) files["graphify-out/graph.json"] = "{}\n";
   await Promise.all(Object.entries(files).map(async ([file, content]) => {
@@ -65,6 +66,7 @@ test("auto mode uses Graphify when a local graph is ready", async () => {
       GRAPHIFY_BIN: process.execPath,
       GRAPHIFY_BIN_ARGS: JSON.stringify([fake.script]),
     });
+    assert.equal(result.docsRoot, docsRoot);
     assert.equal(result.providerMode, "auto");
     assert.equal(provider(result, "graphify").status, "ok");
     assert.match(provider(result, "graphify").content, /EXTRACTED/);
