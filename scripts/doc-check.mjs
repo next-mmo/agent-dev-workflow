@@ -4,7 +4,21 @@ import { fileURLToPath } from "node:url";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultRoot = path.resolve(scriptDirectory, "..");
-const DEFAULT_BUDGET_FILE = ".agents/docs/doc-budgets.json";
+const DOCS_ROOT = ".agents/docs";
+const DEFAULT_BUDGET_FILE = `${DOCS_ROOT}/doc-budgets.json`;
+const LEGACY_WORKFLOW_PATHS = [
+  "docs/AGENTS.md",
+  "docs/agent-workflow.md",
+  "docs/architecture.md",
+  "docs/defensive-patterns.md",
+  "docs/development.md",
+  "docs/doc-budgets.json",
+  "docs/model-recommend.md",
+  "docs/testing.md",
+  "docs/prd",
+  "docs/tasks",
+  "docs/suggestions",
+];
 
 function parseArgs(argv) {
   const options = { root: defaultRoot, json: false, budgetFile: DEFAULT_BUDGET_FILE };
@@ -96,6 +110,14 @@ async function run(options) {
   const info = [];
   const budgets = await loadBudgets(options.root, options.budgetFile);
 
+  const legacyWorkflowPaths = [];
+  for (const relativePath of LEGACY_WORKFLOW_PATHS) {
+    if (await exists(path.join(options.root, relativePath))) legacyWorkflowPaths.push(relativePath);
+  }
+  if (legacyWorkflowPaths.length) {
+    errors.push(`legacy Agent Workflow Scrum docs found outside ${DOCS_ROOT}/: ${legacyWorkflowPaths.join(", ")}`);
+  }
+
   for (const [file, budget] of Object.entries(budgets)) {
     const content = await readText(options.root, file);
     if (content === null) {
@@ -109,7 +131,7 @@ async function run(options) {
   }
 
   const sources = new Set(["README.md", "AGENTS.md", "CONTEXT.md"]);
-  for (const directory of [".agents/docs", ".agents/skills", "scripts", "tests"]) {
+  for (const directory of [DOCS_ROOT, ".agents/skills", "scripts", "tests"]) {
     for (const file of await markdownFiles(options.root, directory)) sources.add(file);
   }
 
@@ -122,7 +144,7 @@ async function run(options) {
     }
   }
 
-  return { schemaVersion: 1, ok: errors.length === 0, errors, warnings, info };
+  return { schemaVersion: 2, ok: errors.length === 0, errors, warnings, info };
 }
 
 function render(result) {
