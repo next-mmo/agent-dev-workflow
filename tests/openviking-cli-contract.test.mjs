@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { retrieveOpenViking } from "../scripts/context/providers/openviking.mjs";
+import { retrieveOpenViking } from "../.agents/scripts/context/providers/openviking.mjs";
 
 test("OpenViking adapter places global JSON output flag before find", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "openviking-contract-"));

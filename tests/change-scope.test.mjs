@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { collectChangeScope } from "../scripts/change-scope.mjs";
+import { classifyChangedPaths, collectChangeScope } from "../.agents/scripts/change-scope.mjs";
 
 const docsRoot = ".agents/docs";
 
@@ -55,6 +55,13 @@ test("change scope reports committed and every dirty layer against an explicit b
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test(".agents script providers stay classified as workflow and provider changes", () => {
+  const providerPath = ".agents/scripts/context/providers/openviking.mjs";
+  const layers = classifyChangedPaths([providerPath]);
+  assert.deepEqual(layers.providers, [providerPath]);
+  assert.deepEqual(layers.workflow, [providerPath]);
 });
 
 test("change scope refuses to guess a base", async () => {

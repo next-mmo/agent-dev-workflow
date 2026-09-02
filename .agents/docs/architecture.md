@@ -68,15 +68,16 @@ The active task carries the current Change Contract and acceptance evidence. `ch
 | `AGENTS.md` | minimal standing repository orders | detailed procedures/history |
 | `CONTEXT.md` | durable memory/authority/recovery contract | task-specific implementation detail |
 | `.agents/skills/` | reusable agent workflows and specialized decision standards | product requirements |
+| `.agents/scripts/` | dependency-light workflow executables, provider adapters, and mechanical checks | product requirements or human approvals |
 | `.agents/docs/` | long-form workflow docs and durable workflow artifacts | executable skill logic |
 | `.agents/docs/prd/` | current product requirements and precedence | implementation evidence |
 | `.agents/docs/tasks/` | current increment/recovery state | reusable global policy |
 | `.agents/docs/tasks/done/` | completed claim-to-proof evidence | current task authority |
 | `.agents/docs/suggestions/` | workflow proposals, decisions, rationale | current product requirements |
-| `scripts/context.mjs` | bounded context composition | approval/authorization |
-| `scripts/change-scope.mjs` | factual Git topology/path scope | test selection or base inference |
-| `scripts/verify-plan.mjs` | smallest-known check selection | proof that path-only inference is complete |
-| `scripts/workflow-check.mjs` | deterministic workflow consistency | semantic product correctness |
+| `.agents/scripts/context.mjs` | bounded context composition | approval/authorization |
+| `.agents/scripts/change-scope.mjs` | factual Git topology/path scope | test selection or base inference |
+| `.agents/scripts/verify-plan.mjs` | smallest-known check selection | proof that path-only inference is complete |
+| `.agents/scripts/workflow-check.mjs` | deterministic workflow consistency | semantic product correctness |
 | Graphify adapter | derived code relationship evidence | canonical code/runtime truth |
 | OpenViking adapter | semantic recall | authoritative requirements/decisions |
 
@@ -102,11 +103,11 @@ Never make `change:scope` guess a base from branch names or upstream configurati
 | Goal | Owner |
 | :--- | :--- |
 | Change universal delivery/risk rules | `.agents/docs/agent-workflow.md` + approved suggestion |
-| Change context selection/budgeting | `scripts/context.mjs` + context reference |
+| Change context selection/budgeting | `.agents/scripts/context.mjs` + context reference |
 | Add code/memory retrieval | provider adapter + provider reference |
-| Change Git outgoing-scope facts | `scripts/change-scope.mjs` |
-| Change check selection | `scripts/verify-plan.mjs` + testing policy |
-| Add deterministic lifecycle rule | `scripts/workflow-check.mjs` |
+| Change Git outgoing-scope facts | `.agents/scripts/change-scope.mjs` |
+| Change check selection | `.agents/scripts/verify-plan.mjs` + testing policy |
+| Add deterministic lifecycle rule | `.agents/scripts/workflow-check.mjs` |
 | Add documentation/writing rule | `.agents/docs/AGENTS.md` or prose skill |
 | Add async/test reliability rule | `.agents/docs/testing.md`, `.agents/docs/defensive-patterns.md`, reliability reference |
 | Change product behavior | affected PRD + active task + code/tests |

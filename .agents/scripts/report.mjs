@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
-const root = path.resolve(scriptDirectory, "..");
+const root = path.resolve(scriptDirectory, "../..");
 const docsRoot = ".agents/docs";
 const reportDir = path.join(root, "report");
 

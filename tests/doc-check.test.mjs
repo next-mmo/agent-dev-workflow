@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(testDirectory, "..");
-const docCheck = path.join(repositoryRoot, "scripts/doc-check.mjs");
+const docCheck = path.join(repositoryRoot, ".agents/scripts/doc-check.mjs");
 const docsRoot = ".agents/docs";
 
 async function fixture() {

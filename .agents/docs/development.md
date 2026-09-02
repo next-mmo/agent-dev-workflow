@@ -13,6 +13,7 @@ Vite 8 is a local development dependency. Prefer `npm ci` for the locked depende
 Agent Workflow Scrum keeps its reusable material under `.agents/`:
 
 - `.agents/skills/` — executable/reusable agent guidance;
+- `.agents/scripts/` — dependency-light workflow tooling and optional provider adapters;
 - `.agents/docs/` — architecture, delivery/testing guidance, PRDs, tasks, suggestions, and evidence.
 
 Do not create Agent Workflow Scrum artifacts under a root `docs/` tree. A repository adopting this workflow may still keep its own application/product documentation in `docs/`; only workflow-owned artifacts are reserved for `.agents/docs/`.
@@ -104,9 +105,9 @@ Run mechanical lifecycle, suggestion-state, link, namespace, and context-budget 
 
 ```bash
 npm run workflow:check
-node scripts/workflow-check.mjs --strict-budget
+node .agents/scripts/workflow-check.mjs --strict-budget
 npm run docs:check
-bash scripts/skill.sh check
+bash .agents/scripts/skill.sh check
 ```
 
 `workflow:check` validates task/suggestion lifecycle and core context budgets. `docs:check` validates standing-document budgets, repository-relative links, and rejects legacy Agent Workflow Scrum artifacts under root `docs/` while allowing application-owned documentation there.
@@ -117,7 +118,7 @@ bash scripts/skill.sh check
 npm run report
 ```
 
-Open `report/index.html`. It is a generated, ignored convenience view of Git/task/PRD/workflow sources, not canonical evidence. `scripts/report.mjs` is self-contained and requires no network connection at runtime.
+Open `report/index.html`. It is a generated, ignored convenience view of Git/task/PRD/workflow sources, not canonical evidence. `.agents/scripts/report.mjs` is self-contained and requires no network connection at runtime.
 
 ## Project entry point
 
