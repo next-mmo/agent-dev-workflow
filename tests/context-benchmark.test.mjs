@@ -79,3 +79,21 @@ test("context benchmark has concise human-readable output", async () => {
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("context benchmark tolerates tracked files deleted in the current worktree", async () => {
+  const root = await fixture();
+  try {
+    await rm(path.join(root, ".agents/docs/tasks/wip-0001-0001-auth.md"));
+    const output = execFileSync(
+      process.execPath,
+      [benchmarkScript, "authorization", "--root", root, "--provider", "local", "--budget", "500", "--json"],
+      { cwd: repositoryRoot, encoding: "utf8" },
+    );
+    const result = JSON.parse(output);
+    assert.equal(result.schemaVersion, 1);
+    assert.ok(result.raw.files >= 10);
+    assert.ok(result.bounded.tokens <= result.bounded.budgetTokens);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

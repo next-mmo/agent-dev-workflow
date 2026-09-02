@@ -72,7 +72,13 @@ function collectRawBaseline(root) {
   let files = 0;
   let characters = 0;
   for (const file of gitFiles(root)) {
-    const content = readFileSync(path.join(root, file));
+    let content;
+    try {
+      content = readFileSync(path.join(root, file));
+    } catch (error) {
+      if (error?.code === "ENOENT") continue;
+      throw error;
+    }
     if (!isText(content)) continue;
     files += 1;
     characters += content.toString("utf8").length;
