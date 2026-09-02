@@ -34,6 +34,8 @@ Run the demo:
 npm run dev
 ```
 
+For a new developer's required baseline, use `/kb:setup` in an agent session. Use `/kb:full-setup` for all supported repository-local setup, including generated Claude/Cursor adapters. Graphify, OpenViking, and remote services remain explicit opt-in integrations.
+
 ## Smart context
 
 Start non-trivial work with a small routing pack instead of dumping the whole repository history into the model:
@@ -104,6 +106,8 @@ Detailed delivery rules: [`.agents/docs/agent-workflow.md`](.agents/docs/agent-w
 
 ```text
 /kb:context   smallest relevant context pack
+/kb:setup     required local prerequisites, dependencies, and checks
+/kb:full-setup all supported local setup, including agent adapters
 /kb:scope     exact committed + dirty outgoing scope
 /kb:impact    Graphify-first code impact; local fallback
 /kb:status    task/PRD/branch/check state

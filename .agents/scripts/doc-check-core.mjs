@@ -88,6 +88,17 @@ function relativeMarkdownLinks(markdown) {
   return links;
 }
 
+function legacyInlineWorkflowPaths(markdown) {
+  const paths = [];
+  const regex = /`((?:\.\/)?docs\/(?:AGENTS\.md|agent-workflow\.md|architecture\.md|defensive-patterns\.md|development\.md|doc-budgets\.json|model-recommend\.md|testing\.md|prd(?:\/[^`\s]+)?|tasks(?:\/[^`\s]+)?|suggestions(?:\/[^`\s]+)?))`/g;
+  for (const match of String(markdown || "").matchAll(regex)) {
+    const line = String(markdown).slice(0, match.index).split(/\r?\n/).pop() || "";
+    if (/\blegacy\b|\bhistorical\b|\brejected\b/i.test(line)) continue;
+    paths.push(match[1].replace(/^\.\//, ""));
+  }
+  return [...new Set(paths)];
+}
+
 async function loadBudgets(root, relativePath) {
   const content = await readText(root, relativePath);
   if (content === null) throw new Error(`documentation budget file not found: ${relativePath}`);
@@ -141,6 +152,12 @@ async function run(options) {
     for (const href of relativeMarkdownLinks(content)) {
       const target = normalizePath(path.normalize(path.join(path.dirname(source), href)));
       if (!await exists(path.join(options.root, target))) errors.push(`${source}: broken relative link '${href}' -> ${target}`);
+    }
+    for (const href of legacyInlineWorkflowPaths(content)) {
+      const canonical = normalizePath(path.join(".agents", href));
+      if (await exists(path.join(options.root, canonical))) {
+        errors.push(`${source}: stale inline workflow path '${href}'; use '${canonical}'`);
+      }
     }
   }
 

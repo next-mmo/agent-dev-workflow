@@ -27,7 +27,7 @@ Improve agent success rate and token/runtime efficiency by making review/context
 - [x] Generated context separates decision authority from observation evidence.
 - [x] `verify:plan` selects narrow known checks and names limitations of path-only inference.
 - [x] Root + `docs/`, `scripts/`, and `tests/` instructions load ownership rules at the narrowest useful scope.
-- [x] `docs/architecture.md` maps workflow planes, owners, provider seam, verification seam, and extension points.
+- [x] `.agents/docs/architecture.md` maps workflow planes, owners, provider seam, verification seam, and extension points.
 - [x] Prose and reliability guidance are specialized/on-demand instead of inflating the default Scrum skill.
 - [x] `docs:check` enforces standing-document token budgets and relative-link validity; CI runs it.
 - [x] `/kb:scope` and `/kb:verify` are documented without turning startup into a universal checklist.
@@ -59,10 +59,10 @@ Improve agent success rate and token/runtime efficiency by making review/context
 - `CONTEXT.md`: ~1199 / 1400
 - `.agents/skills/agent-workflow-scrum/SKILL.md`: ~821 / 900
 - `.agents/skills/agent-workflow-prose/SKILL.md`: ~878 / 1000
-- `docs/architecture.md`: ~1506 / 1800
-- `docs/AGENTS.md`: ~631 / 900
-- `docs/testing.md`: ~875 / 1200
-- `docs/defensive-patterns.md`: ~760 / 1000
+- `.agents/docs/architecture.md`: ~1506 / 1800
+- `.agents/docs/AGENTS.md`: ~631 / 900
+- `.agents/docs/testing.md`: ~875 / 1200
+- `.agents/docs/defensive-patterns.md`: ~760 / 1000
 - `scripts/AGENTS.md`: ~393 / 700
 - `tests/AGENTS.md`: ~384 / 700
 

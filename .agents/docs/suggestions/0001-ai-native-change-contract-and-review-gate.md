@@ -4,7 +4,7 @@
 > **Created:** 2026-09-01
 > **Proposed by:** Codex
 > **Decision owner:** Human
-> **Canonical targets:** `AGENTS.md`, `docs/agent-workflow.md`, `docs/suggestions/README.md`, suggestion template
+> **Canonical targets:** `AGENTS.md`, `.agents/docs/agent-workflow.md`, `.agents/docs/suggestions/README.md`, suggestion template
 
 ## Observation
 

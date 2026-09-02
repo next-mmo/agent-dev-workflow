@@ -77,8 +77,8 @@ tracked workflow document rendered in place.
 - **Outcome:** `report/index.html` is now a navigable single-page report. The
   sidebar and dashboard let a reader browse and read rendered workflow sources
   in place, and `report/report.json` exposes a `documents` index for tooling.
-- **Changed files:** `scripts/report.mjs`, `README.md`, `docs/development.md`,
-  `docs/agent-workflow.md`, the canonical workflow skill, generated ignored
+- **Changed files:** `.agents/scripts/report.mjs`, `README.md`, `.agents/docs/development.md`,
+  `.agents/docs/agent-workflow.md`, the canonical workflow skill, generated ignored
   adapters, and this completed task record.
 - **Skipped:** A visual browser click-through was not captured as a screenshot.
   Navigation correctness was verified structurally (every link resolves to a

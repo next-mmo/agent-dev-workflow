@@ -69,6 +69,6 @@
 
 ## Application Evidence
 
-- **Changed canonical files:** `AGENTS.md`, `CONTEXT.md`, `README.md`, `.agents/skills/agent-workflow-scrum/`, `docs/development.md`, package scripts, workflow tooling/tests.
+- **Changed canonical files:** `AGENTS.md`, `CONTEXT.md`, `README.md`, `.agents/skills/agent-workflow-scrum/`, `.agents/docs/development.md`, package scripts, workflow tooling/tests.
 - **Verification:** Node syntax and 16/16 combined tests passed; strict workflow/context-budget fixture checks passed.
 - **Follow-up:** Measure ranking quality on several larger real repositories before adding an optional code-graph or long-memory provider.

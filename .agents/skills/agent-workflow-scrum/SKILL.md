@@ -25,7 +25,7 @@ Inspect current Git state and affected code before edits. Load only the referenc
 ## Command Namespace
 
 Only `/kb:` belongs to this skill. Supported commands:
-`/kb:help` `/kb:status` `/kb:context` `/kb:scope` `/kb:impact` `/kb:report` `/kb:todo` `/kb:plan` `/kb:define` `/kb:baseline` `/kb:design` `/kb:start` `/kb:implement` `/kb:sync` `/kb:verify` `/kb:test` `/kb:accept` `/kb:review` `/kb:security` `/kb:suggest` `/kb:release` `/kb:handoff` `/kb:done` `/kb:block` `/kb:commit` `/kb:push` `/kb:rollback`.
+`/kb:help` `/kb:setup` `/kb:full-setup` `/kb:status` `/kb:context` `/kb:scope` `/kb:impact` `/kb:report` `/kb:todo` `/kb:plan` `/kb:define` `/kb:baseline` `/kb:design` `/kb:start` `/kb:implement` `/kb:sync` `/kb:verify` `/kb:test` `/kb:accept` `/kb:review` `/kb:security` `/kb:suggest` `/kb:release` `/kb:handoff` `/kb:done` `/kb:block` `/kb:commit` `/kb:push` `/kb:rollback`.
 
 Bare host commands remain unclaimed. Guarded destructive aliases never grant permission. See [commands](references/commands.md).
 

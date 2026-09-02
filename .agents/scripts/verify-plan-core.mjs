@@ -42,11 +42,19 @@ function addCheck(checks, id, command, reason, strength = "required") {
   checks.push({ id, command, reason, strength });
 }
 
+function workflowCheckCommand(input) {
+  const args = ["--strict-budget"];
+  if (input.base) args.push("--base", input.base);
+  if (input.head !== "HEAD") args.push("--head", input.head);
+  return `npm run workflow:check -- ${args.join(" ")}`;
+}
+
 async function focusedWorkflowTests(root) {
   const candidates = [
     "tests/workflow-tools.test.mjs",
     "tests/context-providers.test.mjs",
     "tests/context-budget-contract.test.mjs",
+    "tests/context-benchmark.test.mjs",
     "tests/openviking-cli-contract.test.mjs",
     "tests/change-scope.test.mjs",
     "tests/verify-plan.test.mjs",
@@ -75,9 +83,9 @@ export async function buildVerificationPlan({ root = process.cwd(), base, head =
   ]);
   const skillsTouched = matchesAny(paths, [/^\.agents\/skills\//]);
   const workflowToolingTouched = matchesAny(paths, [
-    /^scripts\/context(?:\.mjs|\/)/,
-    /^scripts\/(?:change-scope|verify-plan|workflow-check|doc-check)\.mjs$/,
-    /^tests\/(?:workflow-tools|context-providers|context-budget-contract|openviking-cli-contract|change-scope|verify-plan|scope-aware-context|doc-check)\.test\.mjs$/,
+    /^(?:\.agents\/)?scripts\/context(?:\.mjs|\/)/,
+    /^(?:\.agents\/)?scripts\/(?:context-benchmark|change-scope|verify-plan|workflow-check|doc-check)\.mjs$/,
+    /^tests\/(?:workflow-tools|context-providers|context-budget-contract|context-benchmark|openviking-cli-contract|change-scope|verify-plan|scope-aware-context|doc-check)\.test\.mjs$/,
   ]);
   const productTouched = matchesAny(paths, [/^src\//, /^index\.html$/, /^public\//]);
   const testTouched = matchesAny(paths, [/^tests\//, /\.(?:test|spec)\.[cm]?[jt]sx?$/]);
@@ -104,7 +112,7 @@ export async function buildVerificationPlan({ root = process.cwd(), base, head =
   addCheck(checks, "diff-staged", "git diff --cached --check", "Reject whitespace errors in the staged index.");
 
   if (workflowTouched && scripts["workflow:check"]) {
-    addCheck(checks, "workflow", "npm run workflow:check -- --strict-budget", "Workflow/task/suggestion/link/context-budget state changed.");
+    addCheck(checks, "workflow", workflowCheckCommand(scope.input), "Workflow/task/suggestion/link/context-budget state changed; verify product synchronization against the explicit outgoing base when supplied.");
   }
 
   if (docsTouched && scripts["docs:check"]) {

@@ -1,6 +1,8 @@
+import { spawnSync } from "node:child_process";
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { collectChangeScope } from "./change-scope.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultRoot = path.resolve(scriptDirectory, "..");
@@ -12,14 +14,17 @@ const DEFAULT_BUDGETS = {
 };
 
 function parseArgs(argv) {
-  const options = { root: defaultRoot, json: false, strictBudget: false };
+  const options = { root: defaultRoot, json: false, strictBudget: false, base: "", head: "HEAD" };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--json") options.json = true;
     else if (arg === "--strict-budget") options.strictBudget = true;
     else if (arg === "--root") options.root = path.resolve(argv[++index] || "");
+    else if (arg === "--base") options.base = argv[++index] || "";
+    else if (arg === "--head") options.head = argv[++index] || "";
     else throw new Error(`unknown option: ${arg}`);
   }
+  if (options.head !== "HEAD" && !options.base) throw new Error("--head requires --base <verified-ref>");
   return options;
 }
 
@@ -72,6 +77,90 @@ function relativeMarkdownLinks(markdown) {
   return links;
 }
 
+function gitStatusPaths(root) {
+  const result = spawnSync("git", ["-C", root, "-c", "core.fsmonitor=false", "status", "--porcelain=v1", "--untracked-files=all", "--"], {
+    encoding: "utf8",
+    env: { ...process.env, GIT_OPTIONAL_LOCKS: "0", LANG: "C", LC_ALL: "C" },
+    windowsHide: true,
+  });
+  if (result.status !== 0) {
+    const detail = result.error?.message || String(result.stderr || "").trim() || `git exited with status ${result.status}`;
+    throw new Error(`cannot inspect Git worktree: ${detail}`);
+  }
+  const paths = [];
+  for (const line of String(result.stdout || "").split(/\r?\n/).filter(Boolean)) {
+    let file = line.slice(3);
+    const renameSeparator = file.lastIndexOf(" -> ");
+    if (renameSeparator >= 0) file = file.slice(renameSeparator + 4);
+    if (file) paths.push(file.replaceAll("\\", "/"));
+  }
+  return [...new Set(paths)].sort();
+}
+
+function isProductPath(file) {
+  return /^(?:src\/|index\.html$|public\/)/.test(file);
+}
+
+function taskPrdReferences(markdown) {
+  const references = [];
+  const field = /^\s*>\s*\*{0,2}(?:Related\s+)?PRD\*{0,2}:\s*(.+)$/gim;
+  for (const match of String(markdown || "").matchAll(field)) {
+    for (const reference of match[1].matchAll(/`([^`]+\.md)`/g)) references.push(reference[1].replaceAll("\\", "/"));
+  }
+  return [...new Set(references)];
+}
+
+function prdId(file) {
+  return path.posix.basename(file).match(/^(\d{4})-/)?.[1] || "";
+}
+
+async function validateProductSynchronization({ root, changedPaths, active, errors, info }) {
+  const productPaths = changedPaths.filter(isProductPath);
+  if (!productPaths.length) return;
+  info.push(`product synchronization: ${productPaths.length} product path(s) require task/PRD/evidence metadata`);
+
+  const changedDone = changedPaths
+    .filter((file) => /^\.agents\/docs\/tasks\/done\/done-[^/]+\.md$/.test(file))
+    .sort();
+  let taskFile = "";
+  if (active.length === 1) taskFile = active[0];
+  else if (active.length === 0 && changedDone.length === 1) taskFile = changedDone[0];
+  else if (active.length === 0) errors.push("product changes require one active wip/blocked task or one changed completed task with evidence");
+
+  if (!taskFile) {
+    if (changedDone.length > 1) errors.push(`product changes have multiple changed completed tasks; select one increment: ${changedDone.join(", ")}`);
+    return;
+  }
+
+  const task = await readText(root, taskFile);
+  if (task === null) {
+    errors.push(`${taskFile}: synchronized product task is missing`);
+    return;
+  }
+
+  const prdReferences = taskPrdReferences(task).filter((file) => file.startsWith(`${DOCS_ROOT}/prd/`));
+  if (!prdReferences.length) {
+    errors.push(`${taskFile}: product changes must declare a canonical PRD field such as \`${DOCS_ROOT}/prd/0001-example.md\``);
+  }
+
+  const index = await readText(root, `${DOCS_ROOT}/prd/0000-prd-index.md`);
+  for (const reference of prdReferences) {
+    if (!await exists(path.join(root, reference))) errors.push(`${taskFile}: referenced PRD does not exist: ${reference}`);
+    const id = prdId(reference);
+    if (id && index && !new RegExp(`(?:^|[^0-9])${id}(?:[^0-9]|$)`).test(index)) {
+      errors.push(`${taskFile}: referenced PRD ${id} is missing from ${DOCS_ROOT}/prd/0000-prd-index.md`);
+    }
+  }
+  if (index === null) errors.push(`missing ${DOCS_ROOT}/prd/0000-prd-index.md for product synchronization`);
+  if (!/^##\s+[^\n]*Acceptance Criteria/im.test(task)) errors.push(`${taskFile}: product task must include an Acceptance Criteria section`);
+  const evidenceHeading = task.match(/^##\s+Evidence Ledger\s*$/im);
+  const evidence = evidenceHeading
+    ? task.slice((evidenceHeading.index || 0) + evidenceHeading[0].length).replace(/^\s+/, "").split(/^##\s+/m, 1)[0].trim()
+    : "";
+  if (!evidence) errors.push(`${taskFile}: product task must include a non-empty Evidence Ledger section`);
+  else if (/\/tasks\/done\//.test(taskFile) && /\bpending\b/i.test(evidence)) errors.push(`${taskFile}: completed product task evidence cannot remain pending`);
+}
+
 async function exists(absolutePath) {
   try {
     await stat(absolutePath);
@@ -93,6 +182,24 @@ async function run(options) {
   const lifecycleTasks = rootTasks.filter((file) => /\/(todo|wip|blocked)-[^/]+\.md$/.test(`/${file}`));
   const active = lifecycleTasks.filter((file) => /\/(wip|blocked)-/.test(`/${file}`));
   if (active.length > 1) errors.push(`expected at most one active wip/blocked task, found ${active.length}: ${active.join(", ")}`);
+
+  let changedPaths = [];
+  if (options.base) {
+    try {
+      changedPaths = collectChangeScope({ root, base: options.base, head: options.head }).paths.all;
+      info.push(`outgoing scope: ${changedPaths.length} path(s) from ${options.base} to ${options.head}`);
+    } catch (error) {
+      errors.push(`cannot evaluate outgoing product synchronization: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  } else {
+    try {
+      changedPaths = gitStatusPaths(root);
+      info.push(`working-tree scope: ${changedPaths.length} changed path(s)`);
+    } catch (error) {
+      errors.push(`cannot evaluate working-tree product synchronization: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  await validateProductSynchronization({ root, changedPaths, active, errors, info });
 
   for (const file of lifecycleTasks) {
     const content = await readText(root, file);

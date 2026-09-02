@@ -67,7 +67,7 @@ summarize it from memory.
   standalone local HTML snapshot, while automation can consume the matching
   JSON file. `/kb:report` documents the same workflow entry point.
 - **Changed files:** `scripts/report.mjs`, `package.json`, `.gitignore`,
-  `README.md`, `docs/development.md`, `docs/agent-workflow.md`, the canonical
+  `README.md`, `.agents/docs/development.md`, `.agents/docs/agent-workflow.md`, the canonical
   workflow skill, generated ignored adapters, and this completed task record.
 - **Skipped:** No deployment, hosting, authentication, external-system write,
   or cross-browser screen-reader round applies to this local static report.

@@ -42,7 +42,7 @@ modes while preserving the host client's native commands and approval rules.
 ## 4. Documentation Impact
 
 - **PRD impact:** None; this changes agent routing, not product behavior.
-- **Canonical workflow impact:** None; `AGENTS.md`, `docs/agent-workflow.md`,
+- **Canonical workflow impact:** None; `AGENTS.md`, `.agents/docs/agent-workflow.md`,
   and Suggestion 0001 remain unchanged and human-controlled.
 - **New reusable asset:** `.agents/skills/agent-workflow-scrum/SKILL.md` with
   project-level command-style routing.

@@ -72,3 +72,29 @@ test("documentation checker rejects legacy workflow artifacts in root docs but a
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("documentation checker rejects stale inline workflow paths", async () => {
+  const root = await fixture();
+  try {
+    await mkdir(path.join(root, docsRoot, "prd"), { recursive: true });
+    await writeFile(path.join(root, docsRoot, "prd/0001-auth.md"), "# Auth\n", "utf8");
+    await writeFile(path.join(root, "AGENTS.md"), "# Agents\nPRD: `docs/prd/0001-auth.md`\n", "utf8");
+    const result = run(root);
+    assert.notEqual(result.status, 0);
+    const parsed = JSON.parse(result.stdout);
+    assert.ok(parsed.errors.some((error) => error.includes("stale inline workflow path")));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("documentation checker allows explicit legacy-path evidence", async () => {
+  const root = await fixture();
+  try {
+    await writeFile(path.join(root, "AGENTS.md"), "# Agents\nLegacy workflow path `docs/tasks/` is rejected.\n", "utf8");
+    const result = run(root);
+    assert.equal(result.status, 0, result.stderr);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

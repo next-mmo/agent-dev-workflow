@@ -17,7 +17,7 @@ improvement loop.
 - [x] Keep root `AGENTS.md` concise and canonical.
 - [x] Define the universal delivery loop and scope-specific quality gates.
 - [x] Add a counter-app full-stack worked example.
-- [x] Add `docs/suggestions/` governance and a reusable proposal template.
+- [x] Add `.agents/docs/suggestions/` governance and a reusable proposal template.
 - [x] Require human approval before suggestions become canonical workflow rules.
 - [x] Validate commands, links, formatting, tests, and build.
 
@@ -27,7 +27,7 @@ improvement loop.
   `AGENTS.md`.
 - [x] Detailed guidance is linked rather than duplicated in `AGENTS.md`.
 - [x] Reusable learnings are deduplicated, evidence-backed, and recorded under
-  `docs/suggestions/`.
+  `.agents/docs/suggestions/`.
 - [x] Workflow changes cannot self-approve; a human decision is required.
 - [x] The counter app demonstrates how the workflow extends from frontend-only
   work to a realistic full-stack feature.

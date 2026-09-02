@@ -30,6 +30,7 @@ async function fixture() {
   }, null, 2), "utf8");
   await writeFile(path.join(root, skillScript), "#!/bin/sh\nexit 0\n", "utf8");
   await writeFile(path.join(root, "tests/context-providers.test.mjs"), "// fixture focused test\n", "utf8");
+  await writeFile(path.join(root, "tests/context-benchmark.test.mjs"), "// fixture benchmark test\n", "utf8");
   await writeFile(path.join(root, "README.md"), "# Fixture\n", "utf8");
   git(root, "init", "-q");
   git(root, "config", "user.email", "test@example.com");
@@ -72,7 +73,7 @@ test("skill changes select workflow, docs, and adapter checks but skip product b
 
     const plan = await buildVerificationPlan({ root, base: baseSha });
     const commands = plan.checks.map((item) => item.command);
-    assert.ok(commands.includes("npm run workflow:check -- --strict-budget"));
+    assert.ok(commands.includes(`npm run workflow:check -- --strict-budget --base ${baseSha}`));
     assert.ok(commands.includes("npm run docs:check"));
     assert.ok(commands.includes(`${skillScript} check`));
     assert.ok(!commands.includes("npm run build"));
@@ -92,7 +93,7 @@ test(".agents docs changes select workflow and documentation checks", async () =
 
     const plan = await buildVerificationPlan({ root, base: baseSha });
     const commands = plan.checks.map((item) => item.command);
-    assert.ok(commands.includes("npm run workflow:check -- --strict-budget"));
+    assert.ok(commands.includes(`npm run workflow:check -- --strict-budget --base ${baseSha}`));
     assert.ok(commands.includes("npm run docs:check"));
     assert.ok(plan.layers.docs.includes(`${docsRoot}/architecture.md`));
     assert.ok(plan.layers.workflow.includes(`${docsRoot}/architecture.md`));
@@ -114,6 +115,21 @@ test("provider changes under .agents scripts select focused workflow regressions
     const commands = plan.checks.map((item) => item.command);
     assert.ok(commands.some((command) => command.includes("node --test") && command.includes("tests/context-providers.test.mjs")));
     assert.ok(plan.layers.providers.includes(".agents/scripts/context/providers/example.mjs"));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("context benchmark changes select the benchmark regression", async () => {
+  const { root, baseSha } = await fixture();
+  try {
+    await writeFile(path.join(root, ".agents/scripts/context-benchmark.mjs"), "export const benchmark = true;\n", "utf8");
+    git(root, "add", ".");
+    git(root, "commit", "-qm", "context benchmark");
+
+    const plan = await buildVerificationPlan({ root, base: baseSha });
+    const commands = plan.checks.map((item) => item.command);
+    assert.ok(commands.some((command) => command.includes("node --test") && command.includes("tests/context-benchmark.test.mjs")));
   } finally {
     await rm(root, { recursive: true, force: true });
   }

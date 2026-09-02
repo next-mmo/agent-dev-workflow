@@ -198,6 +198,11 @@ function classifyRuleHints(terms, changedPaths = []) {
   return [...hints];
 }
 
+function isPriorityChangedPath(file) {
+  return /^(?:src\/|index\.html$|public\/)/.test(file)
+    || /^\.agents\/docs\/(?:prd\/|tasks\/(?:wip|blocked)\/)/.test(file);
+}
+
 async function collectDocuments(root) {
   const documents = [];
   const add = async (relativePath, kind) => {
@@ -328,6 +333,40 @@ function enforceBudget(result) {
     provider.estimatedTokens = provider.content ? estimateTokens(provider.content) : 0;
     over = update();
   }
+  for (let index = result.selected.length - 1; index >= 0 && over > 0; index -= 1) {
+    const item = result.selected[index];
+    const current = estimateTokens(item.summary);
+    item.summary = trimToBudget(item.summary, Math.max(8, current - over - 4));
+    over = update();
+  }
+  // At the minimum budget, routing metadata outranks descriptive summaries.
+  // Remove summaries and then the least-relevant selected records before
+  // spending the remaining budget on descriptive document excerpts.
+  for (let index = result.selected.length - 1; index >= 0 && over > 0; index -= 1) {
+    if (result.selected[index].summary) {
+      result.selected[index].summary = "";
+      over = update();
+    }
+    if (over > 0 && result.selected.length > 1) {
+      result.selected.splice(index, 1);
+      over = update();
+    }
+  }
+  const compactPaths = (paths) => {
+    const prioritized = paths.filter(isPriorityChangedPath);
+    const remaining = paths.filter((file) => !isPriorityChangedPath(file));
+    return [...new Set([...prioritized, ...remaining])].slice(0, 3);
+  };
+  if (over > 0 && result.git.changedPaths.length > 3) {
+    result.git.changedPaths = compactPaths(result.git.changedPaths);
+    result.git.changedPathsTruncated = true;
+    over = update();
+  }
+  if (over > 0 && result.git.outgoing?.committedPaths?.length > 3) {
+    result.git.outgoing.committedPaths = compactPaths(result.git.outgoing.committedPaths);
+    result.git.outgoing.committedPathsTruncated = true;
+    over = update();
+  }
   for (let index = result.documents.length - 1; index >= 0 && over > 0; index -= 1) {
     const document = result.documents[index];
     const current = estimateTokens(document.content);
@@ -335,13 +374,20 @@ function enforceBudget(result) {
     if (!document.content) result.documents.splice(index, 1);
     over = update();
   }
-  for (let index = result.selected.length - 1; index >= 0 && over > 0; index -= 1) {
-    const item = result.selected[index];
-    const current = estimateTokens(item.summary);
-    item.summary = trimToBudget(item.summary, Math.max(8, current - over - 4));
-    over = update();
-  }
   update();
+}
+
+function updateLocalProviderEstimate(result) {
+  const local = result.providers.find((provider) => provider.name === "local");
+  if (!local) return;
+  local.estimatedTokens = estimateTokens(JSON.stringify({
+    branch: result.git.branch,
+    changedPaths: result.git.changedPaths,
+    activeTasks: result.activeTasks,
+    ruleHints: result.ruleHints,
+    selected: result.selected,
+    documents: result.documents,
+  }));
 }
 
 async function buildContext(options) {
@@ -423,7 +469,12 @@ async function buildContext(options) {
   };
 
   enforceBudget(result);
+  updateLocalProviderEstimate(result);
+  enforceBudget(result);
   result.budgetExceeded = result.estimatedTokens > options.budget;
+  if (result.budgetExceeded) {
+    throw new Error(`context output cannot fit the requested ${options.budget}-token budget; narrow the scope or increase --budget`);
+  }
   return result;
 }
 

@@ -41,3 +41,7 @@ Retries and broader timeouts may bound documented transient external boundaries.
 ## Reporting
 
 Record the exact command/scenario and observed result. Keep these states distinct: passed, failed, skipped, timed out, blocked by environment, and pending CI. Never upgrade one into another for a cleaner handoff.
+
+## Context benchmark
+
+Run `npm run benchmark:context -- "<scope>" --provider local --level 1 --budget 1500` to compare a naive raw baseline with the real bounded context entry path. Raw means all tracked UTF-8 text; bounded output is the context router's measured pack. Token savings are comparable, while timings are local measurements rather than stable performance claims.

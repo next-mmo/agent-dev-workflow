@@ -67,6 +67,38 @@ test("minimum context budget remains a hard total cap without a root docs tree",
   }
 });
 
+test("minimum context budget remains hard with many dirty paths", async () => {
+  const root = await fixture({ commit: true });
+  try {
+    await Promise.all(Array.from({ length: 12 }, (_, index) => (
+      writeFile(path.join(root, `changed-${index}.md`), `Changed file ${index}.\n`, "utf8")
+    )));
+    const result = spawnSync(
+      process.execPath,
+      [contextScript, "budget contract", "--root", root, "--provider", "local", "--level", "1", "--budget", "500", "--json"],
+      { cwd: repositoryRoot, encoding: "utf8" },
+    );
+
+    assert.equal(result.status, 0, result.stderr);
+    const parsed = JSON.parse(result.stdout);
+    assert.ok(parsed.estimatedTokens <= 500, `estimated ${parsed.estimatedTokens} tokens`);
+    assert.equal(parsed.budgetExceeded, false);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("context router fails closed when the requested scope cannot fit", () => {
+  const result = spawnSync(
+    process.execPath,
+    [contextScript, "scope", "x".repeat(2600), "--provider", "local", "--budget", "500"],
+    { cwd: repositoryRoot, encoding: "utf8" },
+  );
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /cannot fit the requested 500-token budget/);
+});
+
 test("tracked git-status paths preserve the first path character", async () => {
   const root = await fixture({ commit: true });
   try {

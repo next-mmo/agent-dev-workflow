@@ -2,7 +2,7 @@
 
 > **Status:** done
 > **Scrum Artifact:** completed increment
-> **PRD:** `docs/prd/0001-counter-core-features.md`
+> **PRD:** `.agents/docs/prd/0001-counter-core-features.md`
 > **Created:** 2026-09-01
 > **Completed:** 2026-09-01
 

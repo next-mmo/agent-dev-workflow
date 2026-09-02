@@ -49,6 +49,10 @@ function runJson(script, args) {
   return JSON.parse(execFileSync(process.execPath, [script, ...args, "--json"], { encoding: "utf8" }));
 }
 
+function git(root, ...args) {
+  return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+}
+
 test("context router prioritizes active task and security rules", async () => {
   const root = await fixture();
   try {
@@ -99,6 +103,80 @@ test("workflow checker rejects multiple active tasks", async () => {
     const parsed = JSON.parse(result.stdout);
     assert.equal(parsed.ok, false);
     assert.ok(parsed.errors.some((error) => error.includes("at most one active")));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("workflow checker requires synchronized task metadata for product changes", async () => {
+  const root = await fixture();
+  try {
+    await mkdir(path.join(root, "src"), { recursive: true });
+    await writeFile(path.join(root, "src/app.js"), "export const value = 1;\n", "utf8");
+    await rm(path.join(root, docsRoot, "tasks/wip-0001-0001-auth.md"));
+    const result = spawnSync(process.execPath, [checkScript, "--root", root, "--json"], { encoding: "utf8" });
+    assert.notEqual(result.status, 0);
+    const parsed = JSON.parse(result.stdout);
+    assert.ok(parsed.errors.some((error) => error.includes("product changes require one active")));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("workflow checker accepts a product change with task, PRD index, and evidence", async () => {
+  const root = await fixture();
+  try {
+    await mkdir(path.join(root, "src"), { recursive: true });
+    await writeFile(
+      path.join(root, docsRoot, "tasks/wip-0001-0001-auth.md"),
+      "# Task Auth\n> **Status:** wip\n> **PRD:** `.agents/docs/prd/0001-auth.md`\n\n## Acceptance Criteria\n\n- [ ] Session timeout and authorization denial paths are verified.\n\n## Evidence Ledger\n\n| Claim | Evidence | Result |\n| :--- | :--- | :--- |\n| Session behavior | Focused tests | Pending |\n",
+      "utf8",
+    );
+    await writeFile(path.join(root, "src/app.js"), "export const value = 1;\n", "utf8");
+    const result = runJson(checkScript, ["--root", root, "--strict-budget"]);
+    assert.equal(result.ok, true, JSON.stringify(result.errors));
+    assert.ok(result.info.some((item) => item.includes("product synchronization")));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("workflow checker rejects product changes with incomplete task synchronization", async () => {
+  const root = await fixture();
+  try {
+    await mkdir(path.join(root, "src"), { recursive: true });
+    await writeFile(path.join(root, "src/app.js"), "export const value = 1;\n", "utf8");
+    const result = spawnSync(process.execPath, [checkScript, "--root", root, "--json"], { encoding: "utf8" });
+    assert.notEqual(result.status, 0);
+    const parsed = JSON.parse(result.stdout);
+    assert.equal(parsed.ok, false);
+    assert.ok(parsed.errors.some((error) => error.includes("canonical PRD")));
+    assert.ok(parsed.errors.some((error) => error.includes("Evidence Ledger")));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("workflow checker evaluates committed product paths with an explicit base", async () => {
+  const root = await fixture();
+  try {
+    await writeFile(
+      path.join(root, docsRoot, "tasks/wip-0001-0001-auth.md"),
+      "# Task Auth\n> **Status:** wip\n> **PRD:** `.agents/docs/prd/0001-auth.md`\n\n## Acceptance Criteria\n\n- [ ] Session timeout is verified.\n\n## Evidence Ledger\n\n| Claim | Evidence | Result |\n| :--- | :--- | :--- |\n| Session behavior | Focused tests | Pending |\n",
+      "utf8",
+    );
+    git(root, "add", ".");
+    git(root, "commit", "-qm", "task metadata");
+    const base = git(root, "rev-parse", "HEAD");
+    await mkdir(path.join(root, "src"), { recursive: true });
+    await writeFile(path.join(root, "src/app.js"), "export const value = 1;\n", "utf8");
+    git(root, "add", ".");
+    git(root, "commit", "-qm", "product increment");
+
+    const result = runJson(checkScript, ["--root", root, "--base", base]);
+    assert.equal(result.ok, true, JSON.stringify(result.errors));
+    assert.ok(result.info.some((item) => item.includes("outgoing scope")));
+    assert.ok(result.info.some((item) => item.includes("product synchronization")));
   } finally {
     await rm(root, { recursive: true, force: true });
   }

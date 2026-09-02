@@ -26,6 +26,32 @@ npm run dev
 
 The app defaults to <http://localhost:5173>. Set `PORT` for another development port. On Windows PowerShell use `$env:PORT = 8080` before `npm run dev`.
 
+## Setup modes
+
+Use `/kb:setup` in an agent session for the required baseline. It verifies Node.js, npm, and Git; installs locked project dependencies; and runs the required repository checks.
+
+Use `/kb:full-setup` for all supported repository-local setup. It runs `/kb:setup`, initializes the Claude and Cursor adapters, and validates every generated adapter. Full setup does not install or configure external Graphify/OpenViking providers or remote services; those remain explicit opt-in integrations.
+
+The required baseline terminal sequence is:
+
+```bash
+npm ci
+npm test
+npm run build
+npm run workflow:check -- --strict-budget
+npm run docs:check
+bash .agents/scripts/skill.sh check
+```
+
+To complete full local setup, run these additional commands:
+
+```bash
+bash .agents/scripts/skill.sh init all
+bash .agents/scripts/skill.sh check all
+```
+
+The skill audit and adapter initialization require a POSIX shell; on Windows, run them from Git Bash.
+
 ## Build and preview
 
 ```bash
@@ -42,6 +68,8 @@ npm test
 ```
 
 Tests use Node's built-in runner. Workflow-tool tests create temporary fixture repositories and require no dev server.
+
+For raw-versus-bounded context measurement, see [`testing.md`](testing.md).
 
 ## Smart context
 
@@ -101,7 +129,7 @@ For async/resource-owning tests or CI, use `.agents/skills/agent-workflow-scrum/
 
 ## Workflow and documentation consistency
 
-Run mechanical lifecycle, suggestion-state, link, namespace, and context-budget checks:
+Run workflow, documentation, and adapter checks:
 
 ```bash
 npm run workflow:check
@@ -110,7 +138,7 @@ npm run docs:check
 bash .agents/scripts/skill.sh check
 ```
 
-`workflow:check` validates task/suggestion lifecycle and core context budgets. `docs:check` validates standing-document budgets, repository-relative links, and rejects legacy Agent Workflow Scrum artifacts under root `docs/` while allowing application-owned documentation there.
+`workflow:check` validates lifecycle, product task/PRD/evidence synchronization, and context budgets; add `--base <verified-ref>` for committed scope. `docs:check` validates budgets/links, stale inline paths, and the root `docs/` namespace while allowing application docs.
 
 ## Workflow report
 

@@ -3,9 +3,9 @@
 > Status: done  
 > Created: 2026-09-01  
 > Updated: 2026-09-01
-> Related Tasks: `docs/tasks/done/done-0001-0001-counter-state-and-ui.md`,
-> `docs/tasks/done/done-0007-0001-undo-last-counter-action.md`,
-> `docs/tasks/done/done-0013-0001-custom-step-and-accessible-selection.md`
+> Related Tasks: `.agents/docs/tasks/done/done-0001-0001-counter-state-and-ui.md`,
+> `.agents/docs/tasks/done/done-0007-0001-undo-last-counter-action.md`,
+> `.agents/docs/tasks/done/done-0013-0001-custom-step-and-accessible-selection.md`
 
 ## 1. Problem Statement
 

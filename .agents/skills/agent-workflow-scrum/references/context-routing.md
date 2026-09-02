@@ -19,7 +19,7 @@ npm run context -- "deep recovery" --full --budget 5000
 npm run context -- "api contract" --json
 ```
 
-The default total budget is approximately 1,500 tokens. Estimates use characters/4 and are deliberately approximate. Local and optional provider content share this one budget; provider quotas cannot increase it.
+The default total budget is approximately 1,500 tokens. Estimates use characters/4 and are deliberately approximate. Local and optional provider content share this one budget; provider quotas cannot increase it. Final output is hard-capped; tight budgets compact summaries and low-priority path detail, while an impossible scope fails with an actionable narrowing message.
 
 ## Outgoing Scope
 
@@ -51,4 +51,5 @@ See [optional providers](providers.md) for provider contracts, setup boundaries,
 - Provider unavailable/error/timeout: continue with local context and report provider status; never block safe work solely on an optional provider.
 - Stale Graphify snapshot: inspect changed code directly and refresh the graph before relying on impact relationships.
 - Budget exceeded: narrow scope or reduce level. Increase budget only when broader evidence is genuinely needed.
+- Product synchronization failure: create/select one active task with a canonical affected PRD, acceptance criteria, and evidence ledger; keep the PRD index entry current.
 - Missing router: fall back to `AGENTS.md`, `CONTEXT.md`, active task, affected PRD, and current code.
