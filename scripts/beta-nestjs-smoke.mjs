@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile, mkdir, appendFile } from "node:fs/promises";
+import { appendFile, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -181,14 +181,10 @@ async function exerciseHttp(root) {
 async function main() {
   const sandbox = await mkdtemp(path.join(os.tmpdir(), "agent-beta-nestjs-"));
   try {
-    const packOutput = run(npm, ["pack", "./packages/agent-workflow-scrum", "--pack-destination", sandbox, "--json"], {
-      cwd: repositoryRoot,
-      capture: true,
-    });
-    const packed = JSON.parse(packOutput);
-    assert.equal(Array.isArray(packed), true);
-    assert.equal(packed.length, 1);
-    const tarball = path.join(sandbox, packed[0].filename);
+    run(npm, ["pack", "./packages/agent-workflow-scrum", "--pack-destination", sandbox], { cwd: repositoryRoot });
+    const tarballs = (await readdir(sandbox)).filter((name) => name.endsWith(".tgz"));
+    assert.equal(tarballs.length, 1, `expected exactly one packed workflow tarball, found: ${tarballs.join(", ") || "none"}`);
+    const tarball = path.join(sandbox, tarballs[0]);
 
     run(npx, ["--yes", "@nestjs/cli@12.0.0", "new", "todo-api", "--package-manager", "npm", "--skip-git", "--strict"], { cwd: sandbox });
     const appRoot = path.join(sandbox, "todo-api");
