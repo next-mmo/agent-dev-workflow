@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const templateRoot = path.join(packageRoot, "templates");
 const packageManagers = new Set(["npm", "pnpm", "yarn", "bun"]);
+const workflowModes = new Set(["vibe", "standard", "strict", "guided"]);
 const forbiddenDirectories = [".agents/scripts", ".agents/skills", ".agents/benchmark"];
 const agentHandoffStart = "<!-- agent-workflow-scrum:start -->";
 const agentHandoffEnd = "<!-- agent-workflow-scrum:end -->";
@@ -19,7 +20,16 @@ async function exists(filePath) {
 }
 
 function parseArgs(argv, cwd) {
-  const options = { root: cwd, existing: false, dryRun: false, json: false, packageManager: "", mode: "standard", positional: [] };
+  const options = {
+    root: cwd,
+    existing: false,
+    dryRun: false,
+    json: false,
+    packageManager: "",
+    mode: "",
+    modeProvided: false,
+    positional: [],
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--existing") options.existing = true;
@@ -27,8 +37,10 @@ function parseArgs(argv, cwd) {
     else if (arg === "--json") options.json = true;
     else if (arg === "--root") options.root = path.resolve(argv[++index] || "");
     else if (arg === "--package-manager") options.packageManager = argv[++index] || "";
-    else if (arg === "--mode") options.mode = argv[++index] || "";
-    else if (arg.startsWith("--")) throw new Error(`unknown option: ${arg}`);
+    else if (arg === "--mode") {
+      options.mode = argv[++index] || "";
+      options.modeProvided = true;
+    } else if (arg.startsWith("--")) throw new Error(`unknown option: ${arg}`);
     else options.positional.push(arg);
   }
   if (options.positional.length > 1) throw new Error("init accepts at most one target path");
@@ -36,7 +48,7 @@ function parseArgs(argv, cwd) {
   if (options.packageManager && !packageManagers.has(options.packageManager)) {
     throw new Error("--package-manager must be npm, pnpm, yarn, or bun");
   }
-  if (!["vibe", "standard", "strict", "guided"].includes(options.mode)) {
+  if (options.modeProvided && !workflowModes.has(options.mode)) {
     throw new Error("--mode must be vibe, standard, strict, or guided");
   }
   return options;
@@ -63,6 +75,20 @@ async function packageScripts(root) {
   } catch (error) {
     if (error?.code === "ENOENT") return {};
     throw new Error(`package.json: invalid JSON: ${error.message}`);
+  }
+}
+
+async function readExistingConfig(root) {
+  const configPath = path.join(root, ".agents/config.json");
+  if (!await exists(configPath)) return null;
+  try {
+    const parsed = JSON.parse(await readFile(configPath, "utf8"));
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("expected a JSON object");
+    }
+    return parsed;
+  } catch (error) {
+    throw new Error(`.agents/config.json: invalid JSON: ${error.message}`);
   }
 }
 
@@ -176,14 +202,41 @@ export async function initializeProject(argv, cwd = process.cwd()) {
   const meaningful = entries.filter((entry) => entry !== ".git");
   const existingProject = meaningful.length > 0;
 
-  const packageManager = options.packageManager || await detectPackageManager(options.root);
+  const existingConfig = await readExistingConfig(options.root);
+  const detectedPackageManager = await detectPackageManager(options.root);
+  const configuredPackageManager = typeof existingConfig?.packageManager === "string" && packageManagers.has(existingConfig.packageManager)
+    ? existingConfig.packageManager
+    : "";
+  const packageManager = options.packageManager || configuredPackageManager || detectedPackageManager;
+  const configuredMode = typeof existingConfig?.mode === "string" && workflowModes.has(existingConfig.mode)
+    ? existingConfig.mode
+    : "standard";
+  const mode = options.modeProvided ? options.mode : configuredMode;
   const scripts = await packageScripts(options.root);
   const localRunner = runner(packageManager);
   const today = new Date().toISOString().slice(0, 10);
   const renderedAgents = await renderedTemplate("AGENTS.md", { RUNNER: localRunner });
+
+  let configContent;
+  let configNeedsUpdate = false;
+  if (existingConfig) {
+    const nextConfig = { ...existingConfig };
+    if (options.modeProvided && nextConfig.mode !== mode) {
+      nextConfig.mode = mode;
+      configNeedsUpdate = true;
+    }
+    if (options.packageManager && nextConfig.packageManager !== packageManager) {
+      nextConfig.packageManager = packageManager;
+      configNeedsUpdate = true;
+    }
+    configContent = `${JSON.stringify(nextConfig, null, 2)}\n`;
+  } else {
+    configContent = `${JSON.stringify(configFor(packageManager, scripts, mode), null, 2)}\n`;
+  }
+
   const files = new Map([
     ["CONTEXT.md", await renderedTemplate("CONTEXT.md")],
-    [".agents/config.json", `${JSON.stringify(configFor(packageManager, scripts, options.mode), null, 2)}\n`],
+    [".agents/config.json", configContent],
     [".agents/docs/doc-budgets.json", await renderedTemplate("doc-budgets.json")],
     [".agents/docs/prd/0000-prd-index.md", await renderedTemplate("prd-index.md", { TODAY: today })],
     [".agents/docs/tasks/README.md", await renderedTemplate("tasks-readme.md")],
@@ -201,7 +254,12 @@ export async function initializeProject(argv, cwd = process.cwd()) {
   for (const [relativePath, content] of files) {
     const absolutePath = path.join(options.root, relativePath);
     if (await exists(absolutePath)) {
-      preserved.push(relativePath);
+      if (relativePath === ".agents/config.json" && configNeedsUpdate) {
+        updated.push(relativePath);
+        if (!options.dryRun) await writeFile(absolutePath, content, "utf8");
+      } else {
+        preserved.push(relativePath);
+      }
       continue;
     }
     created.push(relativePath);
@@ -219,7 +277,7 @@ export async function initializeProject(argv, cwd = process.cwd()) {
     schemaVersion: 2,
     root: options.root.replaceAll("\\", "/"),
     packageManager,
-    mode: options.mode,
+    mode,
     existingProject,
     dryRun: options.dryRun,
     created,
@@ -236,7 +294,7 @@ export async function initializeProject(argv, cwd = process.cwd()) {
     `${options.dryRun ? "Would initialize" : "Initialized"} Agent Workflow Scrum in ${options.root}`,
     `- Existing project detected: ${existingProject ? "yes; existing files are preserved" : "no"}`,
     `- Package manager: ${packageManager}`,
-    `- Mode: ${options.mode}`,
+    `- Mode: ${mode}`,
     `- Created: ${created.length ? created.join(", ") : "none"}`,
     `- Updated: ${updated.length ? updated.join(", ") : "none"}`,
     `- Preserved: ${preserved.length ? preserved.join(", ") : "none"}`,
