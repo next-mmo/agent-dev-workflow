@@ -186,8 +186,9 @@ async function main() {
     assert.equal(tarballs.length, 1, `expected exactly one packed workflow tarball, found: ${tarballs.join(", ") || "none"}`);
     const tarball = path.join(sandbox, tarballs[0]);
 
-    run(npx, ["--yes", "@nestjs/cli@12.0.0", "new", "todo-api", "--package-manager", "npm", "--skip-git", "--strict"], { cwd: sandbox });
+    run(npx, ["--yes", "@nestjs/cli@12.0.0", "new", "todo-api", "--package-manager", "npm", "--skip-git", "--skip-install", "--strict"], { cwd: sandbox });
     const appRoot = path.join(sandbox, "todo-api");
+    run(npm, ["install"], { cwd: appRoot });
     run(git, ["init", "-q"], { cwd: appRoot });
     run(git, ["config", "user.email", "beta@example.invalid"], { cwd: appRoot });
     run(git, ["config", "user.name", "Agent Workflow Beta"], { cwd: appRoot });
