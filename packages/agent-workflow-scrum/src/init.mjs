@@ -131,10 +131,31 @@ async function ensureAgentInstructions(root, template, dryRun) {
   }
 
   const current = await readFile(absolutePath, "utf8");
-  const hasManagedBlock = current.includes(agentHandoffStart) && current.includes(agentHandoffEnd);
+  const startIndex = current.indexOf(agentHandoffStart);
+  const endStart = current.indexOf(agentHandoffEnd);
+  const hasStart = startIndex >= 0;
+  const hasEnd = endStart >= 0;
+  if (hasStart !== hasEnd || (hasStart && endStart < startIndex)) {
+    throw new Error("AGENTS.md: Agent Workflow Scrum managed markers are incomplete or out of order; repair the marker-bounded block before re-running init");
+  }
+  if (hasStart) {
+    const secondStart = current.indexOf(agentHandoffStart, startIndex + agentHandoffStart.length);
+    const secondEnd = current.indexOf(agentHandoffEnd, endStart + agentHandoffEnd.length);
+    if (secondStart >= 0 || secondEnd >= 0) {
+      throw new Error("AGENTS.md: multiple Agent Workflow Scrum managed blocks detected; keep exactly one marker-bounded block before re-running init");
+    }
+    const endIndex = endStart + agentHandoffEnd.length;
+    const existingBlock = current.slice(startIndex, endIndex);
+    if (existingBlock === block) return "preserved";
+    if (!dryRun) {
+      await writeFile(absolutePath, `${current.slice(0, startIndex)}${block}${current.slice(endIndex)}`, "utf8");
+    }
+    return "updated";
+  }
+
   const hasLegacyWorkflow = current.includes("Humans own outcomes, priority, acceptance, and workflow policy")
     && current.includes(".agents/config.json");
-  if (hasManagedBlock || hasLegacyWorkflow) return "preserved";
+  if (hasLegacyWorkflow) return "preserved";
 
   if (!dryRun) {
     const merged = `${current.trimEnd()}\n\n${block}\n`;
