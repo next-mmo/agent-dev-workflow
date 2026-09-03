@@ -71,6 +71,7 @@ test("auto mode uses Graphify when a local graph is ready", async () => {
     assert.equal(provider(result, "graphify").status, "ok");
     assert.match(provider(result, "graphify").content, /EXTRACTED/);
     assert.equal(provider(result, "openviking"), undefined);
+    assert.ok(provider(result, "memory"), "memory provider should be present in auto mode");
     assert.ok(result.estimatedTokens <= result.budgetTokens);
   } finally {
     await Promise.all([rm(root, { recursive: true, force: true }), rm(fake.directory, { recursive: true, force: true })]);
@@ -123,7 +124,7 @@ test("all mode composes local, Graphify, and OpenViking under one budget", async
       OPENVIKING_BIN: process.execPath,
       OPENVIKING_BIN_ARGS: JSON.stringify([ov.script]),
     });
-    assert.deepEqual(result.providers.map((item) => item.name), ["local", "graphify", "openviking"]);
+    assert.deepEqual(result.providers.map((item) => item.name), ["local", "codebase", "memory", "graphify", "openviking"]);
     assert.equal(provider(result, "graphify").status, "ok");
     assert.equal(provider(result, "openviking").status, "ok");
     assert.ok(result.estimatedTokens <= 1000, `estimated ${result.estimatedTokens}`);
@@ -181,3 +182,171 @@ test("provider diagnostics redact common secret shapes", async () => {
     await Promise.all([rm(root, { recursive: true, force: true }), rm(fake.directory, { recursive: true, force: true })]);
   }
 });
+
+test("trimToBudget truncates at clean semantic boundaries without cutting words", async () => {
+  const { trimToBudget } = await import("../.agents/scripts/context/providers/common.mjs");
+
+  // Case 1: Sentence boundary preferred when complete sentence is available
+  const twoSentences = "First sentence completed. Second sentence with important details and words.";
+  const trimmedSentences = trimToBudget(twoSentences, 10); // 40 chars
+  assert.ok(trimmedSentences.length <= 40, `expected <= 40 chars, got ${trimmedSentences.length}`);
+  assert.equal(trimmedSentences, "First sentence completed.…");
+
+  // Case 2: Word boundary when no sentence boundary is in the lookback window
+  const singleLongSentence = "Feature implementation with detailed verification and acceptance criteria";
+  const trimmedWords = trimToBudget(singleLongSentence, 10); // 40 chars. Char 39 falls inside 'verification'.
+  assert.ok(trimmedWords.length <= 40, `expected <= 40 chars, got ${trimmedWords.length}`);
+  assert.doesNotMatch(trimmedWords, /verifi…/);
+  assert.equal(trimmedWords, "Feature implementation with detailed…");
+});
+
+test("trimToBudget preserves unclosed markdown code fences when budget permits", async () => {
+  const { trimToBudget } = await import("../.agents/scripts/context/providers/common.mjs");
+  const codeBlock = "```javascript\nfunction test() {\n  return 42;\n}\n// trailing content";
+  const trimmed = trimToBudget(codeBlock, 12); // 48 chars
+  assert.ok(trimmed.length <= 48, `expected <= 48 chars, got ${trimmed.length}`);
+  assert.match(trimmed, /```…$/);
+});
+
+// --- Native Memory Provider Tests ---
+
+test("parseFrontmatter extracts YAML fields and body from markdown", async () => {
+  const { parseFrontmatter } = await import("../.agents/scripts/context/providers/memory.mjs");
+  const md = `---
+title: Audio Autoplay Fix
+tags: [audio, webaudio, browser]
+problem: "AudioContext suspended on load"
+solution: "Call resume() on user gesture"
+---
+
+# Audio Autoplay Fix
+
+Body content here.`;
+
+  const { meta, body } = parseFrontmatter(md);
+  assert.equal(meta.title, "Audio Autoplay Fix");
+  assert.deepEqual(meta.tags, ["audio", "webaudio", "browser"]);
+  assert.equal(meta.problem, "AudioContext suspended on load");
+  assert.equal(meta.solution, "Call resume() on user gesture");
+  assert.match(body, /Body content here/);
+});
+
+test("parseFrontmatter returns empty meta for files without frontmatter", async () => {
+  const { parseFrontmatter } = await import("../.agents/scripts/context/providers/memory.mjs");
+  const { meta, body } = parseFrontmatter("# Just a heading\n\nSome text.");
+  assert.deepEqual(meta, {});
+  assert.match(body, /Just a heading/);
+});
+
+test("scoreEntry weights tags > title > body", async () => {
+  const { scoreEntry } = await import("../.agents/scripts/context/providers/memory.mjs");
+  const entry = {
+    meta: {
+      title: "Web Audio Autoplay Fix",
+      tags: ["audio", "webaudio", "browser"],
+      problem: "AudioContext suspended",
+      solution: "Call resume on gesture",
+    },
+    body: "Detailed explanation about the audio context problem.",
+  };
+
+  const terms = ["audio"];
+  const score = scoreEntry(entry, terms);
+  // tags match (2.0) + title match (1.5) + problem match (1.0) + body match (0.5) = 5.0
+  assert.ok(score >= 4.0, `expected score >= 4.0, got ${score}`);
+
+  const unrelated = scoreEntry(entry, ["database"]);
+  assert.equal(unrelated, 0);
+});
+
+test("retrieveNativeMemory returns scored matches from solutions dir", async () => {
+  const { retrieveNativeMemory } = await import("../.agents/scripts/context/providers/memory.mjs");
+  const root = await mkdtemp(path.join(os.tmpdir(), "agent-memory-test-"));
+  const solutionsDir = path.join(root, ".agents", "docs", "solutions");
+  const memoryDir = path.join(root, ".agents", "docs", "memory");
+  await mkdir(solutionsDir, { recursive: true });
+  await mkdir(memoryDir, { recursive: true });
+
+  await writeFile(path.join(solutionsDir, "0001-audio-fix.md"), `---
+title: Web Audio Autoplay Fix
+tags: [audio, webaudio, autoplay]
+problem: "AudioContext suspended on page load"
+solution: "Resume on user gesture"
+---
+
+# Web Audio Fix
+Body content.
+`, "utf8");
+
+  await writeFile(path.join(memoryDir, "0001-esm-pattern.md"), `---
+title: ESM Import Conventions
+tags: [esm, import, javascript]
+scope: "Module system conventions"
+created: 2026-09-04
+---
+
+# ESM Conventions
+Always use .mjs extension.
+`, "utf8");
+
+  try {
+    const audioResult = await retrieveNativeMemory({ root, scope: "audio autoplay context", budgetTokens: 200 });
+    assert.equal(audioResult.status, "ok");
+    assert.match(audioResult.content, /audio/i);
+    assert.ok(audioResult.estimatedTokens > 0);
+    assert.ok(audioResult.estimatedTokens <= 200);
+
+    const esmResult = await retrieveNativeMemory({ root, scope: "esm import module", budgetTokens: 200 });
+    assert.equal(esmResult.status, "ok");
+    assert.match(esmResult.content, /ESM/i);
+
+    const noMatchResult = await retrieveNativeMemory({ root, scope: "kubernetes deployment", budgetTokens: 200 });
+    assert.equal(noMatchResult.status, "ok");
+    assert.match(noMatchResult.content, /No relevant/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("retrieveNativeMemory respects budget constraint", async () => {
+  const { retrieveNativeMemory } = await import("../.agents/scripts/context/providers/memory.mjs");
+  const root = await mkdtemp(path.join(os.tmpdir(), "agent-memory-budget-"));
+  const solutionsDir = path.join(root, ".agents", "docs", "solutions");
+  await mkdir(solutionsDir, { recursive: true });
+
+  // Create several entries to test budget pressure
+  for (let i = 1; i <= 5; i++) {
+    await writeFile(path.join(solutionsDir, `000${i}-test-fix.md`), `---
+title: Test Fix Number ${i} for Authentication
+tags: [auth, session, security]
+problem: "Auth session problem variant ${i}"
+solution: "Fix auth with approach ${i}"
+---
+
+# Auth Fix ${i}
+Detailed auth content for variant ${i}.
+`, "utf8");
+  }
+
+  try {
+    const result = await retrieveNativeMemory({ root, scope: "auth session", budgetTokens: 80 });
+    assert.equal(result.status, "ok");
+    assert.ok(result.estimatedTokens <= 80, `budget exceeded: ${result.estimatedTokens}`);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("native memory provider appears in context output for native mode", async () => {
+  const root = await fixture();
+  try {
+    const result = runContext(root, ["--provider", "native"]);
+    const mem = provider(result, "memory");
+    assert.ok(mem, "memory provider should be present in native mode");
+    assert.equal(mem.authority, "native-recall");
+    assert.ok(["ok", "skipped"].includes(mem.status));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+

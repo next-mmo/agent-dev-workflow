@@ -9,7 +9,6 @@ const requiredPaths = [
   ".agents/config.json",
   ".agents/docs/prd/0000-prd-index.md",
   ".agents/docs/tasks/README.md",
-  ".agents/docs/suggestions/README.md",
 ];
 const vendoredPaths = [".agents/scripts", ".agents/skills", ".agents/benchmark"];
 
@@ -47,6 +46,11 @@ export async function diagnoseProject(argv, cwd = process.cwd()) {
   const info = [];
   for (const relativePath of requiredPaths) {
     if (!await exists(path.join(options.root, relativePath))) errors.push(`missing ${relativePath}`);
+  }
+  const hasProposals = (await exists(path.join(options.root, ".agents/docs/proposals/README.md"))) ||
+    (await exists(path.join(options.root, ".agents/docs/suggestions/README.md")));
+  if (!hasProposals) {
+    errors.push("missing .agents/docs/proposals/README.md or .agents/docs/suggestions/README.md");
   }
 
   let config = null;

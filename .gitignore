@@ -16,3 +16,4 @@ graphify-out/
 # Isolated Agent Worktrees & Cache
 .worktrees/
 .agents/cache/
+*.tgz

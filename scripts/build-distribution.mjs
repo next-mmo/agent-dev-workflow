@@ -40,6 +40,7 @@ const engineFiles = [
   "codebase-graph-core.mjs",
   "context/providers/common.mjs",
   "context/providers/codebase.mjs",
+  "context/providers/memory.mjs",
   "context/providers/graphify.mjs",
   "context/providers/openviking.mjs",
 ];
@@ -121,6 +122,17 @@ async function compareDirectories(source, target, label) {
 }
 
 async function checkEngine() {
+  const providerDir = path.join(scriptSource, "context/providers");
+  if (await exists(providerDir)) {
+    const providerFiles = (await filesUnder(providerDir))
+      .map((file) => path.relative(scriptSource, file).replaceAll("\\", "/"));
+    for (const providerFile of providerFiles) {
+      if (!engineFiles.includes(providerFile)) {
+        throw new Error(`distribution: ${providerFile} is in .agents/scripts/context/providers but missing from engineFiles in build-distribution.mjs`);
+      }
+    }
+  }
+
   const expected = engineFiles.slice().sort();
   const actual = (await filesUnder(engineTarget)).map((file) => path.relative(engineTarget, file).replaceAll("\\", "/")).sort();
   if (JSON.stringify(expected) !== JSON.stringify(actual)) {

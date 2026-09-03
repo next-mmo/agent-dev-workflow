@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
-const defaultRoot = path.resolve(scriptDirectory, "..");
+const defaultRoot = process.cwd();
 const DOCS_ROOT = ".agents/docs";
 const DEFAULT_BUDGET_FILE = `${DOCS_ROOT}/doc-budgets.json`;
 const LEGACY_WORKFLOW_PATHS = [

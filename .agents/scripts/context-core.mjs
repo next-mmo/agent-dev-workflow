@@ -7,10 +7,11 @@ import { estimateTokens, trimToBudget } from "./context/providers/common.mjs";
 import { retrieveCodebaseGraph } from "./context/providers/codebase.mjs";
 import { retrieveGraphify } from "./context/providers/graphify.mjs";
 import { retrieveOpenViking } from "./context/providers/openviking.mjs";
+import { retrieveNativeMemory } from "./context/providers/memory.mjs";
 import { loadWorkflowConfig, matchesPathGroup } from "./workflow-config.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
-const defaultRoot = path.resolve(scriptDirectory, "..");
+const defaultRoot = process.cwd();
 const DOCS_ROOT = ".agents/docs";
 const DEFAULT_BUDGET = 1500;
 const MIN_CONTEXT_BUDGET = 500;
@@ -149,7 +150,12 @@ function summarize(markdown, max = 220) {
     .replace(/[*_`~\[\]()]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  return text.length <= max ? text : `${text.slice(0, max - 1).trim()}…`;
+  if (text.length <= max) return text;
+  const target = max - 1;
+  const lookback = Math.min(40, Math.floor(target * 0.25));
+  const space = text.slice(target - lookback, target).lastIndexOf(" ");
+  const cutAt = space !== -1 ? (target - lookback + space) : target;
+  return `${text.slice(0, cutAt).trimEnd()}…`;
 }
 
 function scoreDocument(document, terms, changedPaths) {
@@ -178,21 +184,29 @@ function scoreDocument(document, terms, changedPaths) {
 function relevantExcerpt(markdown, terms, maxChars = 2200) {
   if (!markdown) return "";
   const lines = markdown.split(/\r?\n/);
-  if (terms.length === 0) return lines.slice(0, 45).join("\n").slice(0, maxChars);
-  const indices = [];
-  for (let i = 0; i < lines.length; i += 1) {
-    const lower = lines[i].toLowerCase();
-    if (terms.some((term) => lower.includes(term))) indices.push(i);
+  let output = "";
+  if (terms.length === 0) {
+    output = lines.slice(0, 45).join("\n");
+  } else {
+    const indices = [];
+    for (let i = 0; i < lines.length; i += 1) {
+      const lower = lines[i].toLowerCase();
+      if (terms.some((term) => lower.includes(term))) indices.push(i);
+    }
+    if (indices.length === 0) {
+      output = lines.slice(0, 35).join("\n");
+    } else {
+      const selected = new Set();
+      for (const index of indices.slice(0, 8)) {
+        let heading = index;
+        while (heading > 0 && !/^#{1,6}\s+/.test(lines[heading])) heading -= 1;
+        for (let i = Math.max(0, heading); i <= Math.min(lines.length - 1, index + 6); i += 1) selected.add(i);
+      }
+      output = [...selected].sort((a, b) => a - b).map((index) => lines[index]).join("\n");
+    }
   }
-  if (indices.length === 0) return lines.slice(0, 35).join("\n").slice(0, maxChars);
-  const selected = new Set();
-  for (const index of indices.slice(0, 8)) {
-    let heading = index;
-    while (heading > 0 && !/^#{1,6}\s+/.test(lines[heading])) heading -= 1;
-    for (let i = Math.max(0, heading); i <= Math.min(lines.length - 1, index + 6); i += 1) selected.add(i);
-  }
-  const output = [...selected].sort((a, b) => a - b).map((index) => lines[index]).join("\n");
-  return output.slice(0, maxChars);
+  if (output.length <= maxChars) return output;
+  return trimToBudget(output, Math.floor(maxChars / 4));
 }
 
 function classifyRuleHints(terms, changedPaths = []) {
@@ -254,17 +268,18 @@ async function collectDocuments(root, options = {}) {
 
 function providerNames(mode) {
   if (mode === "local") return [];
-  if (mode === "codebase" || mode === "native") return ["codebase"];
-  if (mode === "graphify") return ["graphify"];
+  if (mode === "codebase" || mode === "native") return ["codebase", "memory"];
+  if (mode === "graphify") return ["graphify", "memory"];
   if (mode === "openviking") return ["openviking"];
-  if (mode === "all") return ["graphify", "openviking"];
-  return ["graphify"];
+  if (mode === "all") return ["codebase", "memory", "graphify", "openviking"];
+  return ["graphify", "memory"];
 }
 
 function allocateProviderBudgets(totalBudget, names) {
   const reserve = Math.max(0, totalBudget - MIN_LOCAL_BUDGET - 120);
   const desired = {
     codebase: Math.min(450, Math.floor(totalBudget * 0.30)),
+    memory: Math.min(250, Math.floor(totalBudget * 0.15)),
     graphify: Math.min(450, Math.floor(totalBudget * 0.30)),
     openviking: Math.min(300, Math.floor(totalBudget * 0.20)),
   };
@@ -295,6 +310,12 @@ async function retrieveProviders({ options, root, scope, changedPaths }) {
         budgetTokens: budgets.graphify,
         timeoutMs: options.providerTimeout,
         changedPaths,
+      }));
+    } else if (name === "memory") {
+      providers.push(await retrieveNativeMemory({
+        root,
+        scope,
+        budgetTokens: budgets.memory,
       }));
     } else if (name === "openviking") {
       providers.push(await retrieveOpenViking({

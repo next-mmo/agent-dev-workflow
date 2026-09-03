@@ -6,7 +6,7 @@ import { collectChangeScope } from "./change-scope.mjs";
 import { loadWorkflowConfig, matchesPathGroup } from "./workflow-config.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
-const defaultRoot = path.resolve(scriptDirectory, "..");
+const defaultRoot = process.cwd();
 const DOCS_ROOT = ".agents/docs";
 
 function parseArgs(argv) {

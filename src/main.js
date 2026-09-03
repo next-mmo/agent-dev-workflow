@@ -93,9 +93,8 @@ function render({ count, step, theme, undoCount, target }) {
   themeButton.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
   undoButton.disabled = undoCount === null;
 
-  if (!hasInitializedCustomStepInput) {
+  if (document.activeElement !== customStepInput) {
     customStepInput.value = String(step);
-    hasInitializedCustomStepInput = true;
   }
 
   stepButtons.forEach((button) => {
@@ -304,8 +303,20 @@ const shortcuts = {
 };
 
 window.addEventListener('keydown', (event) => {
+  if (event.target.matches('input, textarea')) return;
+
+  // Handle Ctrl+Z / Cmd+Z specifically for undo
+  if ((event.ctrlKey || event.metaKey) && !event.altKey && (event.key === 'z' || event.key === 'Z')) {
+    event.preventDefault();
+    recordUserAction('undo', 'undo');
+    return;
+  }
+
+  // Ignore any other single-key shortcut if Ctrl, Meta, or Alt is held
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+
   const action = shortcuts[event.key];
-  if (!action || event.target.matches('input, textarea')) return;
+  if (!action) return;
   event.preventDefault();
   action();
 });

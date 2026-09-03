@@ -9,8 +9,53 @@ export function trimToBudget(value, budgetTokens) {
   const maxChars = Math.max(0, Math.floor(budgetTokens * 4));
   if (text.length <= maxChars) return text;
   if (maxChars <= 1) return "";
-  return `${text.slice(0, maxChars - 1).trimEnd()}…`;
+
+  const targetLimit = maxChars - 1;
+  const lookback = Math.min(160, Math.max(16, Math.floor(targetLimit * 0.25)));
+  const searchStart = Math.max(0, targetLimit - lookback);
+  const candidateSlice = text.slice(searchStart, targetLimit);
+
+  let sliceOffset = -1;
+
+  const paraIndex = candidateSlice.lastIndexOf("\n\n");
+  if (paraIndex !== -1) {
+    sliceOffset = searchStart + paraIndex;
+  } else {
+    const sentenceMatch = candidateSlice.match(/([.!?])(?:\s|$)(?!.*[.!?](?:\s|$))/s);
+    if (sentenceMatch && typeof sentenceMatch.index === "number") {
+      sliceOffset = searchStart + sentenceMatch.index + 1;
+    } else {
+      const lineIndex = candidateSlice.lastIndexOf("\n");
+      if (lineIndex !== -1) {
+        sliceOffset = searchStart + lineIndex;
+      } else {
+        const spaceIndex = candidateSlice.lastIndexOf(" ");
+        if (spaceIndex !== -1) {
+          sliceOffset = searchStart + spaceIndex;
+        }
+      }
+    }
+  }
+
+  const finalLimit = sliceOffset > 0 ? sliceOffset : targetLimit;
+  let trimmed = text.slice(0, finalLimit).trimEnd();
+  if (!trimmed) trimmed = text.slice(0, targetLimit).trimEnd();
+
+  const openFences = (trimmed.match(/```/g) || []).length % 2 === 1;
+  if (openFences) {
+    if (trimmed.length + 5 > maxChars) {
+      const fenceSafeLimit = Math.max(0, maxChars - 5);
+      const safeLine = trimmed.slice(0, fenceSafeLimit).lastIndexOf("\n");
+      const cutAt = safeLine > 0 ? safeLine : fenceSafeLimit;
+      trimmed = trimmed.slice(0, cutAt).trimEnd();
+    }
+    const stillOpen = (trimmed.match(/```/g) || []).length % 2 === 1;
+    return stillOpen ? `${trimmed}\n\`\`\`…` : `${trimmed}…`;
+  }
+
+  return `${trimmed}…`;
 }
+
 
 export function redactSecrets(value) {
   return String(value || "")

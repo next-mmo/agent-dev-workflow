@@ -16,7 +16,8 @@
   ],
   "scripts": {
     "prepack": "node ../../scripts/build-distribution.mjs",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "test:compact": "node --test --test-reporter=dot test/*.test.mjs"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
