@@ -9,6 +9,7 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 const npx = process.platform === "win32" ? "npx.cmd" : "npx";
 const git = process.platform === "win32" ? "git.exe" : "git";
+const pnpmVersion = "11.25.0";
 
 function run(command, args, options = {}) {
   const cwd = options.cwd || repositoryRoot;
@@ -21,8 +22,12 @@ function run(command, args, options = {}) {
   });
 }
 
-function runJson(command, args, cwd) {
-  return JSON.parse(run(command, args, { cwd, capture: true }));
+function runPnpm(args, options = {}) {
+  return run(npx, ["--yes", `pnpm@${pnpmVersion}`, ...args], options);
+}
+
+function runPnpmJson(args, cwd) {
+  return JSON.parse(runPnpm(args, { cwd, capture: true }));
 }
 
 async function writeTodoApi(root) {
@@ -118,33 +123,63 @@ import { TodosModule } from './todos/todos.module';
 })
 export class AppModule {}
 `, "utf8");
+
+  await writeFile(path.join(root, "src/main.ts"), `import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  const requestedPort = Number(process.env.PORT || 0);
+  await app.listen(requestedPort, '127.0.0.1');
+  const address = app.getHttpServer().address();
+  if (!address || typeof address === 'string') throw new Error('expected TCP server address');
+  console.log(\`BETA_PORT=\${address.port}\`);
+}
+bootstrap();
+`, "utf8");
 }
 
-async function waitForServer(url, child) {
-  for (let attempt = 0; attempt < 60; attempt += 1) {
-    if (child.exitCode !== null) throw new Error(`NestJS server exited before becoming ready (code ${child.exitCode})`);
-    try {
-      const response = await fetch(url);
-      if (response.ok) return response;
-    } catch {
-      // Server is still starting.
-    }
-    await new Promise((resolve) => setTimeout(resolve, 250));
-  }
-  throw new Error("NestJS server did not become ready");
+async function waitForPort(child) {
+  return new Promise((resolve, reject) => {
+    let output = "";
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error(`NestJS server did not report readiness. Output:\n${output}`));
+    }, 15000);
+
+    const onData = (chunk) => {
+      output += String(chunk);
+      const match = output.match(/BETA_PORT=(\d+)/);
+      if (!match) return;
+      cleanup();
+      resolve(Number(match[1]));
+    };
+    const onExit = (code) => {
+      cleanup();
+      reject(new Error(`NestJS server exited before readiness (code ${code}). Output:\n${output}`));
+    };
+    const cleanup = () => {
+      clearTimeout(timeout);
+      child.stdout.off("data", onData);
+      child.off("exit", onExit);
+    };
+
+    child.stdout.on("data", onData);
+    child.once("exit", onExit);
+  });
 }
 
 async function exerciseHttp(root) {
   const child = spawn(process.execPath, [path.join(root, "dist/main.js")], {
     cwd: root,
     stdio: ["ignore", "pipe", "pipe"],
-    env: { ...process.env, PORT: "3210" },
+    env: { ...process.env, PORT: "0" },
   });
   let stderr = "";
   child.stderr.on("data", (chunk) => { stderr += String(chunk); });
   try {
-    const base = "http://127.0.0.1:3210/todos";
-    await waitForServer(base, child);
+    const port = await waitForPort(child);
+    const base = `http://127.0.0.1:${port}/todos`;
     const create = await fetch(base, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -186,43 +221,43 @@ async function main() {
     assert.equal(tarballs.length, 1, `expected exactly one packed workflow tarball, found: ${tarballs.join(", ") || "none"}`);
     const tarball = path.join(sandbox, tarballs[0]);
 
-    run(npx, ["--yes", "@nestjs/cli@12.0.0", "new", "todo-api", "--package-manager", "npm", "--skip-git", "--skip-install", "--strict"], { cwd: sandbox });
+    run(npx, ["--yes", "@nestjs/cli@12.0.0", "new", "todo-api", "--package-manager", "pnpm", "--skip-git", "--skip-install", "--strict"], { cwd: sandbox });
     const appRoot = path.join(sandbox, "todo-api");
-    run(npm, ["install"], { cwd: appRoot });
+    runPnpm(["install"], { cwd: appRoot });
     run(git, ["init", "-q"], { cwd: appRoot });
     run(git, ["config", "user.email", "beta@example.invalid"], { cwd: appRoot });
     run(git, ["config", "user.name", "Agent Workflow Beta"], { cwd: appRoot });
 
     await writeFile(path.join(appRoot, "AGENTS.md"), "# Existing Team Instructions\n\n- Keep this user-owned rule.\n", "utf8");
-    run(npm, ["install", "--save-dev", tarball], { cwd: appRoot });
+    runPnpm(["add", "--save-dev", tarball], { cwd: appRoot });
 
-    const initialized = runJson(npm, ["exec", "--", "agent-workflow", "init", "--mode", "vibe", "--json"], appRoot);
+    const initialized = runPnpmJson(["exec", "agent-workflow", "init", "--mode", "vibe", "--json"], appRoot);
     assert.equal(initialized.existingProject, true);
     assert.equal(initialized.mode, "vibe");
-    assert.equal(initialized.packageManager, "npm");
+    assert.equal(initialized.packageManager, "pnpm");
     assert.ok(initialized.updated.includes("AGENTS.md"));
 
     const agents = await readFile(path.join(appRoot, "AGENTS.md"), "utf8");
     assert.match(agents, /Keep this user-owned rule/);
     assert.match(agents, /Agent Workflow Scrum/);
 
-    const doctor = runJson(npm, ["exec", "--", "agent-workflow", "doctor", "--json"], appRoot);
+    const doctor = runPnpmJson(["exec", "agent-workflow", "doctor", "--json"], appRoot);
     assert.equal(doctor.ok, true, doctor.errors?.join("\n"));
 
     await writeTodoApi(appRoot);
-    run(npm, ["test", "--", "--runInBand"], { cwd: appRoot });
-    run(npm, ["run", "build"], { cwd: appRoot });
+    runPnpm(["test"], { cwd: appRoot });
+    runPnpm(["build"], { cwd: appRoot });
     await exerciseHttp(appRoot);
 
     run(git, ["add", "-A"], { cwd: appRoot });
     run(git, ["commit", "-qm", "beta todo baseline"], { cwd: appRoot });
     await appendFile(path.join(appRoot, "src/todos/todos.service.ts"), "\n// beta workflow change\n", "utf8");
 
-    const check = runJson(npm, ["exec", "--", "agent-workflow", "check", "--mode", "vibe", "--json"], appRoot);
+    const check = runPnpmJson(["exec", "agent-workflow", "check", "--mode", "vibe", "--json"], appRoot);
     assert.equal(check.ok, true, check.errors?.join("\n"));
     assert.ok(check.info.some((line) => line.includes("vibe mode active")), "vibe mode should relax task/PRD sync for a product edit");
 
-    const context = run(npm, ["exec", "--", "agent-workflow", "context", "--", "todo service change", "--level", "0", "--budget", "1200"], {
+    const context = runPnpm(["exec", "agent-workflow", "context", "todo service change", "--level", "0", "--budget", "1200", "--provider", "local"], {
       cwd: appRoot,
       capture: true,
     });
