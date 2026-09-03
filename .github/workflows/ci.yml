@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - dev
 
 permissions:
   contents: read
@@ -38,4 +39,23 @@ jobs:
         run: npm run docs:check
 
       - name: Skill source audit
-run: bash scripts/skill.sh check
+        run: bash scripts/skill.sh check
+
+  beta-nestjs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install workflow repository dependencies
+        run: npm ci
+
+      - name: Public beta smoke on a clean NestJS 12 Todo API
+        run: npm run test:beta:nestjs
