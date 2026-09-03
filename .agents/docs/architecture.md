@@ -74,6 +74,8 @@ The active task carries the current Change Contract and acceptance evidence. `ch
 | `.agents/docs/tasks/` | current increment/recovery state | reusable global policy |
 | `.agents/docs/tasks/done/` | completed claim-to-proof evidence | current task authority |
 | `.agents/docs/suggestions/` | workflow proposals, decisions, rationale | current product requirements |
+| `packages/agent-workflow-scrum/` | released engine, templates, and CLI | consumer task/PRD state |
+| `plugins/agent-workflow-scrum/` | portable skill/command bundle | consumer config or acceptance |
 | `.agents/scripts/context.mjs` | bounded context composition | approval/authorization |
 | `.agents/scripts/change-scope.mjs` | factual Git topology/path scope | test selection or base inference |
 | `.agents/scripts/verify-plan.mjs` | smallest-known check selection | proof that path-only inference is complete |

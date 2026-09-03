@@ -4,8 +4,22 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
-const repositoryRoot = path.resolve(scriptDirectory, "../..");
-const reportDirectory = path.join(repositoryRoot, "report");
+
+function parseArgs(argv) {
+  const options = { root: path.resolve(scriptDirectory, "../.."), output: "report" };
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === "--root") options.root = path.resolve(argv[++index] || "");
+    else if (arg === "--output") options.output = argv[++index] || "";
+    else throw new Error(`unknown option: ${arg}`);
+  }
+  if (!options.output) throw new Error("--output requires a directory path");
+  return options;
+}
+
+const options = parseArgs(process.argv.slice(2));
+const repositoryRoot = options.root;
+const reportDirectory = path.resolve(repositoryRoot, options.output);
 
 const sourceDefinitions = [
   ["Repository instructions", "AGENTS.md"],

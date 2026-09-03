@@ -4,17 +4,17 @@
 
 - Node.js `^20.19.0 || >=22.12.0`
 - npm
-- Git (workflow/context/scope checks inspect repository state)
+- Git
 
-Vite 8 is a local development dependency. Prefer `npm ci` for the locked dependency set; use `npm install` only when intentionally updating the lockfile.
+Vite 8 is a development dependency. Prefer `npm ci` for the locked set; use `npm install` only when intentionally updating the lockfile.
 
 ## Repository documentation layout
 
-Agent Workflow Scrum keeps its reusable material under `.agents/`:
+Agent Workflow Scrum keeps reusable material under `.agents/`:
 
-- `.agents/skills/` — executable/reusable agent guidance;
-- `.agents/scripts/` — dependency-light workflow tooling and optional provider adapters;
-- `.agents/docs/` — architecture, delivery/testing guidance, PRDs, tasks, suggestions, and evidence.
+- `.agents/skills/` — executable agent guidance;
+- `.agents/scripts/` — dependency-light tooling and optional providers;
+- `.agents/docs/` — architecture, delivery/testing guidance, PRDs, tasks, suggestions, evidence.
 
 Do not create Agent Workflow Scrum artifacts under a root `docs/` tree. A repository adopting this workflow may still keep its own application/product documentation in `docs/`; only workflow-owned artifacts are reserved for `.agents/docs/`.
 
@@ -28,9 +28,9 @@ The app defaults to <http://localhost:5173>. Set `PORT` for another development 
 
 ## Setup modes
 
-Use `/kb:setup` in an agent session for the required baseline. It verifies Node.js, npm, and Git; installs locked project dependencies; and runs the required repository checks.
+`/kb:setup` verifies Node.js, npm, and Git, installs locked dependencies, and runs checks.
 
-Use `/kb:full-setup` for all supported repository-local setup. It runs `/kb:setup`, initializes the Claude and Cursor adapters, and validates every generated adapter. Full setup does not install or configure external Graphify/OpenViking providers or remote services; those remain explicit opt-in integrations.
+`/kb:full-setup` also initializes and validates Claude/Cursor adapters; external Graphify/OpenViking providers and remote services remain opt-in.
 
 The required baseline terminal sequence is:
 
@@ -88,7 +88,7 @@ npm run context -- "deep recovery" --full --budget 5000
 npm run context -- "api contract" --json
 ```
 
-The default total context budget is approximately 1,500 tokens. Estimates use characters/4 and are a regression signal, not model billing data. The pack is advisory; current code, active tasks, PRDs, tests, and human decisions stay canonical.
+The default total context budget is approximately 1,500 tokens. Estimates use characters/4 as a regression signal, not billing data. The pack is advisory; code, tasks, PRDs, tests, and human decisions stay canonical.
 
 Without `--base`, context uses current worktree changes. With an explicitly verified `--base`, it includes committed merge-base-to-head paths plus staged, unstaged, and untracked paths. Do not infer the PR base from the local branch/upstream when reviewing outgoing committed work.
 
