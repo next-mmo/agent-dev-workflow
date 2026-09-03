@@ -87,7 +87,7 @@ npm run change:scope -- --base origin/main
 npm run verify:plan -- --base origin/main
 ```
 
-`change:scope` never guesses or fetches a base. It reports resolved base/head/merge-base IDs and committed, staged, unstaged, and untracked paths separately.
+`change-scope` never guesses or fetches a base. It reports resolved base/head/merge-base IDs and committed, staged, unstaged, and untracked paths separately.
 
 `verify:plan` maps that factual scope to the smallest known checks. It remains guidance: filenames cannot prove dynamic loading, configuration, subprocess, provider, network, or external-system reachability, so semantic boundary verification is still required.
 
@@ -157,17 +157,19 @@ bash scripts/skill.sh check all
 
 Never edit generated adapters as the source of truth.
 
-## Start a new project
+## Start in an existing project
 
-For an existing repository, install the pinned package and initialize only the consumer-owned workflow contract:
+For a normal existing repository, install the pinned package and initialize the consumer-owned workflow contract. `vibe` is the lowest-ceremony path for users who want the agent to do the engineering work without learning the workflow first:
 
 ```bash
 npm install --save-dev --save-exact @next-mmo/agent-workflow-scrum
-npx agent-workflow init --existing
+npx agent-workflow init --mode vibe
 npx agent-workflow doctor
 ```
 
-Use `pnpm add -D @next-mmo/agent-workflow-scrum` and `pnpm exec agent-workflow ...` when the project uses pnpm. `init` preserves existing files and does not copy `.agents/scripts`, `.agents/skills`, benchmarks, the Counter demo, or workflow history. It creates `AGENTS.md`, `CONTEXT.md`, `.agents/config.json`, and empty task/PRD/suggestion entry points. Configure product paths and checks in `.agents/config.json`, then run `agent-workflow context`, `scope`, `verify`, `check`, `docs`, and `report` from the project root. The CLI and engine remain in the installed package; `.agents/` is consumer-owned workflow state.
+Use `pnpm add -D --save-exact @next-mmo/agent-workflow-scrum` and `pnpm exec agent-workflow ...` when the project uses pnpm. `init` safely detects an existing project, preserves existing workflow-owned files, and appends an isolated Agent Workflow Scrum handoff to an existing `AGENTS.md` only when one is not already present. Re-running `init` is idempotent. The legacy `--existing` flag remains accepted but is no longer required.
+
+Initialization does not copy `.agents/scripts`, `.agents/skills`, benchmarks, the Counter demo, or workflow history. It creates the missing consumer-owned `AGENTS.md`/handoff, `CONTEXT.md`, `.agents/config.json`, and empty task/PRD/suggestion entry points. Configure product paths and checks in `.agents/config.json`, then run `agent-workflow context`, `scope`, `verify`, `check`, `docs`, and `report` from the project root. The CLI and engine remain in the installed package; `.agents/` is consumer-owned workflow state.
 
 For local package development, `npm pack` is the release-shaped artifact; `yalc` is useful only for rapid iteration. Cursor and other Agent Plugin hosts can consume the portable bundle under `plugins/agent-workflow-scrum/` without importing consumer state.
 
@@ -177,7 +179,7 @@ Install the package in the target repository and initialize only its project-own
 
 ```bash
 npm install --save-dev --save-exact @next-mmo/agent-workflow-scrum
-npx agent-workflow init --existing
+npx agent-workflow init --mode vibe
 npx agent-workflow doctor
 ```
 
