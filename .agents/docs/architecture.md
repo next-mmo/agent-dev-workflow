@@ -1,6 +1,6 @@
 # Agent Workflow Scrum Architecture
 
-Read this before changing the workflow engine, context router, provider adapters, task/PRD lifecycle, or verification tooling. This page maps current composition and ownership. Decision rationale belongs in `.agents/docs/suggestions/`; detailed procedures belong in their owning guides.
+Read this before changing the workflow engine, context router, provider adapters, task/PRD lifecycle, or verification tooling. This page maps current composition and ownership. Decision rationale belongs in `.agents/docs/proposals/`; detailed procedures belong in their owning guides.
 
 ## Four planes
 
@@ -71,9 +71,10 @@ The active task carries the current Change Contract and acceptance evidence. `ch
 | `.agents/scripts/` | dependency-light workflow executables, provider adapters, and mechanical checks | product requirements or human approvals |
 | `.agents/docs/` | long-form workflow docs and durable workflow artifacts | executable skill logic |
 | `.agents/docs/prd/` | current product requirements and precedence | implementation evidence |
+| `.agents/docs/plans/` | architectural blueprints, technical designs, schemas | product requirements |
 | `.agents/docs/tasks/` | current increment/recovery state | reusable global policy |
 | `.agents/docs/tasks/done/` | completed claim-to-proof evidence | current task authority |
-| `.agents/docs/suggestions/` | workflow proposals, decisions, rationale | current product requirements |
+| `.agents/docs/proposals/` | workflow proposals, decisions, rationale | current product requirements |
 | `packages/agent-workflow-scrum/` | released engine, templates, and CLI | consumer task/PRD state |
 | `plugins/agent-workflow-scrum/` | portable skill/command bundle | consumer config or acceptance |
 | `.agents/scripts/context.mjs` | bounded context composition | approval/authorization |
@@ -104,7 +105,7 @@ Never make `change:scope` guess a base from branch names or upstream configurati
 
 | Goal | Owner |
 | :--- | :--- |
-| Change universal delivery/risk rules | `.agents/docs/agent-workflow.md` + approved suggestion |
+| Change universal delivery/risk rules | `.agents/docs/agent-workflow.md` + approved proposal |
 | Change context selection/budgeting | `.agents/scripts/context.mjs` + context reference |
 | Add code/memory retrieval | provider adapter + provider reference |
 | Change Git outgoing-scope facts | `.agents/scripts/change-scope.mjs` |
@@ -113,6 +114,6 @@ Never make `change:scope` guess a base from branch names or upstream configurati
 | Add documentation/writing rule | `.agents/docs/AGENTS.md` or prose skill |
 | Add async/test reliability rule | `.agents/docs/testing.md`, `.agents/docs/defensive-patterns.md`, reliability reference |
 | Change product behavior | affected PRD + active task + code/tests |
-| Preserve rationale/trade-off | `.agents/docs/suggestions/` |
+| Preserve rationale/trade-off | `.agents/docs/proposals/` |
 
 When a change alters one of these ownership boundaries, update this map in the same change. Do not recreate a root `docs/` tree.

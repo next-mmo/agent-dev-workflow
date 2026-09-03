@@ -1,0 +1,13 @@
+# .agentignore
+# Exclude files from AI context routing and indexing (similar to .cursorignore)
+
+dist/
+coverage/
+*.min.js
+*.min.css
+*.map
+node_modules/
+.playwright-mcp/
+scratch/
+.worktrees/
+.agents/cache/

@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { collectChangeScope } from "./change-scope.mjs";
 import { estimateTokens, trimToBudget } from "./context/providers/common.mjs";
+import { retrieveCodebaseGraph } from "./context/providers/codebase.mjs";
 import { retrieveGraphify } from "./context/providers/graphify.mjs";
 import { retrieveOpenViking } from "./context/providers/openviking.mjs";
 import { loadWorkflowConfig, matchesPathGroup } from "./workflow-config.mjs";
@@ -33,11 +34,13 @@ function parseArgs(argv) {
     providerTimeout: DEFAULT_PROVIDER_TIMEOUT,
     base: "",
     head: "HEAD",
+    includeDone: false,
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--json") options.json = true;
     else if (arg === "--full") options.level = 2;
+    else if (arg === "--include-done" || arg === "--done") options.includeDone = true;
     else if (arg === "--level") {
       const value = Number(argv[++index]);
       if (![0, 1, 2].includes(value)) throw new Error("--level must be 0, 1, or 2");
@@ -66,8 +69,8 @@ function parseArgs(argv) {
       options.scope.push(arg);
     }
   }
-  if (!["auto", "local", "graphify", "openviking", "all"].includes(options.provider)) {
-    throw new Error("--provider must be auto, local, graphify, openviking, or all");
+  if (!["auto", "local", "graphify", "openviking", "all", "codebase", "native"].includes(options.provider)) {
+    throw new Error("--provider must be auto, local, graphify, openviking, all, codebase, or native");
   }
   if (options.head !== "HEAD" && !options.base) throw new Error("--head requires --base <verified-ref>");
   return options;
@@ -153,9 +156,14 @@ function scoreDocument(document, terms, changedPaths) {
   const haystack = `${document.path}\n${document.title}\n${document.content}`.toLowerCase();
   let score = document.kind === "active-task" ? 100 : 0;
   if (document.kind === "prd-index") score += 18;
+  if (document.kind === "solution") score += 16;
   if (document.kind === "prd") score += 10;
+  if (document.kind === "plan") score += 8;
+  if (document.kind === "proposal") score += 6;
   for (const term of terms) {
-    if (document.path.toLowerCase().includes(term)) score += 12;
+    if (document.path.toLowerCase().includes(term)) {
+      score += document.kind === "completed-task" ? 50 : 12;
+    }
     if (document.title.toLowerCase().includes(term)) score += 10;
     const matches = haystack.split(term).length - 1;
     score += Math.min(matches, 8) * 2;
@@ -204,7 +212,7 @@ function isPriorityChangedPath(file, config) {
     || /^\.agents\/docs\/(?:prd\/|tasks\/(?:wip|blocked)\/)/.test(file);
 }
 
-async function collectDocuments(root) {
+async function collectDocuments(root, options = {}) {
   const documents = [];
   const add = async (relativePath, kind) => {
     const content = await readText(root, relativePath);
@@ -223,11 +231,30 @@ async function collectDocuments(root) {
     if (/\/((wip|blocked)-[^/]+\.md)$/.test(`/${file}`)) await add(file, "active-task");
     else if (/\/(todo-[^/]+\.md)$/.test(`/${file}`)) await add(file, "todo-task");
   }
+  for (const file of await markdownFiles(root, `${DOCS_ROOT}/plans`)) {
+    if (!file.endsWith("README.md") && !file.endsWith("0000-template.md")) await add(file, "plan");
+  }
+  for (const file of await markdownFiles(root, `${DOCS_ROOT}/proposals`)) {
+    if (!file.endsWith("README.md") && !file.endsWith("0000-template.md")) await add(file, "proposal");
+  }
+  for (const file of await markdownFiles(root, `${DOCS_ROOT}/suggestions`)) {
+    if (!file.endsWith("README.md") && !file.endsWith("0000-template.md")) await add(file, "proposal");
+  }
+  for (const file of await markdownFiles(root, `${DOCS_ROOT}/solutions`)) {
+    if (!file.endsWith("README.md") && !file.endsWith("0000-template.md")) await add(file, "solution");
+  }
+  const shouldIncludeDone = options.includeDone || options.scope?.some((term) => /done-\d+|task-\d+/i.test(term));
+  if (shouldIncludeDone) {
+    for (const file of await markdownFiles(root, `${DOCS_ROOT}/tasks/done`)) {
+      if (file.endsWith(".md") && !file.endsWith("README.md")) await add(file, "completed-task");
+    }
+  }
   return documents;
 }
 
 function providerNames(mode) {
   if (mode === "local") return [];
+  if (mode === "codebase" || mode === "native") return ["codebase"];
   if (mode === "graphify") return ["graphify"];
   if (mode === "openviking") return ["openviking"];
   if (mode === "all") return ["graphify", "openviking"];
@@ -237,6 +264,7 @@ function providerNames(mode) {
 function allocateProviderBudgets(totalBudget, names) {
   const reserve = Math.max(0, totalBudget - MIN_LOCAL_BUDGET - 120);
   const desired = {
+    codebase: Math.min(450, Math.floor(totalBudget * 0.30)),
     graphify: Math.min(450, Math.floor(totalBudget * 0.30)),
     openviking: Math.min(300, Math.floor(totalBudget * 0.20)),
   };
@@ -253,7 +281,14 @@ async function retrieveProviders({ options, root, scope, changedPaths }) {
   const budgets = allocateProviderBudgets(options.budget, names);
   const providers = [];
   for (const name of names) {
-    if (name === "graphify") {
+    if (name === "codebase") {
+      providers.push(await retrieveCodebaseGraph({
+        root,
+        scope,
+        budgetTokens: budgets.codebase,
+        changedPaths,
+      }));
+    } else if (name === "graphify") {
       providers.push(await retrieveGraphify({
         root,
         scope,
@@ -274,7 +309,7 @@ async function retrieveProviders({ options, root, scope, changedPaths }) {
 }
 
 async function buildLocalContext({ options, root, branch, changedPaths, scope, localBudget }) {
-  const documents = await collectDocuments(root);
+  const documents = await collectDocuments(root, options);
   const active = documents.filter((document) => document.kind === "active-task");
   const terms = tokenize(scope);
   const ruleHints = classifyRuleHints(terms, changedPaths);
@@ -308,6 +343,7 @@ async function buildLocalContext({ options, root, branch, changedPaths, scope, l
     let remainingChars = Math.max(0, localBudget * 4 - JSON.stringify(local).length - 400);
     for (const document of selected) {
       if (remainingChars < 200) break;
+      if (document.kind === "prd" && document.score <= 10) continue;
       const maxChars = Math.min(options.level === 2 ? document.content.length : 2200, remainingChars);
       const content = options.level === 2
         ? document.content.slice(0, maxChars)
@@ -326,6 +362,17 @@ function enforceBudget(result, config) {
   };
   let over = update();
   if (over <= 0) return;
+
+  const compactPaths = (paths) => {
+    const prioritized = paths.filter((file) => isPriorityChangedPath(file, config));
+    const remaining = paths.filter((file) => !isPriorityChangedPath(file, config));
+    return [...new Set([...prioritized, ...remaining])].slice(0, 5);
+  };
+  if (result.git.changedPaths.length > 8) {
+    result.git.changedPaths = compactPaths(result.git.changedPaths);
+    result.git.changedPathsTruncated = true;
+    over = update();
+  }
 
   for (let index = result.providers.length - 1; index >= 0 && over > 0; index -= 1) {
     const provider = result.providers[index];
@@ -352,21 +399,6 @@ function enforceBudget(result, config) {
       result.selected.splice(index, 1);
       over = update();
     }
-  }
-  const compactPaths = (paths) => {
-    const prioritized = paths.filter((file) => isPriorityChangedPath(file, config));
-    const remaining = paths.filter((file) => !isPriorityChangedPath(file, config));
-    return [...new Set([...prioritized, ...remaining])].slice(0, 3);
-  };
-  if (over > 0 && result.git.changedPaths.length > 3) {
-    result.git.changedPaths = compactPaths(result.git.changedPaths);
-    result.git.changedPathsTruncated = true;
-    over = update();
-  }
-  if (over > 0 && result.git.outgoing?.committedPaths?.length > 3) {
-    result.git.outgoing.committedPaths = compactPaths(result.git.outgoing.committedPaths);
-    result.git.outgoing.committedPathsTruncated = true;
-    over = update();
   }
   for (let index = result.documents.length - 1; index >= 0 && over > 0; index -= 1) {
     const document = result.documents[index];

@@ -32,8 +32,10 @@ const sourceDefinitions = [
   ["Defensive patterns", ".agents/docs/defensive-patterns.md"],
   ["Model recommendations", ".agents/docs/model-recommend.md"],
   ["PRD index", ".agents/docs/prd/0000-prd-index.md"],
+  ["Plans guide", ".agents/docs/plans/README.md"],
   ["Task board guide", ".agents/docs/tasks/README.md"],
-  ["Suggestions guide", ".agents/docs/suggestions/README.md"],
+  ["Solutions guide", ".agents/docs/solutions/README.md"],
+  ["Proposals guide", ".agents/docs/proposals/README.md"],
   ["Canonical workflow skill", ".agents/skills/agent-workflow-scrum/SKILL.md"],
   ["Prose skill", ".agents/skills/agent-workflow-prose/SKILL.md"],
 ];

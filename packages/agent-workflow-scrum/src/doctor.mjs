@@ -69,6 +69,10 @@ export async function diagnoseProject(argv, cwd = process.cwd()) {
     else errors.push(`${packageManager} is configured but not available on PATH`);
   }
 
+  if (config?.mode) {
+    info.push(`ceremony mode: ${config.mode}`);
+  }
+
   for (const relativePath of vendoredPaths) {
     if (await exists(path.join(options.root, relativePath))) {
       warnings.push(`${relativePath} is vendored; package/plugin mode does not require it`);
@@ -80,6 +84,7 @@ export async function diagnoseProject(argv, cwd = process.cwd()) {
     root: options.root.replaceAll("\\", "/"),
     node: process.version,
     packageManager: packageManager || null,
+    mode: config?.mode || null,
     errors,
     warnings,
     info,

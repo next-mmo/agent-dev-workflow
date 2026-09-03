@@ -58,6 +58,29 @@ test("workflow config validates package manager and matches configured paths", (
   assert.throws(() => normalizeWorkflowConfig({ paths: { product: "apps" } }), /paths\.product/);
 });
 
+test("workflow config normalizes and validates ceremony modes", () => {
+  const defaultConf = normalizeWorkflowConfig({});
+  assert.equal(defaultConf.mode, "standard");
+  for (const validMode of ["vibe", "standard", "strict", "guided"]) {
+    assert.equal(normalizeWorkflowConfig({ mode: validMode }).mode, validMode);
+  }
+  assert.throws(() => normalizeWorkflowConfig({ mode: "cowboy" }), /mode must be one of/);
+});
+
+test("workflow config normalizes and validates archive settings with default 2 weeks", () => {
+  const defaultConf = normalizeWorkflowConfig({});
+  assert.deepEqual(defaultConf.archive, { autoArchiveDone: true, retentionDays: 14 });
+
+  const customConf = normalizeWorkflowConfig({ archive: { autoArchiveDone: false, retentionDays: 30 } });
+  assert.deepEqual(customConf.archive, { autoArchiveDone: false, retentionDays: 30 });
+
+  const boolConf = normalizeWorkflowConfig({ archive: false });
+  assert.equal(boolConf.archive.autoArchiveDone, false);
+
+  assert.throws(() => normalizeWorkflowConfig({ archive: { retentionDays: -5 } }), /retentionDays/);
+  assert.throws(() => normalizeWorkflowConfig({ archive: { retentionDays: "invalid" } }), /retentionDays/);
+});
+
 test("scope and verification use consumer path and command configuration", async () => {
   const root = await fixture();
   try {

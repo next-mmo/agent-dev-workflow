@@ -17,7 +17,7 @@ async function exists(filePath) {
 }
 
 function parseArgs(argv, cwd) {
-  const options = { root: cwd, existing: false, dryRun: false, json: false, packageManager: "", positional: [] };
+  const options = { root: cwd, existing: false, dryRun: false, json: false, packageManager: "", mode: "standard", positional: [] };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--existing") options.existing = true;
@@ -25,6 +25,7 @@ function parseArgs(argv, cwd) {
     else if (arg === "--json") options.json = true;
     else if (arg === "--root") options.root = path.resolve(argv[++index] || "");
     else if (arg === "--package-manager") options.packageManager = argv[++index] || "";
+    else if (arg === "--mode") options.mode = argv[++index] || "";
     else if (arg.startsWith("--")) throw new Error(`unknown option: ${arg}`);
     else options.positional.push(arg);
   }
@@ -32,6 +33,9 @@ function parseArgs(argv, cwd) {
   if (options.positional.length) options.root = path.resolve(cwd, options.positional[0]);
   if (options.packageManager && !packageManagers.has(options.packageManager)) {
     throw new Error("--package-manager must be npm, pnpm, yarn, or bun");
+  }
+  if (!["vibe", "standard", "strict", "guided"].includes(options.mode)) {
+    throw new Error("--mode must be vibe, standard, strict, or guided");
   }
   return options;
 }
@@ -74,10 +78,11 @@ function scriptCommand(packageManager, name, scripts) {
   return `${packageManager} ${name}`;
 }
 
-function configFor(packageManager, scripts) {
+function configFor(packageManager, scripts, mode = "standard") {
   const localRunner = runner(packageManager);
   return {
     schemaVersion: 1,
+    mode,
     packageManager,
     paths: {
       product: ["src/**", "apps/**", "packages/**", "crates/**", "public/**", "index.html"],
@@ -123,7 +128,7 @@ export async function initializeProject(argv, cwd = process.cwd()) {
   const files = new Map([
     ["AGENTS.md", await renderedTemplate("AGENTS.md", { RUNNER: localRunner })],
     ["CONTEXT.md", await renderedTemplate("CONTEXT.md")],
-    [".agents/config.json", `${JSON.stringify(configFor(packageManager, scripts), null, 2)}\n`],
+    [".agents/config.json", `${JSON.stringify(configFor(packageManager, scripts, options.mode), null, 2)}\n`],
     [".agents/docs/doc-budgets.json", await renderedTemplate("doc-budgets.json")],
     [".agents/docs/prd/0000-prd-index.md", await renderedTemplate("prd-index.md", { TODAY: today })],
     [".agents/docs/tasks/README.md", await renderedTemplate("tasks-readme.md")],

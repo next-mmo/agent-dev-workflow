@@ -10,6 +10,8 @@ const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(testDirectory, "..");
 const contextScript = path.join(repositoryRoot, ".agents/scripts/context.mjs");
 const checkScript = path.join(repositoryRoot, ".agents/scripts/workflow-check.mjs");
+const modeScript = path.join(repositoryRoot, ".agents/scripts/mode.mjs");
+const archiveScript = path.join(repositoryRoot, ".agents/scripts/archive.mjs");
 const docsRoot = ".agents/docs";
 
 async function fixture() {
@@ -211,3 +213,94 @@ test("workflow checker rejects applied suggestions without a human decision", as
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("workflow checker accepts product changes without task in vibe mode", async () => {
+  const root = await fixture();
+  try {
+    await mkdir(path.join(root, "src"), { recursive: true });
+    await writeFile(path.join(root, "src/app.js"), "export const value = 1;\n", "utf8");
+    const standardResult = spawnSync(process.execPath, [checkScript, "--root", root, "--json"], { encoding: "utf8" });
+    assert.notEqual(standardResult.status, 0);
+
+    const vibeResult = runJson(checkScript, ["--root", root, "--mode", "vibe"]);
+    assert.equal(vibeResult.ok, true, JSON.stringify(vibeResult.errors));
+    assert.ok(vibeResult.info.some((item) => item.includes("vibe mode active")));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("workflow checker in guided mode provides remediation tip", async () => {
+  const root = await fixture();
+  try {
+    await mkdir(path.join(root, "src"), { recursive: true });
+    await writeFile(path.join(root, "src/app.js"), "export const value = 1;\n", "utf8");
+    const result = spawnSync(process.execPath, [checkScript, "--root", root, "--mode", "guided", "--json"], { encoding: "utf8" });
+    assert.notEqual(result.status, 0);
+    const parsed = JSON.parse(result.stdout);
+    assert.ok(parsed.errors.some((error) => error.includes("Guided Tip:")));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("mode CLI script inspects and switches workflow ceremony mode", async () => {
+  const root = await fixture();
+  try {
+    const inspectResult = runJson(modeScript, ["--root", root]);
+    assert.equal(inspectResult.ok, true);
+    assert.equal(inspectResult.mode, "standard");
+
+    const setResult = runJson(modeScript, ["vibe", "--root", root]);
+    assert.equal(setResult.ok, true);
+    assert.equal(setResult.mode, "vibe");
+
+    const recheckResult = runJson(modeScript, ["--root", root]);
+    assert.equal(recheckResult.mode, "vibe");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("workflow checker allows style-only changes under fast path without task", async () => {
+  const root = await fixture();
+  try {
+    await mkdir(path.join(root, "src"), { recursive: true });
+    await writeFile(path.join(root, "src/styles.css"), "body { color: red; }\n", "utf8");
+    const result = runJson(checkScript, ["--root", root]);
+    assert.equal(result.ok, true, JSON.stringify(result.errors));
+    assert.ok(result.info.some((item) => item.includes("style path(s) changed; fast path active")));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("task archiver moves completed tasks older than retention days and keeps recent ones", async () => {
+  const root = await fixture();
+  try {
+    const oldTask = path.join(root, docsRoot, "tasks/done/done-0001-old.md");
+    const newTask = path.join(root, docsRoot, "tasks/done/done-0002-new.md");
+    await writeFile(oldTask, "# Old Task\n> **Status:** done\n> **Completed:** 2026-08-01\n", "utf8");
+    await writeFile(newTask, "# New Task\n> **Status:** done\n> **Completed:** 2026-09-03\n", "utf8");
+
+    // Run dry-run first
+    const dryRunResult = runJson(archiveScript, ["--dry-run", "--days", "14", "--root", root]);
+    assert.equal(dryRunResult.ok, true);
+    assert.equal(dryRunResult.dryRun, true);
+    assert.equal(dryRunResult.archived.length, 1);
+    assert.equal(dryRunResult.archived[0].file, "done-0001-old.md");
+
+    // Run real archive
+    const realResult = runJson(archiveScript, ["--days", "14", "--root", root]);
+    assert.equal(realResult.ok, true);
+    assert.equal(realResult.archived.length, 1);
+    assert.equal(realResult.archived[0].destPath, ".agents/docs/tasks/archived/2026/done-0001-old.md");
+    assert.equal(realResult.retained.length, 1);
+    assert.equal(realResult.retained[0].file, "done-0002-new.md");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+
+

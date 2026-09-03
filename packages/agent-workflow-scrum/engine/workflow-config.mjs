@@ -3,10 +3,19 @@ import path from "node:path";
 
 export const CONFIG_PATH = ".agents/config.json";
 export const SUPPORTED_PACKAGE_MANAGERS = ["npm", "pnpm", "yarn", "bun"];
+export const SUPPORTED_MODES = ["vibe", "standard", "strict", "guided"];
+export const DEFAULT_MODE = "standard";
+
+export const DEFAULT_RETENTION_DAYS = 14; // 2 weeks default
 
 const defaultConfig = Object.freeze({
   schemaVersion: 1,
+  mode: DEFAULT_MODE,
   packageManager: "npm",
+  archive: {
+    autoArchiveDone: true,
+    retentionDays: DEFAULT_RETENTION_DAYS,
+  },
   paths: {
     product: ["src/**", "public/**", "index.html"],
     tests: ["tests/**", "**/*.test.*", "**/*.spec.*"],
@@ -19,6 +28,16 @@ const defaultConfig = Object.freeze({
       "tsconfig*", "eslint*", "biome*", "Dockerfile*", "docker-compose*",
     ],
   },
+  ignore: [
+    "dist/**",
+    "coverage/**",
+    "**/*.min.js",
+    "**/*.min.css",
+    "**/*.map",
+    "node_modules/**",
+    ".playwright-mcp/**",
+    "scratch/**",
+  ],
   checks: {
     test: "npm test",
     build: "npm run build",
@@ -64,6 +83,12 @@ export function normalizeWorkflowConfig(input = {}) {
   if (source.schemaVersion !== undefined && source.schemaVersion !== 1) {
     throw new Error(`${CONFIG_PATH}: schemaVersion must be 1`);
   }
+  const envMode = (process.env.WORKFLOW_MODE || process.env.AGENT_WORKFLOW_MODE || "").trim().toLowerCase();
+  const rawMode = (envMode && SUPPORTED_MODES.includes(envMode)) ? envMode : (source.mode ?? defaults.mode);
+  const mode = String(rawMode || "").trim().toLowerCase();
+  if (!SUPPORTED_MODES.includes(mode)) {
+    throw new Error(`${CONFIG_PATH}: mode must be one of: ${SUPPORTED_MODES.join(", ")}`);
+  }
   const packageManager = source.packageManager ?? defaults.packageManager;
   if (!SUPPORTED_PACKAGE_MANAGERS.includes(packageManager)) {
     throw new Error(`${CONFIG_PATH}: packageManager must be ${SUPPORTED_PACKAGE_MANAGERS.join(", ")}`);
@@ -98,7 +123,35 @@ export function normalizeWorkflowConfig(input = {}) {
     contextBudgets[file.replaceAll("\\", "/")] = budget;
   }
 
-  return { schemaVersion: 1, packageManager, paths, checks, contextBudgets };
+  const sourceArchive = source.archive === undefined
+    ? defaults.archive
+    : (typeof source.archive === "boolean"
+      ? { autoArchiveDone: source.archive, retentionDays: DEFAULT_RETENTION_DAYS }
+      : objectOrEmpty(source.archive));
+
+  const autoArchiveDone = sourceArchive.autoArchiveDone !== undefined
+    ? Boolean(sourceArchive.autoArchiveDone)
+    : (sourceArchive.enabled !== undefined ? Boolean(sourceArchive.enabled) : true);
+
+  let retentionDays = DEFAULT_RETENTION_DAYS;
+  if (sourceArchive.retentionDays !== undefined) {
+    const days = Number(sourceArchive.retentionDays);
+    if (!Number.isInteger(days) || days < 1) {
+      throw new Error(`${CONFIG_PATH}: archive.retentionDays must be an integer >= 1`);
+    }
+    retentionDays = days;
+  }
+
+  const ignore = source.ignore === undefined
+    ? defaults.ignore
+    : validateStringArray(source.ignore, "ignore");
+
+  const archive = {
+    autoArchiveDone,
+    retentionDays,
+  };
+
+  return { schemaVersion: 1, mode, packageManager, paths, ignore, checks, contextBudgets, archive };
 }
 
 export function loadWorkflowConfigSync(root = process.cwd()) {

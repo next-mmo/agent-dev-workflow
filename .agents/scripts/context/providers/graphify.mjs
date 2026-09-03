@@ -1,4 +1,4 @@
-import { access } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { baseProvider, estimateTokens, parseArgPrefix, redactSecrets, runCli, trimToBudget } from "./common.mjs";
 
@@ -39,7 +39,35 @@ export async function retrieveGraphify({ root, scope, budgetTokens, timeoutMs, c
     [...prefixArgs, "query", scope, "--budget", String(budgetTokens), "--graph", graphPath],
     { cwd: root, timeoutMs },
   );
-  if (!execution.ok) return { ...provider, ...execution, content: "", estimatedTokens: 0 };
+  if (!execution.ok) {
+    if (execution.status === "unavailable" && !process.env.GRAPHIFY_BIN) {
+      try {
+        const graphData = JSON.parse(await readFile(graphPath, "utf8"));
+        const terms = scope.toLowerCase().split(/\s+/).filter(Boolean);
+        const matchingNodes = (graphData.nodes || []).filter((n) =>
+          terms.some((t) => n.file.toLowerCase().includes(t) || (n.functions || []).some((f) => f.toLowerCase().includes(t)) || (n.classes || []).some((c) => c.toLowerCase().includes(t)))
+        );
+        const lines = [
+          `Code graph: ${graphData.stats?.filesIndexed || 0} files, ${graphData.stats?.symbolsIndexed || 0} symbols`,
+        ];
+        for (const node of matchingNodes.slice(0, 4)) {
+          lines.push(`- ${node.file}: functions [${(node.functions || []).join(", ")}], classes [${(node.classes || []).join(", ")}]`);
+        }
+        const text = lines.join("\n");
+        const content = trimToBudget(text, budgetTokens);
+        return {
+          ...provider,
+          status: "ok",
+          content,
+          estimatedTokens: estimateTokens(content),
+          durationMs: 5,
+        };
+      } catch {
+        // Continue to return execution below
+      }
+    }
+    return { ...provider, ...execution, content: "", estimatedTokens: 0 };
+  }
 
   const content = trimToBudget(redactSecrets(execution.stdout), budgetTokens);
   return {

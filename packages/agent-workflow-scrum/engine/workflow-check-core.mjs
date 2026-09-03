@@ -10,7 +10,7 @@ const defaultRoot = path.resolve(scriptDirectory, "..");
 const DOCS_ROOT = ".agents/docs";
 
 function parseArgs(argv) {
-  const options = { root: defaultRoot, json: false, strictBudget: false, base: "", head: "HEAD" };
+  const options = { root: defaultRoot, json: false, strictBudget: false, base: "", head: "HEAD", mode: "" };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--json") options.json = true;
@@ -18,6 +18,7 @@ function parseArgs(argv) {
     else if (arg === "--root") options.root = path.resolve(argv[++index] || "");
     else if (arg === "--base") options.base = argv[++index] || "";
     else if (arg === "--head") options.head = argv[++index] || "";
+    else if (arg === "--mode") options.mode = argv[++index] || "";
     else throw new Error(`unknown option: ${arg}`);
   }
   if (options.head !== "HEAD" && !options.base) throw new Error("--head requires --base <verified-ref>");
@@ -93,6 +94,10 @@ function gitStatusPaths(root) {
   return [...new Set(paths)].sort();
 }
 
+function isStyleOnlyPath(file) {
+  return /\.(css|scss|sass|less|styl)$/i.test(file);
+}
+
 function isProductPath(file, config) {
   return matchesPathGroup(file, config, "product");
 }
@@ -113,6 +118,15 @@ function prdId(file) {
 async function validateProductSynchronization({ root, changedPaths, active, errors, info, config }) {
   const productPaths = changedPaths.filter((file) => isProductPath(file, config));
   if (!productPaths.length) return;
+  if (config.mode === "vibe") {
+    info.push(`product synchronization: ${productPaths.length} product path(s) changed; vibe mode active (task/PRD sync relaxed)`);
+    return;
+  }
+  const nonStylePaths = productPaths.filter((file) => !isStyleOnlyPath(file));
+  if (nonStylePaths.length === 0) {
+    info.push(`product synchronization: ${productPaths.length} style path(s) changed; fast path active (task/PRD sync relaxed for style-only tweaks)`);
+    return;
+  }
   info.push(`product synchronization: ${productPaths.length} product path(s) require task/PRD/evidence metadata`);
 
   const changedDone = changedPaths
@@ -121,7 +135,14 @@ async function validateProductSynchronization({ root, changedPaths, active, erro
   let taskFile = "";
   if (active.length === 1) taskFile = active[0];
   else if (active.length === 0 && changedDone.length === 1) taskFile = changedDone[0];
-  else if (active.length === 0) errors.push("product changes require one active wip/blocked task or one changed completed task with evidence");
+  else if (active.length === 0) {
+    const message = "product changes require one active wip/blocked task or one changed completed task with evidence";
+    if (config.mode === "guided") {
+      errors.push(`${message} (Guided Tip: run '/kb:todo' to create a task, or switch to vibe mode with 'agent-workflow mode vibe')`);
+    } else {
+      errors.push(message);
+    }
+  }
 
   if (!taskFile) {
     if (changedDone.length > 1) errors.push(`product changes have multiple changed completed tasks; select one increment: ${changedDone.join(", ")}`);
@@ -136,7 +157,8 @@ async function validateProductSynchronization({ root, changedPaths, active, erro
 
   const prdReferences = taskPrdReferences(task).filter((file) => file.startsWith(`${DOCS_ROOT}/prd/`));
   if (!prdReferences.length) {
-    errors.push(`${taskFile}: product changes must declare a canonical PRD field such as \`${DOCS_ROOT}/prd/0001-example.md\``);
+    const prdMsg = `${taskFile}: product changes must declare a canonical PRD field such as \`${DOCS_ROOT}/prd/0001-example.md\``;
+    errors.push(config.mode === "guided" ? `${prdMsg} (Guided Tip: add '> **PRD:** \`${DOCS_ROOT}/prd/0001-...\`' to task header)` : prdMsg);
   }
 
   const index = await readText(root, `${DOCS_ROOT}/prd/0000-prd-index.md`);
@@ -148,7 +170,13 @@ async function validateProductSynchronization({ root, changedPaths, active, erro
     }
   }
   if (index === null) errors.push(`missing ${DOCS_ROOT}/prd/0000-prd-index.md for product synchronization`);
-  if (!/^##\s+[^\n]*Acceptance Criteria/im.test(task)) errors.push(`${taskFile}: product task must include an Acceptance Criteria section`);
+  if (!/^##\s+[^\n]*Acceptance Criteria/im.test(task)) {
+    const acMsg = `${taskFile}: product task must include an Acceptance Criteria section`;
+    errors.push(config.mode === "guided" ? `${acMsg} (Guided Tip: add '## Acceptance Criteria' checklist)` : acMsg);
+  }
+  if (config.mode === "strict" && !/^##\s+[^\n]*(?:Rollback|Recovery)/im.test(task)) {
+    errors.push(`${taskFile}: strict mode requires a Rollback or Recovery section in task`);
+  }
   const evidenceHeading = task.match(/^##\s+Evidence Ledger\s*$/im);
   const evidence = evidenceHeading
     ? task.slice((evidenceHeading.index || 0) + evidenceHeading[0].length).replace(/^\s+/, "").split(/^##\s+/m, 1)[0].trim()
@@ -172,8 +200,21 @@ async function run(options) {
   const info = [];
   const root = options.root;
   const config = await loadWorkflowConfig(root);
+  if (options.mode) {
+    if (!["vibe", "standard", "strict", "guided"].includes(options.mode)) {
+      throw new Error(`invalid --mode '${options.mode}'; expected vibe, standard, strict, or guided`);
+    }
+    config.mode = options.mode;
+  }
+  info.push(`ceremony mode: ${config.mode}`);
+  if (config.mode === "strict") {
+    options.strictBudget = true;
+  }
   const tasksRoot = `${DOCS_ROOT}/tasks`;
-  const suggestionsRoot = `${DOCS_ROOT}/suggestions`;
+  const proposalsRoot = `${DOCS_ROOT}/proposals`;
+  const legacySuggestionsRoot = `${DOCS_ROOT}/suggestions`;
+  const plansRoot = `${DOCS_ROOT}/plans`;
+  const solutionsRoot = `${DOCS_ROOT}/solutions`;
 
   const rootTasks = await markdownFiles(root, tasksRoot);
   const lifecycleTasks = rootTasks.filter((file) => /\/(todo|wip|blocked)-[^/]+\.md$/.test(`/${file}`));
@@ -208,27 +249,42 @@ async function run(options) {
   }
 
   for (const file of await markdownFiles(root, `${tasksRoot}/done`)) {
+    if (file.endsWith("README.md")) continue;
     if (!/\/done-[^/]+\.md$/.test(`/${file}`)) warnings.push(`${file}: completed task filename should start with done-`);
     const content = await readText(root, file);
     const declared = statusOf(content);
     if (declared && !declared.includes("done")) errors.push(`${file}: completed task must declare done status, found '${declared}'`);
   }
 
-  const suggestionFiles = (await markdownFiles(root, suggestionsRoot)).filter((file) => !file.endsWith("README.md") && !file.endsWith("0000-template.md"));
-  const validSuggestionStatuses = new Set(["proposed", "accepted", "applied", "rejected", "superseded"]);
-  for (const file of suggestionFiles) {
+  const proposalFiles = [
+    ...(await markdownFiles(root, proposalsRoot)),
+    ...(await markdownFiles(root, legacySuggestionsRoot)),
+  ].filter((file) => !file.endsWith("README.md") && !file.endsWith("0000-template.md"));
+  const validProposalStatuses = new Set(["proposed", "accepted", "applied", "rejected", "superseded"]);
+  for (const file of proposalFiles) {
     const content = await readText(root, file);
     const status = statusOf(content);
-    if (!status) errors.push(`${file}: suggestion is missing a status`);
-    else if (!validSuggestionStatuses.has(status)) errors.push(`${file}: unknown suggestion status '${status}'`);
+    if (!status) errors.push(`${file}: proposal is missing a status`);
+    else if (!validProposalStatuses.has(status)) errors.push(`${file}: unknown proposal status '${status}'`);
     const decision = content?.match(/- \*\*Decision:\*\*\s*(.+?)\s*$/im)?.[1]?.trim().toLowerCase() || "";
     if (["accepted", "applied", "rejected", "superseded"].includes(status) && (!decision || decision === "pending")) {
-      errors.push(`${file}: ${status} suggestion must record a non-pending human decision`);
+      errors.push(`${file}: ${status} proposal must record a non-pending human decision`);
     }
     if (status === "proposed" && decision && decision !== "pending") {
       warnings.push(`${file}: proposal records decision '${decision}' but status is still proposed`);
     }
   }
+
+  const planFiles = (await markdownFiles(root, plansRoot)).filter((file) => !file.endsWith("README.md") && !file.endsWith("0000-template.md"));
+  const validPlanStatuses = new Set(["draft", "approved", "in-progress", "completed", "superseded"]);
+  for (const file of planFiles) {
+    const content = await readText(root, file);
+    const status = statusOf(content);
+    if (!status) errors.push(`${file}: plan is missing a status`);
+    else if (!validPlanStatuses.has(status)) errors.push(`${file}: unknown plan status '${status}'`);
+  }
+
+  const solutionFiles = (await markdownFiles(root, solutionsRoot)).filter((file) => !file.endsWith("README.md") && !file.endsWith("0000-template.md"));
 
   const linkSources = [
     "README.md",
@@ -239,9 +295,14 @@ async function run(options) {
     `${DOCS_ROOT}/agent-workflow.md`,
     `${DOCS_ROOT}/architecture.md`,
     `${tasksRoot}/README.md`,
-    `${suggestionsRoot}/README.md`,
+    `${proposalsRoot}/README.md`,
+    `${legacySuggestionsRoot}/README.md`,
+    `${plansRoot}/README.md`,
+    `${solutionsRoot}/README.md`,
     ".agents/skills/agent-workflow-scrum/SKILL.md",
-    ...suggestionFiles,
+    ...proposalFiles,
+    ...planFiles,
+    ...solutionFiles,
     ...lifecycleTasks,
   ];
   for (const source of linkSources) {

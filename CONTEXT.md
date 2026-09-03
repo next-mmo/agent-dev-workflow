@@ -19,8 +19,8 @@ For **what should be true**, prefer:
 1. explicit current human decision/approval;
 2. active task acceptance, non-goals, and approved change contract;
 3. affected PRD requirement;
-4. applied workflow policy in tracked instructions and approved suggestions;
-5. completed-task/suggestion rationale;
+4. applied workflow policy in tracked instructions and approved proposals;
+5. completed-task/proposal rationale;
 6. chat or agent-local memory.
 
 Surface conflicts; do not silently choose a convenient source.

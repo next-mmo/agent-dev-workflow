@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
+import { loadIgnoreFilterSync } from "./ignore-core.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(scriptDirectory, "../..");
@@ -43,8 +44,8 @@ function parseArgs(argv) {
     else if (arg.startsWith("--")) throw new Error(`unknown option: ${arg}`);
     else options.scope.push(arg);
   }
-  if (!["auto", "local", "graphify", "openviking", "all"].includes(options.provider)) {
-    throw new Error("--provider must be auto, local, graphify, openviking, or all");
+  if (!["auto", "local", "graphify", "openviking", "all", "codebase", "native"].includes(options.provider)) {
+    throw new Error("--provider must be auto, local, graphify, openviking, all, codebase, or native");
   }
   if (options.head !== "HEAD" && !options.base) throw new Error("--head requires --base <verified-ref>");
   if (!options.scope.length) options.scope = ["benchmark context routing"];
@@ -69,9 +70,11 @@ function isText(buffer) {
 }
 
 function collectRawBaseline(root) {
+  const ignoreFilter = loadIgnoreFilterSync(root);
   let files = 0;
   let characters = 0;
   for (const file of gitFiles(root)) {
+    if (ignoreFilter.isIgnored(file)) continue;
     let content;
     try {
       content = readFileSync(path.join(root, file));
@@ -151,11 +154,12 @@ function render(result) {
     "",
     `- Scope: ${result.scope}`,
     `- Provider/level: ${result.provider}/L${result.level}`,
-    `- Raw baseline: ~${result.raw.tokens} tokens from ${result.raw.files} tracked text files (${result.raw.durationMs}ms)`,
-    `- Bounded context: ~${result.bounded.tokens}/${result.bounded.budgetTokens} tokens (${result.bounded.durationMs}ms)`,
-    `- Savings: ~${result.savings.tokens} tokens (${result.savings.percent}%; ratio ${result.savings.ratio})`,
-    `- Selected/loaded documents: ${result.bounded.selectedDocuments}/${result.bounded.loadedDocuments}`,
-    `- Budget exceeded: ${result.bounded.budgetExceeded}`,
+    "",
+    "| Context Mode | Estimated Tokens | Latency | Scope & Payload | Savings |",
+    "| :--- | :--- | :--- | :--- | :--- |",
+    `| **Raw baseline:** | ~${result.raw.tokens} tokens | ${result.raw.durationMs}ms | ${result.raw.files} tracked UTF-8 text files | 0% (baseline) |`,
+    `| **Bounded context:** | ~${result.bounded.tokens} / ${result.bounded.budgetTokens} tokens | ${result.bounded.durationMs}ms | ${result.bounded.selectedDocuments} selected, ${result.bounded.loadedDocuments} loaded | **${result.savings.percent}%** (~${result.savings.tokens} tokens saved) |`,
+    `| **Savings:** | **~${result.savings.tokens} tokens** | — | Ratio: ${result.savings.ratio} (budget exceeded: ${result.bounded.budgetExceeded}) | **${result.savings.percent}% net savings** |`,
     "",
     "Raw baseline means all tracked UTF-8 text; bounded context uses the real context router and does not print its full pack.",
     "",

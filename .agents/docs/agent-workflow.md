@@ -24,7 +24,7 @@
 | Sprint Backlog | `.agents/docs/tasks/wip-*` task and checklist | Agent maintains progress and evidence |
 | Increment | Working change plus `.agents/docs/tasks/done/done-*` record | Definition of Done passes |
 | Sprint Review | Final handoff and user-boundary demonstration | Human accepts or requests adaptation |
-| Retrospective | `.agents/docs/suggestions/NNNN-*.md` proposal | Human accepts, rejects, or defers |
+| Retrospective | `.agents/docs/proposals/NNNN-*.md` proposal | Human accepts, rejects, or defers |
 
 Agents may facilitate planning, review, and retrospective activities. Agents do not replace human product ownership or self-approve policy changes.
 
@@ -108,9 +108,9 @@ Signed-in users keep count, step, and theme across devices without losing the cu
 ## Learning Loop
 
 - Observe a repeated friction, failure mode, or clearly better verified method.
-- Search [`suggestions/`](suggestions/) for an existing proposal.
-- Create or strengthen one evidence-backed proposal using [`suggestions/0000-template.md`](suggestions/0000-template.md).
-- Complete the current task; suggestions should not silently expand its scope.
+- Search [`proposals/`](proposals/) for an existing proposal.
+- Create or strengthen one evidence-backed proposal using [`proposals/0000-template.md`](proposals/0000-template.md).
+- Complete the current task; proposals should not silently expand its scope.
 - Surface the proposal to the human with expected benefit and tradeoffs.
 - Apply it to canonical instructions only after explicit human acceptance.
 - Revalidate the updated workflow on a later task; supersede rules that no longer improve outcomes.

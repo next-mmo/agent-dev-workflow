@@ -91,8 +91,9 @@ function pathLayers(file, config) {
   if (matchesPathGroup(value, config, "tests")) layers.add("tests");
   if (matchesPathGroup(value, config, "docs")) layers.add("docs");
   if (new RegExp(`^${docsPrefix}prd/`).test(value)) layers.add("prd");
+  if (new RegExp(`^${docsPrefix}plans/`).test(value)) layers.add("plans");
   if (new RegExp(`^${docsPrefix}tasks/`).test(value)) layers.add("tasks");
-  if (new RegExp(`^${docsPrefix}suggestions/`).test(value)) layers.add("governance");
+  if (new RegExp(`^${docsPrefix}(?:proposals|suggestions)/`).test(value)) layers.add("governance");
   if (matchesPathGroup(value, config, "workflow")) layers.add("workflow");
   if (/^(?:\.agents\/scripts|scripts)\/context\/providers\//.test(value)) layers.add("providers");
   if (matchesPathGroup(value, config, "ci")) layers.add("ci");

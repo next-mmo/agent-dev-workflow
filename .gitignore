@@ -12,3 +12,7 @@ graphify-out/
 .claude/skills/
 .cursor/rules/*.generated.mdc
 .cursor/commands/*.generated.md
+
+# Isolated Agent Worktrees & Cache
+.worktrees/
+.agents/cache/

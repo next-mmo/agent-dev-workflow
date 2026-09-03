@@ -11,6 +11,10 @@ const entries = {
   check: "workflow-check-core.mjs",
   docs: "doc-check-core.mjs",
   report: "report.mjs",
+  mode: "mode.mjs",
+  archive: "archive.mjs",
+  plan: "plan.mjs",
+  index: "index.mjs",
 };
 
 function hasRoot(args) {

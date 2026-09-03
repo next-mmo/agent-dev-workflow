@@ -6,16 +6,20 @@ import { initializeProject } from "./init.mjs";
 import { runEngine } from "./run-engine.mjs";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const engineCommands = new Set(["context", "scope", "verify", "check", "docs", "report"]);
+const engineCommands = new Set(["context", "scope", "verify", "check", "docs", "report", "mode", "archive", "plan", "index"]);
 
 const help = `Agent Workflow Scrum
 
 Usage:
-  agent-workflow init [path] [--existing] [--package-manager npm|pnpm|yarn|bun] [--dry-run] [--json]
+  agent-workflow init [path] [--existing] [--package-manager npm|pnpm|yarn|bun] [--mode vibe|standard|strict|guided] [--dry-run] [--json]
+  agent-workflow mode [vibe|standard|strict|guided] [--json]
+  agent-workflow archive [--days <N>] [--dry-run] [--json]
+  agent-workflow plan <title> [--json]
+  agent-workflow index [--json]
   agent-workflow context [scope] [--level 0|1|2] [--budget tokens] [--provider mode]
   agent-workflow scope --base <verified-ref> [--head <ref>]
   agent-workflow verify --base <verified-ref> [--head <ref>] [--json]
-  agent-workflow check [--strict-budget] [--base <verified-ref>] [--head <ref>] [--json]
+  agent-workflow check [--strict-budget] [--mode vibe|standard|strict|guided] [--base <verified-ref>] [--head <ref>] [--json]
   agent-workflow docs [--budget-file <path>] [--json]
   agent-workflow report [--output <directory>]
   agent-workflow doctor [path] [--json]

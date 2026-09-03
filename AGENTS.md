@@ -21,8 +21,9 @@
 - Context loading: [`.agents/skills/agent-workflow-scrum/references/context-routing.md`](.agents/skills/agent-workflow-scrum/references/context-routing.md).
 - Track non-trivial work per [`.agents/docs/tasks/README.md`](.agents/docs/tasks/README.md); verified tasks move to `.agents/docs/tasks/done/`.
 - Product behavior changes update the affected PRD and `.agents/docs/prd/0000-prd-index.md`.
-- Reusable workflow changes follow [`.agents/docs/suggestions/README.md`](.agents/docs/suggestions/README.md) and require human approval.
-- Workflow documentation, PRDs, tasks, suggestions, testing guidance, and architecture belong under `.agents/docs/`; do not recreate a root `docs/` tree.
+- Reusable workflow changes follow [`.agents/docs/proposals/README.md`](.agents/docs/proposals/README.md) and require human approval.
+- Technical architecture designs follow [`.agents/docs/plans/README.md`](.agents/docs/plans/README.md).
+- Workflow documentation, PRDs, plans, tasks, proposals, testing guidance, and architecture belong under `.agents/docs/`; do not recreate a root `docs/` tree.
 
 ## Checks and Conventions
 

@@ -17,7 +17,7 @@ Task files implement the Agent Workflow Scrum backlog and delivery states. The f
 | Sprint Backlog | Current `wip-*` task and checklist |
 | Impediment | `blocked-*` task with evidence |
 | Increment | `.agents/docs/tasks/done/done-*` record with verification results |
-| Retrospective learning | [`../suggestions/`](../suggestions/) proposal |
+| Retrospective learning | [`../proposals/`](../proposals/) proposal |
 
 ## Rules
 

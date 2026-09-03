@@ -2,12 +2,36 @@
   "schemaVersion": 1,
   "packageManager": "npm",
   "paths": {
-    "product": ["src/**", "public/**", "index.html"],
-    "tests": ["tests/**", "**/*.test.*", "**/*.spec.*"],
-    "docs": ["README.md", ".agents/docs/**"],
-    "workflow": ["AGENTS.md", "CONTEXT.md", ".agents/**"],
-    "ci": [".github/**"],
-    "build": ["package.json", "package-lock.json", "vite.config.*", "tsconfig*", "Dockerfile*", "docker-compose*"]
+    "product": [
+      "src/**",
+      "public/**",
+      "index.html"
+    ],
+    "tests": [
+      "tests/**",
+      "**/*.test.*",
+      "**/*.spec.*"
+    ],
+    "docs": [
+      "README.md",
+      ".agents/docs/**"
+    ],
+    "workflow": [
+      "AGENTS.md",
+      "CONTEXT.md",
+      ".agents/**"
+    ],
+    "ci": [
+      ".github/**"
+    ],
+    "build": [
+      "package.json",
+      "package-lock.json",
+      "vite.config.*",
+      "tsconfig*",
+      "Dockerfile*",
+      "docker-compose*"
+    ]
   },
   "checks": {
     "test": "npm test",
@@ -20,5 +44,20 @@
     "AGENTS.md": 800,
     "CONTEXT.md": 1400,
     ".agents/skills/agent-workflow-scrum/SKILL.md": 900
+  },
+  "ignore": [
+    "dist/**",
+    "coverage/**",
+    "**/*.min.js",
+    "**/*.min.css",
+    "**/*.map",
+    "node_modules/**",
+    ".playwright-mcp/**",
+    "scratch/**"
+  ],
+  "mode": "vibe",
+  "archive": {
+    "autoArchiveDone": true,
+    "retentionDays": 14
   }
 }

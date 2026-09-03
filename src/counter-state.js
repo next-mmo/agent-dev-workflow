@@ -22,12 +22,14 @@ export class CounterState {
       theme = 'dark',
       undoCount = null,
       history = [],
+      target = null,
     } = initial ?? {};
     this.count = Number.isFinite(count) ? count : 0;
     this.step = Number.isFinite(step) && step > 0 ? step : 1;
     this.theme = theme === 'light' ? 'light' : 'dark';
     this.undoCount = Number.isFinite(undoCount) ? undoCount : null;
     this.history = validHistory(history);
+    this.target = Number.isFinite(target) && target > 0 ? target : null;
     this.listeners = new Set();
   }
 
@@ -88,6 +90,39 @@ export class CounterState {
     return this.step;
   }
 
+  setTarget(value) {
+    if (value === null || value === '' || value === undefined) {
+      this.target = null;
+    } else {
+      const num = Number(value);
+      this.target = Number.isFinite(num) && num > 0 ? num : null;
+    }
+    this.notify();
+    return this.target;
+  }
+
+  multiply(factor) {
+    const num = Number(factor);
+    if (!Number.isFinite(num) || num <= 0) return this.count;
+    const before = this.count;
+    this.undoCount = this.count;
+    this.count = Math.round(this.count * num);
+    this.recordHistory(`×${factor}`, before, this.count);
+    this.notify();
+    return this.count;
+  }
+
+  addAmount(amount) {
+    const delta = Number(amount);
+    if (!Number.isFinite(delta) || delta === 0) return this.count;
+    const before = this.count;
+    this.undoCount = this.count;
+    this.count += delta;
+    this.recordHistory(delta > 0 ? `+${delta}` : `${delta}`, before, this.count);
+    this.notify();
+    return this.count;
+  }
+
   toggleTheme() {
     this.theme = this.theme === 'dark' ? 'light' : 'dark';
     this.notify();
@@ -105,13 +140,17 @@ export class CounterState {
   }
 
   toJSON() {
-    return {
+    const data = {
       count: this.count,
       step: this.step,
       theme: this.theme,
       undoCount: this.undoCount,
       history: this.history,
     };
+    if (this.target !== null && this.target !== undefined) {
+      data.target = this.target;
+    }
+    return data;
   }
 
   saveToStorage(storage = globalThis.localStorage, key = STORAGE_KEY) {
