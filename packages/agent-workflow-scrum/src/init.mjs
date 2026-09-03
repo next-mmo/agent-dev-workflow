@@ -6,6 +6,8 @@ const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 const templateRoot = path.join(packageRoot, "templates");
 const packageManagers = new Set(["npm", "pnpm", "yarn", "bun"]);
 const forbiddenDirectories = [".agents/scripts", ".agents/skills", ".agents/benchmark"];
+const agentHandoffStart = "<!-- agent-workflow-scrum:start -->";
+const agentHandoffEnd = "<!-- agent-workflow-scrum:end -->";
 
 async function exists(filePath) {
   try {
@@ -112,6 +114,35 @@ async function renderedTemplate(name, replacements = {}) {
   return content;
 }
 
+function agentHandoff(template) {
+  const body = template.replace(/^# Agent Instructions\s*\n+/i, "").trim();
+  return `${agentHandoffStart}\n## Agent Workflow Scrum\n${body}\n${agentHandoffEnd}`;
+}
+
+async function ensureAgentInstructions(root, template, dryRun) {
+  const absolutePath = path.join(root, "AGENTS.md");
+  const block = agentHandoff(template);
+  if (!await exists(absolutePath)) {
+    if (!dryRun) {
+      await mkdir(path.dirname(absolutePath), { recursive: true });
+      await writeFile(absolutePath, `# Agent Instructions\n\n${block}\n`, { encoding: "utf8", flag: "wx" });
+    }
+    return "created";
+  }
+
+  const current = await readFile(absolutePath, "utf8");
+  const hasManagedBlock = current.includes(agentHandoffStart) && current.includes(agentHandoffEnd);
+  const hasLegacyWorkflow = current.includes("Humans own outcomes, priority, acceptance, and workflow policy")
+    && current.includes(".agents/config.json");
+  if (hasManagedBlock || hasLegacyWorkflow) return "preserved";
+
+  if (!dryRun) {
+    const merged = `${current.trimEnd()}\n\n${block}\n`;
+    await writeFile(absolutePath, merged, "utf8");
+  }
+  return "updated";
+}
+
 export async function initializeProject(argv, cwd = process.cwd()) {
   const options = parseArgs(argv, cwd);
   let entries;
@@ -122,16 +153,14 @@ export async function initializeProject(argv, cwd = process.cwd()) {
     entries = [];
   }
   const meaningful = entries.filter((entry) => entry !== ".git");
-  if (meaningful.length && !options.existing) {
-    throw new Error(`target is not empty: ${options.root}; pass --existing to preserve existing files`);
-  }
+  const existingProject = meaningful.length > 0;
 
   const packageManager = options.packageManager || await detectPackageManager(options.root);
   const scripts = await packageScripts(options.root);
   const localRunner = runner(packageManager);
   const today = new Date().toISOString().slice(0, 10);
+  const renderedAgents = await renderedTemplate("AGENTS.md", { RUNNER: localRunner });
   const files = new Map([
-    ["AGENTS.md", await renderedTemplate("AGENTS.md", { RUNNER: localRunner })],
     ["CONTEXT.md", await renderedTemplate("CONTEXT.md")],
     [".agents/config.json", `${JSON.stringify(configFor(packageManager, scripts, options.mode), null, 2)}\n`],
     [".agents/docs/doc-budgets.json", await renderedTemplate("doc-budgets.json")],
@@ -141,7 +170,13 @@ export async function initializeProject(argv, cwd = process.cwd()) {
   ]);
 
   const created = [];
+  const updated = [];
   const preserved = [];
+  const agentAction = await ensureAgentInstructions(options.root, renderedAgents, options.dryRun);
+  if (agentAction === "created") created.push("AGENTS.md");
+  else if (agentAction === "updated") updated.push("AGENTS.md");
+  else preserved.push("AGENTS.md");
+
   for (const [relativePath, content] of files) {
     const absolutePath = path.join(options.root, relativePath);
     if (await exists(absolutePath)) {
@@ -160,11 +195,14 @@ export async function initializeProject(argv, cwd = process.cwd()) {
     if (await exists(path.join(options.root, relativePath))) presentForbidden.push(relativePath);
   }
   const result = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     root: options.root.replaceAll("\\", "/"),
     packageManager,
+    mode: options.mode,
+    existingProject,
     dryRun: options.dryRun,
     created,
+    updated,
     preserved,
     forbiddenDirectoriesCreated: [],
     existingForbiddenDirectories: presentForbidden,
@@ -175,11 +213,15 @@ export async function initializeProject(argv, cwd = process.cwd()) {
   }
   const lines = [
     `${options.dryRun ? "Would initialize" : "Initialized"} Agent Workflow Scrum in ${options.root}`,
+    `- Existing project detected: ${existingProject ? "yes; existing files are preserved" : "no"}`,
     `- Package manager: ${packageManager}`,
+    `- Mode: ${options.mode}`,
     `- Created: ${created.length ? created.join(", ") : "none"}`,
+    `- Updated: ${updated.length ? updated.join(", ") : "none"}`,
     `- Preserved: ${preserved.length ? preserved.join(", ") : "none"}`,
     "- Reusable scripts, skills, and benchmarks copied: none",
   ];
+  if (options.existing) lines.push("- Note: --existing is retained for compatibility; existing-project safety is now automatic");
   if (presentForbidden.length) lines.push(`- Existing vendored directories left unchanged: ${presentForbidden.join(", ")}`);
   lines.push(`- Next: ${localRunner} doctor`);
   return { ...result, json: false, output: `${lines.join("\n")}\n` };
