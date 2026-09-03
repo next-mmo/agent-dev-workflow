@@ -81,11 +81,13 @@ export async function buildVerificationPlan({ root = process.cwd(), base, head =
     /^CONTEXT\.md$/,
     /^\.agents\//,
     /^scripts\/(?:context|workflow-check|change-scope|verify-plan|doc-check)/,
+    /^packages\/agent-workflow-scrum\/(?:engine|src|bin|templates)\//,
   ]);
   const skillsTouched = matchesAny(paths, [/^\.agents\/skills\//]);
   const workflowToolingTouched = matchesAny(paths, [
-    /^(?:\.agents\/)?scripts\/context(?:\.mjs|\/)/,
-    /^(?:\.agents\/)?scripts\/(?:context-benchmark|change-scope|verify-plan|workflow-check|doc-check)\.mjs$/,
+    /^scripts\/context(?:\.mjs|\/)/,
+    /^scripts\/(?:context-benchmark|change-scope|verify-plan|workflow-check|doc-check)\.mjs$/,
+    /^packages\/agent-workflow-scrum\/(?:engine|src|bin)\//,
     /^tests\/(?:workflow-tools|context-providers|context-budget-contract|context-benchmark|openviking-cli-contract|change-scope|verify-plan|scope-aware-context|doc-check)\.test\.mjs$/,
   ]);
   const productTouched = Boolean(scope.layers.product?.length);

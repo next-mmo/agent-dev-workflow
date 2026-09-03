@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(testDirectory, "..");
-const docCheck = path.join(repositoryRoot, ".agents/scripts/doc-check.mjs");
+const agentBinary = path.join(repositoryRoot, "packages/agent-workflow-scrum/bin/agent-workflow.mjs");
 const docsRoot = ".agents/docs";
 
 async function fixture() {
@@ -24,13 +24,13 @@ async function fixture() {
 }
 
 function run(root) {
-  return spawnSync(process.execPath, [docCheck, "--root", root, "--json"], { encoding: "utf8" });
+  return spawnSync(process.execPath, [agentBinary, "docs", "--root", root, "--json"], { encoding: "utf8" });
 }
 
 test("documentation checker accepts bounded .agents docs and valid relative links", async () => {
   const root = await fixture();
   try {
-    const output = execFileSync(process.execPath, [docCheck, "--root", root, "--json"], { encoding: "utf8" });
+    const output = execFileSync(process.execPath, [agentBinary, "docs", "--root", root, "--json"], { encoding: "utf8" });
     const result = JSON.parse(output);
     assert.equal(result.ok, true);
     assert.deepEqual(result.errors, []);

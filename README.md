@@ -7,7 +7,8 @@ The Counter App is only an executable demo. The workflow is intended to move int
 ## Core design
 
 - `.agents/skills/` — canonical executable agent guidance.
-- `.agents/scripts/` — dependency-light workflow tooling, context providers, checks, and adapter helpers.
+- `packages/agent-workflow-scrum/` — canonical CLI, workflow engine, context providers, and initialization templates.
+- `scripts/` — source-repository build, benchmark, and skill-adapter helpers.
 - `.agents/docs/` — all workflow-owned long-form docs and durable artifacts: architecture, testing, PRDs, tasks, suggestions, development guidance, and evidence.
 - `AGENTS.md` + `CONTEXT.md` — compact standing orders and shared authority/recovery contract.
 - `npm run context` — bounded L0/L1/L2 context routing.
@@ -131,7 +132,7 @@ npm run workflow:check
 npm run docs:check
 npm test
 npm run build
-bash .agents/scripts/skill.sh check
+bash scripts/skill.sh check
 ```
 
 For outgoing work first establish scope:
@@ -146,8 +147,8 @@ npm run verify:plan -- --base <verified-ref>
 `.agents/skills/` is canonical.
 
 ```bash
-bash .agents/scripts/skill.sh init all
-bash .agents/scripts/skill.sh check all
+bash scripts/skill.sh init all
+bash scripts/skill.sh check all
 ```
 
 - ChatGPT/Codex consume the canonical Agent Skills layout directly.
@@ -166,40 +167,37 @@ npx agent-workflow init --existing
 npx agent-workflow doctor
 ```
 
-Use `pnpm add -D @next-mmo/agent-workflow-scrum` and `pnpm exec agent-workflow ...` when the project uses pnpm. `init` preserves existing files and does not copy `.agents/scripts`, `.agents/skills`, benchmarks, the Counter demo, or workflow history. It creates `AGENTS.md`, `CONTEXT.md`, `.agents/config.json`, and empty task/PRD/suggestion entry points. Configure product paths and checks in `.agents/config.json`, then run `agent-workflow context`, `scope`, `verify`, `check`, `docs`, and `report` from the project root.
+Use `pnpm add -D @next-mmo/agent-workflow-scrum` and `pnpm exec agent-workflow ...` when the project uses pnpm. `init` preserves existing files and does not copy `.agents/scripts`, `.agents/skills`, benchmarks, the Counter demo, or workflow history. It creates `AGENTS.md`, `CONTEXT.md`, `.agents/config.json`, and empty task/PRD/suggestion entry points. Configure product paths and checks in `.agents/config.json`, then run `agent-workflow context`, `scope`, `verify`, `check`, `docs`, and `report` from the project root. The CLI and engine remain in the installed package; `.agents/` is consumer-owned workflow state.
 
 For local package development, `npm pack` is the release-shaped artifact; `yalc` is useful only for rapid iteration. Cursor and other Agent Plugin hosts can consume the portable bundle under `plugins/agent-workflow-scrum/` without importing consumer state.
 
 ## Move the source workflow into another repository
 
-The source repository itself retains the canonical implementation. If a consumer cannot use the package, copy the workflow foundation:
+Install the package in the target repository and initialize only its project-owned contract:
 
-```text
-.agents/
-  docs/
-  scripts/
-  skills/
-AGENTS.md
-CONTEXT.md
-CLAUDE.md
+```bash
+npm install --save-dev --save-exact @next-mmo/agent-workflow-scrum
+npx agent-workflow init --existing
+npx agent-workflow doctor
 ```
 
-Then adapt runtime/build/test rules in `AGENTS.md`, replace demo PRDs/tasks under `.agents/docs/`, initialize agent adapters, and wire `.agents/scripts/` into the target package manager/CI. Keep Graphify and OpenViking optional.
+Then adapt runtime/build/test rules in `AGENTS.md`, replace demo PRDs/tasks under `.agents/docs/`, initialize any desired agent adapters from the target's canonical skills, and wire the package CLI into the target package manager/CI. Keep Graphify and OpenViking optional.
 
 ## Repository map
 
 ```text
+packages/agent-workflow-scrum/
+  bin/agent-workflow.mjs            npm CLI entry point
+  engine/                           canonical workflow engine and providers
+  templates/                        consumer initialization templates
+  plugin/                           portable skill/command bundle
+scripts/
+  build-distribution.mjs             generated plugin bundle check/build
+  context-benchmark.mjs              source-repository benchmark harness
+  skill.sh                           agent adapter generation/drift audit
 .agents/
-  docs/                            architecture, testing, PRDs, tasks, suggestions, evidence
-  scripts/context.mjs              progressive context router
-  scripts/context/providers/       optional Graphify/OpenViking adapters
-  scripts/change-scope.mjs         exact outgoing-scope report
-  scripts/verify-plan.mjs          scope-aware verification selector
-  scripts/workflow-check.mjs       workflow consistency checks
-  scripts/doc-check.mjs            doc/link/token-budget checks
-  scripts/skill.sh                 agent adapter generation/drift audit
-  scripts/report.mjs               local workflow report
-  skills/                          canonical agent skills + focused references
+  docs/                              architecture, testing, PRDs, tasks, suggestions, evidence
+  skills/                            canonical agent skills + focused references
 AGENTS.md                           compact standing repository instructions
 CONTEXT.md                          durable authority/recovery/context contract
 src/ + tests/                      executable Counter demo

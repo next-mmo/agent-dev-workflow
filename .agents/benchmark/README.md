@@ -1,6 +1,6 @@
 ﻿# Agent Workflow Benchmark Index
 
-> Reference map of every measurement, proposal, and comparison related to **token savings**, **context efficiency**, and **workflow intelligence** in this repository.
+> Reference map of every measurement, proposal, and comparison related to **context-size reduction**, **context efficiency**, and **workflow intelligence** in this repository.
 > Actual numbers are evidence snapshots; re-run the commands below for current values.
 
 ---
@@ -33,17 +33,18 @@ npm run workflow:check -- --strict-budget --base origin/main
 **Source:** [done-0026-0001-context-benchmark.md](../docs/tasks/done/done-0026-0001-context-benchmark.md)
 **Proposal:** [0002-progressive-context-router-and-workflow-checks.md](../docs/proposals/0002-progressive-context-router-and-workflow-checks.md)
 
-| Metric | Value |
+| Metric | Historical value |
 |---|---|
 | Raw baseline (all tracked UTF-8 files) | **102,978 tokens** across 98 files |
 | Bounded context (L0, budget 1,500) | **639 tokens** |
-| Token savings | **99.38%** |
+| Context-size reduction | **99.38%** |
+| Actual task token savings | **Not measured** |
 | Budget exceeded | `false` |
 | Test suite | 3 benchmark fixtures passed, 55 total passed |
 
-**What it proves:** The progressive L0/L1/L2 context router reduces naive whole-repo prompt overhead by >99% without changing any product behavior.
+**What it proves:** The progressive L0/L1/L2 context router produced a much smaller bounded context pack than the naive whole-repository text baseline in this historical fixture. It does not prove that an end-to-end task used 99.38% fewer tokens or that product behavior was unchanged.
 
-**Interpretation note:** Raw = all tracked UTF-8 text files tokenised naively. Bounded = router's measured JSON pack. Timings vary by machine/filesystem state; token counts are comparable.
+**Interpretation note:** Raw = all tracked UTF-8 text files tokenised naively. Bounded = router's measured JSON pack. The current benchmark reports schema v2 `reduction` using a characters/4 estimator and leaves `actualTaskTokenSavings` null. End-to-end task savings require equivalent task runs that account for later reads, tool output, model output, caching, and outcome quality. Timings vary by machine/filesystem state.
 
 ---
 
@@ -134,14 +135,16 @@ Pre-change canonical skill was **~9.9 KB (~2,500 heuristic tokens)**. After rout
 |---|---|
 | `tests/context-benchmark.test.mjs` | Deterministic fixture: bounded < raw and budget contract |
 | `tests/verify-plan.test.mjs` | Benchmark regression selected for benchmark tooling changes |
-| `.agents/scripts/context-core.mjs` | Core bounded retrieval engine |
-| `.agents/scripts/context/providers/common.mjs` | Provider normalisation, trimming, and redaction |
+| `scripts/context-benchmark.mjs` | Schema v2 context-size comparison CLI |
+| `packages/agent-workflow-scrum/engine/context-core.mjs` | Core bounded retrieval engine |
+| `packages/agent-workflow-scrum/engine/context/providers/common.mjs` | Provider normalisation, trimming, and redaction |
 
 ---
 
 ## How to Add a New Benchmark Result
 
 1. Run `npm run benchmark:context -- "<scope>" --json > .agents/benchmark/results/<date>-<scope>.json`
-2. Record `rawTokens`, `boundedTokens`, `savings`, `reduction`, and `budgetExceeded` in the evidence tables above.
+2. Record `rawTokens`, `boundedTokens`, `reduction`, `actualTaskTokenSavings`, and `budgetExceeded` in the evidence tables above.
 3. Note the level (`--level 0|1|2`), provider, and budget used.
 4. Never paste the raw repository dump or full context pack into this file.
+5. Do not describe context-size reduction as task token savings unless equivalent task runs provide that evidence.

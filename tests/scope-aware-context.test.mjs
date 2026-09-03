@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(testDirectory, "..");
-const contextScript = path.join(repositoryRoot, ".agents/scripts/context.mjs");
+const contextScript = path.join(repositoryRoot, "packages/agent-workflow-scrum/bin/agent-workflow.mjs");
 const docsRoot = ".agents/docs";
 
 function git(root, ...args) {
@@ -40,7 +40,7 @@ test("context with explicit base sees committed branch changes, .agents docs, an
   try {
     const output = execFileSync(
       process.execPath,
-      [contextScript, "review", "--root", root, "--provider", "local", "--base", baseSha, "--json"],
+      [contextScript, "context", "review", "--root", root, "--provider", "local", "--base", baseSha, "--json"],
       { cwd: repositoryRoot, encoding: "utf8" },
     );
     const result = JSON.parse(output);

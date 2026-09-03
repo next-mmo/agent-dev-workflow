@@ -114,8 +114,13 @@ async function renderedTemplate(name, replacements = {}) {
 
 export async function initializeProject(argv, cwd = process.cwd()) {
   const options = parseArgs(argv, cwd);
-  await mkdir(options.root, { recursive: true });
-  const entries = await readdir(options.root);
+  let entries;
+  try {
+    entries = await readdir(options.root);
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+    entries = [];
+  }
   const meaningful = entries.filter((entry) => entry !== ".git");
   if (meaningful.length && !options.existing) {
     throw new Error(`target is not empty: ${options.root}; pass --existing to preserve existing files`);

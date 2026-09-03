@@ -1,6 +1,6 @@
-# AGENTS.md — Workflow Scripts
+# AGENTS.md — Workflow Engine
 
-These rules apply under `.agents/scripts/` and supplement the root standing orders.
+These rules apply under `packages/agent-workflow-scrum/engine/` and supplement the root standing orders.
 
 - Keep reusable workflow tooling dependency-light and deterministic; prefer Node built-ins unless a dependency materially deletes complexity.
 - Separate facts from policy: read-only probes such as `change-scope` report repository state; planners/checkers consume those facts and apply workflow policy.

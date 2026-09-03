@@ -4,10 +4,10 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { buildVerificationPlan } from "../.agents/scripts/verify-plan.mjs";
+import { buildVerificationPlan } from "../packages/agent-workflow-scrum/engine/verify-plan.mjs";
 
 const docsRoot = ".agents/docs";
-const skillScript = ".agents/scripts/skill.sh";
+const skillScript = "scripts/skill.sh";
 
 function git(root, ...args) {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
@@ -16,7 +16,8 @@ function git(root, ...args) {
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "agent-verify-plan-"));
   await Promise.all([
-    mkdir(path.join(root, ".agents/scripts"), { recursive: true }),
+    mkdir(path.join(root, ".agents"), { recursive: true }),
+    mkdir(path.join(root, "scripts"), { recursive: true }),
     mkdir(path.join(root, "tests"), { recursive: true }),
   ]);
   await writeFile(path.join(root, "package.json"), JSON.stringify({
@@ -24,11 +25,24 @@ async function fixture() {
     scripts: {
       test: "node --test",
       build: "echo build",
-      "workflow:check": "node .agents/scripts/check.mjs",
-      "docs:check": "node .agents/scripts/doc-check.mjs",
+      "workflow:check": "npm run workflow:check",
+      "docs:check": "npm run docs:check",
     },
   }, null, 2), "utf8");
   await writeFile(path.join(root, skillScript), "#!/bin/sh\nexit 0\n", "utf8");
+  await writeFile(path.join(root, ".agents/config.json"), `${JSON.stringify({
+    paths: {
+      product: ["src/**"],
+      workflow: ["AGENTS.md", "CONTEXT.md", ".agents/**", "packages/agent-workflow-scrum/**", "scripts/**"],
+    },
+    checks: {
+      test: "npm test",
+      build: "npm run build",
+      workflow: "npm run workflow:check --",
+      docs: "npm run docs:check",
+      skills: `bash ${skillScript} check`,
+    },
+  }, null, 2)}\n`, "utf8");
   await writeFile(path.join(root, "tests/context-providers.test.mjs"), "// fixture focused test\n", "utf8");
   await writeFile(path.join(root, "tests/context-benchmark.test.mjs"), "// fixture benchmark test\n", "utf8");
   await writeFile(path.join(root, "README.md"), "# Fixture\n", "utf8");
@@ -75,7 +89,7 @@ test("skill changes select workflow, docs, and adapter checks but skip product b
     const commands = plan.checks.map((item) => item.command);
     assert.ok(commands.includes(`npm run workflow:check -- --strict-budget --base ${baseSha}`));
     assert.ok(commands.includes("npm run docs:check"));
-    assert.ok(commands.includes(`${skillScript} check`));
+    assert.ok(commands.includes(`bash ${skillScript} check`));
     assert.ok(!commands.includes("npm run build"));
     assert.ok(plan.layers.workflow.includes(".agents/skills/example/SKILL.md"));
   } finally {
@@ -102,10 +116,10 @@ test(".agents docs changes select workflow and documentation checks", async () =
   }
 });
 
-test("provider changes under .agents scripts select focused workflow regressions", async () => {
+test("provider changes under the package engine select focused workflow regressions", async () => {
   const { root, baseSha } = await fixture();
   try {
-    const provider = path.join(root, ".agents/scripts/context/providers/example.mjs");
+    const provider = path.join(root, "packages/agent-workflow-scrum/engine/context/providers/example.mjs");
     await mkdir(path.dirname(provider), { recursive: true });
     await writeFile(provider, "export const provider = true;\n", "utf8");
     git(root, "add", ".");
@@ -114,7 +128,7 @@ test("provider changes under .agents scripts select focused workflow regressions
     const plan = await buildVerificationPlan({ root, base: baseSha });
     const commands = plan.checks.map((item) => item.command);
     assert.ok(commands.some((command) => command.includes("node --test") && command.includes("tests/context-providers.test.mjs")));
-    assert.ok(plan.layers.providers.includes(".agents/scripts/context/providers/example.mjs"));
+    assert.ok(plan.layers.providers.includes("packages/agent-workflow-scrum/engine/context/providers/example.mjs"));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -123,7 +137,7 @@ test("provider changes under .agents scripts select focused workflow regressions
 test("context benchmark changes select the benchmark regression", async () => {
   const { root, baseSha } = await fixture();
   try {
-    await writeFile(path.join(root, ".agents/scripts/context-benchmark.mjs"), "export const benchmark = true;\n", "utf8");
+    await writeFile(path.join(root, "scripts/context-benchmark.mjs"), "export const benchmark = true;\n", "utf8");
     git(root, "add", ".");
     git(root, "commit", "-qm", "context benchmark");
 

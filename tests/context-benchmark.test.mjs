@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(testDirectory, "..");
-const benchmarkScript = path.join(repositoryRoot, ".agents/scripts/context-benchmark.mjs");
+const benchmarkScript = path.join(repositoryRoot, "scripts/context-benchmark.mjs");
 
 function git(root, ...args) {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
@@ -39,7 +39,7 @@ async function fixture() {
   return root;
 }
 
-test("context benchmark reports raw versus bounded token savings", async () => {
+test("context benchmark reports size reduction without claiming measured task savings", async () => {
   const root = await fixture();
   try {
     const output = execFileSync(
@@ -48,14 +48,18 @@ test("context benchmark reports raw versus bounded token savings", async () => {
       { cwd: repositoryRoot, encoding: "utf8" },
     );
     const result = JSON.parse(output);
-    assert.equal(result.schemaVersion, 1);
+    assert.equal(result.schemaVersion, 2);
+    assert.equal(result.measurement, "context-pack-size-comparison");
+    assert.equal(result.tokenEstimator, "characters/4");
+    assert.equal(result.actualTaskTokenSavings, null);
+    assert.equal(Object.hasOwn(result, "savings"), false);
     assert.equal(result.provider, "local");
     assert.equal(result.bounded.budgetExceeded, false);
     assert.ok(result.bounded.tokens <= result.bounded.budgetTokens);
     assert.ok(result.raw.files >= 10);
     assert.ok(result.raw.tokens > result.bounded.tokens);
-    assert.ok(result.savings.tokens > 0);
-    assert.ok(result.savings.percent > 0);
+    assert.equal(result.reduction.tokens, result.raw.tokens - result.bounded.tokens);
+    assert.ok(result.reduction.percent > 0);
     assert.ok(result.raw.durationMs >= 0);
     assert.ok(result.bounded.durationMs >= 0);
   } finally {
@@ -74,7 +78,9 @@ test("context benchmark has concise human-readable output", async () => {
     assert.match(output, /# Context Benchmark/);
     assert.match(output, /Raw baseline:/);
     assert.match(output, /Bounded context:/);
-    assert.match(output, /Savings:/);
+    assert.match(output, /Reduction:/);
+    assert.match(output, /Actual task token savings: not measured/);
+    assert.doesNotMatch(output, /net savings|tokens saved/i);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -90,7 +96,7 @@ test("context benchmark tolerates tracked files deleted in the current worktree"
       { cwd: repositoryRoot, encoding: "utf8" },
     );
     const result = JSON.parse(output);
-    assert.equal(result.schemaVersion, 1);
+    assert.equal(result.schemaVersion, 2);
     assert.ok(result.raw.files >= 10);
     assert.ok(result.bounded.tokens <= result.bounded.budgetTokens);
   } finally {

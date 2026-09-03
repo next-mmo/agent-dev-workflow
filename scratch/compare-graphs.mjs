@@ -1,9 +1,9 @@
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
-import { buildNativeCodebaseGraph, queryNativeCodebaseGraph } from "../.agents/scripts/codebase-graph-core.mjs";
-import { retrieveGraphify } from "../.agents/scripts/context/providers/graphify.mjs";
-import { estimateTokens } from "../.agents/scripts/context/providers/common.mjs";
+import { buildNativeCodebaseGraph, queryNativeCodebaseGraph } from "../packages/agent-workflow-scrum/engine/codebase-graph-core.mjs";
+import { retrieveGraphify } from "../packages/agent-workflow-scrum/engine/context/providers/graphify.mjs";
+import { estimateTokens } from "../packages/agent-workflow-scrum/engine/context/providers/common.mjs";
 
 const root = process.cwd();
 

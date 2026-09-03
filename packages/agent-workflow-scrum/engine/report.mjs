@@ -1,12 +1,9 @@
 import { execFileSync } from "node:child_process";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 
 function parseArgs(argv) {
-  const options = { root: path.resolve(scriptDirectory, "../.."), output: "report" };
+  const options = { root: process.cwd(), output: "report" };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--root") options.root = path.resolve(argv[++index] || "");

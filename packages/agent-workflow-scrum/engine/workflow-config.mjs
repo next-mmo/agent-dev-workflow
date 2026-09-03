@@ -58,7 +58,7 @@ const legacyConfig = Object.freeze({
     build: "npm run build",
     workflow: "npm run workflow:check --",
     docs: "npm run docs:check",
-    skills: ".agents/scripts/skill.sh check",
+    skills: "bash scripts/skill.sh check",
   },
 });
 

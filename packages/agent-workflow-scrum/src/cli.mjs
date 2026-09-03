@@ -28,6 +28,10 @@ Usage:
   agent-workflow report [--output <directory>]
   agent-workflow doctor [path] [--json]
 
+All repository commands accept --root <path> when targeting a repository other
+than the current working directory. The package owns the runtime; the target
+repository owns .agents/ configuration, docs, tasks, and evidence.
+
 The engine reads .agents/config.json from the target repository. Keep this package
 project-local and pin its version; no global installation is required.
 `;

@@ -70,8 +70,8 @@ function runPnpm(args, cwd) {
   return run(pnpm.command, [...pnpm.prefix, ...args], cwd, { shell: pnpm.shell });
 }
 
-function runNpm(args, cwd) {
-  return run(npmRunner.command, [...npmRunner.prefix, ...args], cwd, { shell: npmRunner.shell });
+function runNpm(args, cwd, options = {}) {
+  return run(npmRunner.command, [...npmRunner.prefix, ...args], cwd, { shell: npmRunner.shell, ...options });
 }
 
 async function exists(filePath) {
@@ -117,7 +117,11 @@ test("init preserves existing files and creates only project-owned workflow stat
 async function packArtifact(root) {
   const packDirectory = path.join(root, "pack");
   await mkdir(packDirectory);
-  const output = runNpm(["pack", "./packages/agent-workflow-scrum", "--json", "--ignore-scripts", "--pack-destination", packDirectory], repositoryRoot);
+  const output = runNpm(
+    ["pack", "./packages/agent-workflow-scrum", "--json", "--ignore-scripts", "--pack-destination", packDirectory],
+    repositoryRoot,
+    { env: { ...process.env, NO_COLOR: "1", NPM_CONFIG_CACHE: path.join(root, "npm-cache") } },
+  );
   const start = output.indexOf("[");
   if (start < 0) throw new Error(`npm pack did not return JSON: ${output}`);
   const metadata = JSON.parse(output.slice(start))[0];
@@ -131,7 +135,11 @@ async function exerciseInstalledFixture(manager, tarball, root) {
   git(root, ["config", "user.email", "fixture@example.test"]);
   git(root, ["config", "user.name", "Fixture"]);
   if (manager === "npm") {
-    runNpm(["install", "--save-dev", "--save-exact", tarball], root);
+    runNpm(
+      ["install", "--save-dev", "--save-exact", tarball],
+      root,
+      { env: { ...process.env, NO_COLOR: "1", NPM_CONFIG_CACHE: path.join(root, "npm-cache") } },
+    );
   } else {
     runPnpm(["add", "--save-dev", "--save-exact", tarball], root);
   }

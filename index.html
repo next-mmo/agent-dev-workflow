@@ -3,148 +3,59 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <title>Counter Studio — Pro Agent Workflow</title>
+  <title>Focus Todo — Local task workspace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./src/styles.css" />
 </head>
 <body>
-  <main class="counter-card" role="region" aria-label="Interactive Counter Studio">
-    <!-- Header -->
-    <header class="counter-header">
-      <div class="brand">
-        <span class="brand-badge">PRO</span>
-        <h1 class="counter-title">Counter Studio</h1>
+  <main class="todo-app" aria-labelledby="page-title">
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Personal workspace</p>
+        <h1 id="page-title">Focus Todo</h1>
+        <p id="summary" class="summary" aria-live="polite">No tasks yet</p>
       </div>
-      <div class="header-controls">
-        <button id="btn-sound" class="icon-btn" type="button" aria-label="Toggle Sound Effects" title="Toggle Sound (M)">🔊</button>
-        <button id="btn-theme" class="theme-toggle-btn" type="button" aria-label="Toggle Theme">Light</button>
-      </div>
+      <button id="theme-toggle" class="icon-button" type="button" aria-label="Switch to light mode">☼</button>
     </header>
+    <p id="storage-message" role="status" hidden></p>
 
-    <!-- Main Display Section -->
-    <section class="display-section">
-      <div class="display-glow"></div>
-      <div class="display-meta">
-        <span id="target-badge" class="target-badge">Free Counting</span>
-        <button id="btn-copy" class="copy-btn" type="button" aria-label="Copy current count" title="Copy to clipboard">
-          <span class="copy-icon">📋</span>
-          <span id="copy-text">Copy</span>
-        </button>
-      </div>
-      <div id="count-display" class="count-display" aria-live="polite">0</div>
-      
-      <!-- Target Goal Progress Bar -->
-      <div id="progress-container" class="progress-container" style="display: none;">
-        <div class="progress-header">
-          <span id="progress-label" class="progress-label">0% to goal</span>
-          <span id="progress-counts" class="progress-counts">0 / 100</span>
+    <section class="composer" aria-labelledby="add-task-heading">
+      <h2 id="add-task-heading">Plan your next move</h2>
+      <form id="task-form" novalidate>
+        <label class="sr-only" for="task-title">Task title</label>
+        <div class="title-row">
+          <input id="task-title" name="title" type="text" maxlength="160" placeholder="What needs your attention?" autocomplete="off" />
+          <button class="primary-button" type="submit">Add task</button>
         </div>
-        <div class="progress-track">
-          <div id="progress-bar" class="progress-fill" style="width: 0%"></div>
+        <div class="details-grid">
+          <label>Project <input id="task-project" name="project" type="text" maxlength="40" placeholder="Inbox" autocomplete="off" /></label>
+          <label>Priority <select id="task-priority" name="priority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></label>
+          <label>Due date <input id="task-due-date" name="dueDate" type="date" /></label>
         </div>
-        <div id="goal-banner" class="goal-banner" style="display: none;">
-          🎉 <strong>Goal Reached!</strong> Awesome job!
-        </div>
-      </div>
-    </section>
-
-    <!-- Quick Boost / Multipliers -->
-    <section class="quick-boost-grid" aria-label="Quick Actions">
-      <button id="btn-mult-half" class="boost-btn" type="button" title="Divide by 2">÷2</button>
-      <button id="btn-mult-2" class="boost-btn" type="button" title="Double count">×2</button>
-      <button id="btn-boost-minus-100" class="boost-btn" type="button" title="Subtract 100">-100</button>
-      <button id="btn-boost-100" class="boost-btn" type="button" title="Add 100">+100</button>
-    </section>
-
-    <!-- Primary Action Buttons Grid -->
-    <section class="action-buttons-grid">
-      <button id="btn-dec" class="btn-action btn-dec" aria-label="Decrement Count">−</button>
-      <button id="btn-inc" class="btn-action btn-inc" aria-label="Increment Count">+</button>
-      <button id="btn-undo" class="btn-action-alt btn-undo" aria-label="Undo Last Count Action" disabled>Undo (Z)</button>
-      <button id="btn-reset" class="btn-action-alt btn-reset" aria-label="Reset Count to Zero">Reset (R)</button>
-    </section>
-
-    <!-- Step Selector Group -->
-    <section class="step-selector-group">
-      <div class="section-label-row">
-        <span class="group-label">Step Size</span>
-        <span class="group-hint">Active amount per click</span>
-      </div>
-      <div class="step-buttons">
-        <button class="step-btn active" data-step="1" aria-pressed="true">1</button>
-        <button class="step-btn" data-step="5" aria-pressed="false">5</button>
-        <button class="step-btn" data-step="10" aria-pressed="false">10</button>
-        <button class="step-btn" data-step="50" aria-pressed="false">50</button>
-      </div>
-    </section>
-
-    <!-- Custom Step -->
-    <section class="custom-step-group">
-      <form id="custom-step-form" class="custom-step-form" novalidate>
-        <label class="group-label" for="custom-step">Custom Step</label>
-        <div class="custom-step-controls">
-          <input id="custom-step" name="custom-step" type="number" min="0.1" step="any" inputmode="decimal" value="1" aria-describedby="custom-step-error" />
-          <button id="btn-apply-step" type="submit">Apply</button>
-        </div>
-        <p id="custom-step-error" class="field-error" role="alert" aria-live="polite"></p>
+        <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
       </form>
     </section>
 
-    <!-- Target Goal Setting -->
-    <section class="target-goal-group">
-      <div class="section-label-row">
-        <span class="group-label">Target Goal</span>
-        <button id="btn-clear-goal" class="text-link-btn" type="button" style="display: none;">Clear Goal</button>
+    <section class="controls" aria-label="Find tasks">
+      <label class="search-field"><span class="sr-only">Search tasks</span><input id="task-search" type="search" placeholder="Search tasks or projects" /></label>
+      <div id="status-filters" class="filter-group" aria-label="Task status">
+        <button type="button" data-status="all" aria-pressed="true">All</button>
+        <button type="button" data-status="active" aria-pressed="false">Active</button>
+        <button type="button" data-status="completed" aria-pressed="false">Completed</button>
       </div>
-      <div class="target-presets">
-        <button class="preset-goal-btn" data-goal="50" type="button">50</button>
-        <button class="preset-goal-btn" data-goal="100" type="button">100</button>
-        <button class="preset-goal-btn" data-goal="500" type="button">500</button>
-        <button class="preset-goal-btn" data-goal="1000" type="button">1,000</button>
-      </div>
+      <label class="project-filter">Project <select id="project-filter"><option value="all">All projects</option></select></label>
     </section>
 
-    <!-- Session Stats -->
-    <section class="stats-panel" aria-label="Session Statistics">
-      <div class="stat-item">
-        <span class="stat-label">Actions</span>
-        <span id="stat-actions" class="stat-value">0</span>
+    <section class="task-panel" aria-labelledby="task-list-heading">
+      <div class="task-panel-heading">
+        <h2 id="task-list-heading">Tasks</h2>
+        <button id="clear-completed" class="quiet-button" type="button" disabled>Clear completed</button>
       </div>
-      <div class="stat-item">
-        <span class="stat-label">Peak</span>
-        <span id="stat-peak" class="stat-value">0</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">Step</span>
-        <span id="stat-step" class="stat-value">1</span>
-      </div>
+      <ul id="task-list" class="task-list" aria-label="Todo tasks"></ul>
     </section>
-
-    <!-- History Section -->
-    <section class="history-section" aria-labelledby="history-title">
-      <div class="history-heading">
-        <h2 id="history-title">Count History</h2>
-        <button id="btn-clear-history" type="button" aria-label="Clear Count History" disabled>Clear</button>
-      </div>
-      <ol id="count-history" class="count-history" aria-label="No count history">
-        <li class="history-empty">No count actions yet.</li>
-      </ol>
-    </section>
-
-    <!-- Shortcuts Footer -->
-    <footer class="shortcuts-hint">
-      <span>Shortcuts:</span>
-      <code>↑ / +</code> Inc &nbsp;•&nbsp; 
-      <code>↓ / -</code> Dec &nbsp;•&nbsp; 
-      <code>R</code> Reset &nbsp;•&nbsp; 
-      <code>Z</code> Undo &nbsp;•&nbsp; 
-      <code>M</code> Mute
-    </footer>
   </main>
-
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>

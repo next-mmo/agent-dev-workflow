@@ -68,19 +68,19 @@ The active task carries the current Change Contract and acceptance evidence. `ch
 | `AGENTS.md` | minimal standing repository orders | detailed procedures/history |
 | `CONTEXT.md` | durable memory/authority/recovery contract | task-specific implementation detail |
 | `.agents/skills/` | reusable agent workflows and specialized decision standards | product requirements |
-| `.agents/scripts/` | dependency-light workflow executables, provider adapters, and mechanical checks | product requirements or human approvals |
+| `packages/agent-workflow-scrum/` | released CLI, workflow engine, provider adapters, and initialization templates | consumer task/PRD state or human approvals |
+| `scripts/` | source-repository build helpers, benchmark harnesses, and skill adapter checks | released workflow runtime |
 | `.agents/docs/` | long-form workflow docs and durable workflow artifacts | executable skill logic |
 | `.agents/docs/prd/` | current product requirements and precedence | implementation evidence |
 | `.agents/docs/plans/` | architectural blueprints, technical designs, schemas | product requirements |
 | `.agents/docs/tasks/` | current increment/recovery state | reusable global policy |
 | `.agents/docs/tasks/done/` | completed claim-to-proof evidence | current task authority |
 | `.agents/docs/proposals/` | workflow proposals, decisions, rationale | current product requirements |
-| `packages/agent-workflow-scrum/` | released engine, templates, and CLI | consumer task/PRD state |
 | `plugins/agent-workflow-scrum/` | portable skill/command bundle | consumer config or acceptance |
-| `.agents/scripts/context.mjs` | bounded context composition | approval/authorization |
-| `.agents/scripts/change-scope.mjs` | factual Git topology/path scope | test selection or base inference |
-| `.agents/scripts/verify-plan.mjs` | smallest-known check selection | proof that path-only inference is complete |
-| `.agents/scripts/workflow-check.mjs` | deterministic workflow consistency | semantic product correctness |
+| `packages/agent-workflow-scrum/engine/context*.mjs` | bounded context composition and provider routing | approval/authorization |
+| `packages/agent-workflow-scrum/engine/change-scope*.mjs` | factual Git topology/path scope | test selection or base inference |
+| `packages/agent-workflow-scrum/engine/verify-plan*.mjs` | smallest-known check selection | proof that path-only inference is complete |
+| `packages/agent-workflow-scrum/engine/workflow-check*.mjs` | deterministic workflow consistency | semantic product correctness |
 | Graphify adapter | derived code relationship evidence | canonical code/runtime truth |
 | OpenViking adapter | semantic recall | authoritative requirements/decisions |
 
@@ -106,11 +106,11 @@ Never make `change:scope` guess a base from branch names or upstream configurati
 | Goal | Owner |
 | :--- | :--- |
 | Change universal delivery/risk rules | `.agents/docs/agent-workflow.md` + approved proposal |
-| Change context selection/budgeting | `.agents/scripts/context.mjs` + context reference |
+| Change context selection/budgeting | `packages/agent-workflow-scrum/engine/context*.mjs` + context reference |
 | Add code/memory retrieval | provider adapter + provider reference |
-| Change Git outgoing-scope facts | `.agents/scripts/change-scope.mjs` |
-| Change check selection | `.agents/scripts/verify-plan.mjs` + testing policy |
-| Add deterministic lifecycle rule | `.agents/scripts/workflow-check.mjs` |
+| Change Git outgoing-scope facts | `packages/agent-workflow-scrum/engine/change-scope*.mjs` |
+| Change check selection | `packages/agent-workflow-scrum/engine/verify-plan*.mjs` + testing policy |
+| Add deterministic lifecycle rule | `packages/agent-workflow-scrum/engine/workflow-check*.mjs` |
 | Add documentation/writing rule | `.agents/docs/AGENTS.md` or prose skill |
 | Add async/test reliability rule | `.agents/docs/testing.md`, `.agents/docs/defensive-patterns.md`, reliability reference |
 | Change product behavior | affected PRD + active task + code/tests |

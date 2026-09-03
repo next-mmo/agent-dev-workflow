@@ -95,7 +95,7 @@ function pathLayers(file, config) {
   if (new RegExp(`^${docsPrefix}tasks/`).test(value)) layers.add("tasks");
   if (new RegExp(`^${docsPrefix}(?:proposals|suggestions)/`).test(value)) layers.add("governance");
   if (matchesPathGroup(value, config, "workflow")) layers.add("workflow");
-  if (/^(?:\.agents\/scripts|scripts)\/context\/providers\//.test(value)) layers.add("providers");
+  if (/^(?:packages\/agent-workflow-scrum\/engine|scripts)\/context\/providers\//.test(value)) layers.add("providers");
   if (matchesPathGroup(value, config, "ci")) layers.add("ci");
   if (/^(package(?:-lock)?\.json$|pnpm-lock\.yaml$|yarn\.lock$|bun\.lockb?$|Cargo\.(?:toml|lock)$|go\.(?:mod|sum)$|pyproject\.toml$)/.test(value)) layers.add("dependencies");
   if (matchesPathGroup(value, config, "build")) layers.add("build");

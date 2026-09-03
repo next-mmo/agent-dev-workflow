@@ -12,7 +12,7 @@
 - Use `npm run context -- "<scope>" --level 1` only when more detail is needed; use `--full` only for explicit deep review.
 - Treat the generated context pack as a routing aid, not a source of truth. Inspect current code, Git state, tests, the active task, and affected PRD before changing behavior.
 - `CONTEXT.md` defines durable cross-agent terms, authority, recovery, and handoff. Tracked PRDs/tasks/evidence remain authoritative over chat or agent-local memory.
-- Keep `.agents/skills/` canonical; regenerate/check target adapters with `.agents/scripts/skill.sh`.
+- Keep `.agents/skills/` canonical; regenerate/check target adapters with `scripts/skill.sh`.
 
 ## Workflow
 

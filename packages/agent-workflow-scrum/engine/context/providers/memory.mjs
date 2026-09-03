@@ -88,6 +88,9 @@ async function loadEntries(dirPath, contextType) {
     try {
       const content = await readFile(path.join(dirPath, file.name), "utf8");
       const { meta, body } = parseFrontmatter(content);
+      if (["draft", "proposed", "template"].includes(String(meta.status || "").toLowerCase())) continue;
+      const summaries = [meta.title, meta.problem, meta.solution, meta.scope];
+      if (summaries.some((value) => /^<[^<>]+>$/.test(String(value || "").trim()))) continue;
       entries.push({
         file: file.name,
         contextType,

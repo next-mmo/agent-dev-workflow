@@ -1,10 +1,22 @@
 import { syncLivingPRDs } from "./prd-sync-core.mjs";
+import path from "node:path";
 
-const dryRun = process.argv.includes("--dry-run");
-const json = process.argv.includes("--json");
+function parseArgs(argv) {
+  const options = { root: process.cwd(), dryRun: false, json: false };
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === "--root") options.root = path.resolve(argv[++index] || "");
+    else if (arg === "--dry-run") options.dryRun = true;
+    else if (arg === "--json") options.json = true;
+    else throw new Error(`unknown option: ${arg}`);
+  }
+  return options;
+}
 
 try {
-  const result = await syncLivingPRDs({ dryRun });
+  const options = parseArgs(process.argv.slice(2));
+  const { dryRun, json } = options;
+  const result = await syncLivingPRDs(options);
   if (json) {
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   } else {

@@ -1,11 +1,13 @@
 import { createSolution } from "./solve-core.mjs";
+import path from "node:path";
 
 function parseArgs(argv) {
-  const options = { title: "", module: "src/", tags: ["bugfix", "pattern"], json: false };
+  const options = { root: process.cwd(), title: "", module: "src/", tags: ["bugfix", "pattern"], json: false };
   const positional = [];
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "--json") options.json = true;
+    else if (arg === "--root") options.root = path.resolve(argv[++i] || "");
     else if (arg === "--module") options.module = argv[++i] || "src/";
     else if (arg === "--tags") options.tags = (argv[++i] || "").split(",").map((t) => t.trim());
     else if (arg.startsWith("-")) throw new Error(`unknown option: ${arg}`);

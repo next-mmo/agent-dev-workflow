@@ -4,9 +4,9 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { collectChangeScope } from "../.agents/scripts/change-scope.mjs";
-import { buildVerificationPlan } from "../.agents/scripts/verify-plan.mjs";
-import { matchesPathGroup, normalizeWorkflowConfig } from "../.agents/scripts/workflow-config.mjs";
+import { collectChangeScope } from "../packages/agent-workflow-scrum/engine/change-scope.mjs";
+import { buildVerificationPlan } from "../packages/agent-workflow-scrum/engine/verify-plan.mjs";
+import { matchesPathGroup, normalizeWorkflowConfig } from "../packages/agent-workflow-scrum/engine/workflow-config.mjs";
 
 function git(root, args) {
   return execFileSync("git", ["-C", root, ...args], { encoding: "utf8", stdio: "pipe" });

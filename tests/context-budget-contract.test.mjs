@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(testDirectory, "..");
-const contextScript = path.join(repositoryRoot, ".agents/scripts/context.mjs");
+const contextScript = path.join(repositoryRoot, "packages/agent-workflow-scrum/bin/agent-workflow.mjs");
 const docsRoot = ".agents/docs";
 
 function git(root, ...args) {
@@ -39,7 +39,7 @@ async function fixture({ commit = false } = {}) {
 test("context router rejects budgets below its viable minimum", () => {
   const result = spawnSync(
     process.execPath,
-    [contextScript, "budget contract", "--provider", "local", "--budget", "499", "--json"],
+    [contextScript, "context", "budget contract", "--provider", "local", "--budget", "499", "--json"],
     { cwd: repositoryRoot, encoding: "utf8" },
   );
 
@@ -52,7 +52,7 @@ test("minimum context budget remains a hard total cap without a root docs tree",
   try {
     const result = spawnSync(
       process.execPath,
-      [contextScript, "budget contract", "--root", root, "--provider", "local", "--budget", "500", "--json"],
+      [contextScript, "context", "budget contract", "--root", root, "--provider", "local", "--budget", "500", "--json"],
       { cwd: repositoryRoot, encoding: "utf8" },
     );
 
@@ -75,7 +75,7 @@ test("minimum context budget remains hard with many dirty paths", async () => {
     )));
     const result = spawnSync(
       process.execPath,
-      [contextScript, "budget contract", "--root", root, "--provider", "local", "--level", "1", "--budget", "500", "--json"],
+      [contextScript, "context", "budget contract", "--root", root, "--provider", "local", "--level", "1", "--budget", "500", "--json"],
       { cwd: repositoryRoot, encoding: "utf8" },
     );
 
@@ -91,7 +91,7 @@ test("minimum context budget remains hard with many dirty paths", async () => {
 test("context router fails closed when the requested scope cannot fit", () => {
   const result = spawnSync(
     process.execPath,
-    [contextScript, "scope", "x".repeat(2600), "--provider", "local", "--budget", "500"],
+    [contextScript, "context", "scope", "x".repeat(2600), "--provider", "local", "--budget", "500"],
     { cwd: repositoryRoot, encoding: "utf8" },
   );
 
@@ -107,7 +107,7 @@ test("tracked git-status paths preserve the first path character", async () => {
 
     const result = spawnSync(
       process.execPath,
-      [contextScript, "changed path contract", "--root", root, "--provider", "local", "--json"],
+      [contextScript, "context", "changed path contract", "--root", root, "--provider", "local", "--json"],
       { cwd: repositoryRoot, encoding: "utf8" },
     );
 

@@ -36,4 +36,4 @@ For completed multi-step tasks record compact claim-to-proof evidence:
 | Criterion | command, artifact, or visible flow | Passed/failed/skipped |
 ```
 
-Never call skipped/unverified work passed. Separate baseline/environment failures from regressions caused by the change. Before handoff run the selected relevant checks, `npm run workflow:check`, and `.agents/scripts/skill.sh check` when skills changed. CI owns broader platform/exhaustive coverage when configured; pending or absent CI is not a pass.
+Never call skipped/unverified work passed. Separate baseline/environment failures from regressions caused by the change. Before handoff run the selected relevant checks, `npm run workflow:check`, and `bash scripts/skill.sh check` when skills changed. CI owns broader platform/exhaustive coverage when configured; pending or absent CI is not a pass.

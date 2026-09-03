@@ -10,7 +10,7 @@
 - **Fresh evidence:** a current check, visible flow, artifact, or direct inspection.
 - **Ready:** acceptance is human-reviewable and backed by fresh evidence; agents do not self-approve policy or release.
 - **Recovery state:** scope, progress, decisions, risks, and evidence needed to continue without rediscovery.
-- **Context pack:** bounded L0/L1/L2 routing output from `.agents/scripts/context.mjs`.
+- **Context pack:** bounded L0/L1/L2 routing output from the package CLI (`agent-workflow context`).
 
 ## Decision Authority
 

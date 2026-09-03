@@ -19,7 +19,9 @@
     "workflow": [
       "AGENTS.md",
       "CONTEXT.md",
-      ".agents/**"
+      ".agents/**",
+      "packages/agent-workflow-scrum/**",
+      "scripts/**"
     ],
     "ci": [
       ".github/**"
@@ -38,7 +40,7 @@
     "build": "npm run build",
     "workflow": "npm run workflow:check --",
     "docs": "npm run docs:check",
-    "skills": ".agents/scripts/skill.sh check"
+    "skills": "bash scripts/skill.sh check"
   },
   "contextBudgets": {
     "AGENTS.md": 800,

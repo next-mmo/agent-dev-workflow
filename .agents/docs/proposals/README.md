@@ -38,6 +38,7 @@ Proposals are durable Agent Workflow Scrum policy records and live under `.agent
 | [0007](0007-configurable-ceremony-modes.md) | Configurable Ceremony Modes | `applied` | 2026-09-03 | Support `vibe`, `standard`, `strict`, and `guided` modes for diverse user types |
 | [0008](0008-optional-rtk-command-compression-layer.md) | Optional RTK Command Compression Layer | `proposed` | 2026-09-04 | Optional RTK proxy integration for terminal command output compression |
 | [0009](0009-optional-openviking-semantic-recall.md) | Optional OpenViking Semantic Recall Fallback | `proposed` | 2026-09-04 | OpenViking as optional vector-semantic upgrade over native file-based memory recall |
+| [0011](0011-beta-claim-and-recall-corrections.md) | Beta Measurement and Memory Corrections | `accepted` | 2026-09-04 | Exclude unfinished recall and distinguish context size from task token savings |
 
 
 ## Proposal Rules

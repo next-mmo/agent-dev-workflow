@@ -35,4 +35,6 @@ Followed by a concise body (aim for < 30 lines) explaining the learning, pattern
 
 The native memory provider (`memory.mjs`) loads all memory and solution entries, scores them against the current context scope using term overlap (tags weighted 2×, title 1.5×), and returns top matches within the allocated token budget.
 
-When the optional OpenViking provider is available, it supplements native recall with vector-semantic search for deeper matching.
+Entries marked `status: draft`, `proposed`, or `template`, or containing an angle-bracket-only placeholder in title/problem/solution/scope, are excluded. Complete the content and remove the draft status before using an entry for recall. Inclusion means eligible for retrieval; it does not prove the entry is correct.
+
+Explicit `--provider all` selection can supplement native recall with OpenViking search. Availability alone does not enable remote queries.

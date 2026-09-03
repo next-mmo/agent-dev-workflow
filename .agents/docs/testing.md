@@ -44,4 +44,4 @@ Record the exact command/scenario and observed result. Keep these states distinc
 
 ## Context benchmark
 
-Run `npm run benchmark:context -- "<scope>" --provider local --level 1 --budget 1500` to compare a naive raw baseline with the real bounded context entry path. Raw means all tracked UTF-8 text; bounded output is the context router's measured pack. Token savings are comparable, while timings are local measurements rather than stable performance claims.
+Run `npm run benchmark:context -- "<scope>" --provider local --level 1 --budget 1500` to compare all nonignored tracked UTF-8 text with one bounded context pack, using characters/4 estimates. This measures context-size reduction only. Schema v2 reports `reduction` and `actualTaskTokenSavings: null`; it does not measure task savings. Such a claim requires equivalent task runs with total input/output, later reads, tool output, caching, and outcome quality recorded. Timings are local measurements.

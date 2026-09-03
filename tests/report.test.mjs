@@ -9,7 +9,7 @@ const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(testDirectory, "..");
 
 test("workflow report links Markdown paths to in-page previews", async () => {
-  execFileSync(process.execPath, [".agents/scripts/report.mjs"], { cwd: repositoryRoot, stdio: "pipe" });
+  execFileSync(process.execPath, ["packages/agent-workflow-scrum/bin/agent-workflow.mjs", "report"], { cwd: repositoryRoot, stdio: "pipe" });
 
   const report = JSON.parse(await readFile(path.join(repositoryRoot, "report/report.json"), "utf8"));
   const html = await readFile(path.join(repositoryRoot, "report/index.html"), "utf8");

@@ -1,5 +1,6 @@
 ---
 title: Vite Windows Path Normalization
+status: draft
 module: scripts/build-distribution.mjs
 tags: [windows, vite, paths]
 problem: "<One-line explanation of the symptom/error>"

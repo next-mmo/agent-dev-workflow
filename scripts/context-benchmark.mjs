@@ -3,11 +3,11 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
-import { loadIgnoreFilterSync } from "./ignore-core.mjs";
+import { loadIgnoreFilterSync } from "../packages/agent-workflow-scrum/engine/ignore-core.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
-const repositoryRoot = path.resolve(scriptDirectory, "../..");
-const contextScript = path.join(scriptDirectory, "context.mjs");
+const repositoryRoot = path.resolve(scriptDirectory, "..");
+const contextScript = path.join(repositoryRoot, "packages/agent-workflow-scrum/bin/agent-workflow.mjs");
 const MIN_BUDGET = 500;
 
 function normalizePath(value) {
@@ -90,7 +90,7 @@ function collectRawBaseline(root) {
 }
 
 function runContext(options) {
-  const args = [contextScript, ...options.scope, "--provider", options.provider, "--level", String(options.level), "--budget", String(options.budget), "--json", "--root", options.root];
+  const args = [contextScript, "context", ...options.scope, "--provider", options.provider, "--level", String(options.level), "--budget", String(options.budget), "--json", "--root", options.root];
   if (options.base) args.push("--base", options.base);
   if (options.head !== "HEAD") args.push("--head", options.head);
   const result = spawnSync(process.execPath, args, {
@@ -131,18 +131,21 @@ export function runBenchmark(input = {}) {
     loadedDocuments: context.documents.length,
     durationMs: round(performance.now() - contextStarted),
   };
-  const savedTokens = raw.tokens - bounded.tokens;
+  const reducedTokens = raw.tokens - bounded.tokens;
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
+    measurement: "context-pack-size-comparison",
+    tokenEstimator: "characters/4",
+    actualTaskTokenSavings: null,
     root: normalizePath(options.root),
     scope: options.scope.join(" "),
     level: options.level,
     provider: options.provider,
     raw,
     bounded,
-    savings: {
-      tokens: savedTokens,
-      percent: round((savedTokens / raw.tokens) * 100),
+    reduction: {
+      tokens: reducedTokens,
+      percent: round((reducedTokens / raw.tokens) * 100),
       ratio: round(bounded.tokens / raw.tokens),
     },
   };
@@ -155,13 +158,14 @@ function render(result) {
     `- Scope: ${result.scope}`,
     `- Provider/level: ${result.provider}/L${result.level}`,
     "",
-    "| Context Mode | Estimated Tokens | Latency | Scope & Payload | Savings |",
+    "| Context Mode | Estimated Tokens | Latency | Scope & Payload | Size reduction |",
     "| :--- | :--- | :--- | :--- | :--- |",
     `| **Raw baseline:** | ~${result.raw.tokens} tokens | ${result.raw.durationMs}ms | ${result.raw.files} tracked UTF-8 text files | 0% (baseline) |`,
-    `| **Bounded context:** | ~${result.bounded.tokens} / ${result.bounded.budgetTokens} tokens | ${result.bounded.durationMs}ms | ${result.bounded.selectedDocuments} selected, ${result.bounded.loadedDocuments} loaded | **${result.savings.percent}%** (~${result.savings.tokens} tokens saved) |`,
-    `| **Savings:** | **~${result.savings.tokens} tokens** | — | Ratio: ${result.savings.ratio} (budget exceeded: ${result.bounded.budgetExceeded}) | **${result.savings.percent}% net savings** |`,
+    `| **Bounded context:** | ~${result.bounded.tokens} / ${result.bounded.budgetTokens} tokens | ${result.bounded.durationMs}ms | ${result.bounded.selectedDocuments} selected, ${result.bounded.loadedDocuments} loaded | **${result.reduction.percent}%** |`,
+    `| **Reduction:** | **~${result.reduction.tokens} estimated tokens** | — | Ratio: ${result.reduction.ratio} (budget exceeded: ${result.bounded.budgetExceeded}) | **${result.reduction.percent}% smaller context pack** |`,
     "",
-    "Raw baseline means all tracked UTF-8 text; bounded context uses the real context router and does not print its full pack.",
+    "Raw baseline means all nonignored tracked UTF-8 text. Estimates use characters/4; this compares context sizes, not equivalent task runs.",
+    "Actual task token savings: not measured. Later file reads, instructions, tool output, model output, and caching are not accounted for.",
     "",
   ].join("\n");
 }

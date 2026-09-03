@@ -38,4 +38,4 @@ jobs:
         run: npm run docs:check
 
       - name: Skill source audit
-        run: bash .agents/scripts/skill.sh check
+run: bash scripts/skill.sh check

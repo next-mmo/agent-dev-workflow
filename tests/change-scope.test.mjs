@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { classifyChangedPaths, collectChangeScope } from "../.agents/scripts/change-scope.mjs";
+import { classifyChangedPaths, collectChangeScope } from "../packages/agent-workflow-scrum/engine/change-scope.mjs";
 
 const docsRoot = ".agents/docs";
 
@@ -57,8 +57,8 @@ test("change scope reports committed and every dirty layer against an explicit b
   }
 });
 
-test(".agents script providers stay classified as workflow and provider changes", () => {
-  const providerPath = ".agents/scripts/context/providers/openviking.mjs";
+test("package context providers stay classified as workflow and provider changes", () => {
+  const providerPath = "packages/agent-workflow-scrum/engine/context/providers/openviking.mjs";
   const layers = classifyChangedPaths([providerPath]);
   assert.deepEqual(layers.providers, [providerPath]);
   assert.deepEqual(layers.workflow, [providerPath]);

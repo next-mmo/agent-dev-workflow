@@ -22,7 +22,12 @@ const entries = {
 };
 
 function hasRoot(args) {
-  return args.some((arg) => arg === "--root");
+  const index = args.indexOf("--root");
+  if (index < 0) return false;
+  if (!args[index + 1] || args[index + 1].startsWith("--")) {
+    throw new Error("--root requires a directory path");
+  }
+  return true;
 }
 
 export function runEngine(command, args, cwd = process.cwd()) {

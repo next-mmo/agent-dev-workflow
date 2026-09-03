@@ -141,7 +141,7 @@ async function run(options) {
     else if (tokens > Math.floor(budget * 0.95)) warnings.push(`${file}: documentation budget has less than 5% headroom (${tokens}/${budget})`);
   }
 
-  const sources = new Set(["README.md", "AGENTS.md", "CONTEXT.md"]);
+  const sources = new Set(["README.md", "AGENTS.md", "CONTEXT.md", ...Object.keys(budgets)]);
   for (const directory of [DOCS_ROOT, ".agents/skills", "scripts", "tests"]) {
     for (const file of await markdownFiles(options.root, directory)) sources.add(file);
   }

@@ -8,10 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(testDirectory, "..");
-const contextScript = path.join(repositoryRoot, ".agents/scripts/context.mjs");
-const checkScript = path.join(repositoryRoot, ".agents/scripts/workflow-check.mjs");
-const modeScript = path.join(repositoryRoot, ".agents/scripts/mode.mjs");
-const archiveScript = path.join(repositoryRoot, ".agents/scripts/archive.mjs");
+const agentBinary = path.join(repositoryRoot, "packages/agent-workflow-scrum/bin/agent-workflow.mjs");
 const docsRoot = ".agents/docs";
 
 async function fixture() {
@@ -47,8 +44,8 @@ async function fixture() {
   return root;
 }
 
-function runJson(script, args) {
-  return JSON.parse(execFileSync(process.execPath, [script, ...args, "--json"], { encoding: "utf8" }));
+function runJson(command, args) {
+  return JSON.parse(execFileSync(process.execPath, [agentBinary, command, ...args, "--json"], { encoding: "utf8" }));
 }
 
 function git(root, ...args) {
@@ -58,7 +55,7 @@ function git(root, ...args) {
 test("context router prioritizes active task and security rules", async () => {
   const root = await fixture();
   try {
-    const result = runJson(contextScript, ["session timeout", "--root", root]);
+    const result = runJson("context", ["session timeout", "--root", root]);
     assert.equal(result.docsRoot, docsRoot);
     assert.equal(result.activeTasks.length, 1);
     assert.equal(result.selected[0].kind, "active-task");
@@ -72,7 +69,7 @@ test("context router prioritizes active task and security rules", async () => {
 test("L1 context respects a small token budget", async () => {
   const root = await fixture();
   try {
-    const result = runJson(contextScript, ["authorization", "--level", "1", "--budget", "500", "--root", root]);
+    const result = runJson("context", ["authorization", "--level", "1", "--budget", "500", "--root", root]);
     assert.equal(result.level, 1);
     assert.ok(result.documents.length > 0);
     assert.ok(result.estimatedTokens <= 550, `estimated ${result.estimatedTokens} tokens`);
@@ -84,7 +81,7 @@ test("L1 context respects a small token budget", async () => {
 test("workflow checker accepts a consistent fixture", async () => {
   const root = await fixture();
   try {
-    const result = runJson(checkScript, ["--root", root, "--strict-budget"]);
+    const result = runJson("check", ["--root", root, "--strict-budget"]);
     assert.equal(result.ok, true);
     assert.deepEqual(result.errors, []);
   } finally {
@@ -100,7 +97,7 @@ test("workflow checker rejects multiple active tasks", async () => {
       "# Other\n> **Status:** blocked\nWaiting for a decision.\n",
       "utf8",
     );
-    const result = spawnSync(process.execPath, [checkScript, "--root", root, "--json"], { encoding: "utf8" });
+    const result = spawnSync(process.execPath, [agentBinary, "check", "--root", root, "--json"], { encoding: "utf8" });
     assert.notEqual(result.status, 0);
     const parsed = JSON.parse(result.stdout);
     assert.equal(parsed.ok, false);
@@ -116,7 +113,7 @@ test("workflow checker requires synchronized task metadata for product changes",
     await mkdir(path.join(root, "src"), { recursive: true });
     await writeFile(path.join(root, "src/app.js"), "export const value = 1;\n", "utf8");
     await rm(path.join(root, docsRoot, "tasks/wip-0001-0001-auth.md"));
-    const result = spawnSync(process.execPath, [checkScript, "--root", root, "--json"], { encoding: "utf8" });
+    const result = spawnSync(process.execPath, [agentBinary, "check", "--root", root, "--json"], { encoding: "utf8" });
     assert.notEqual(result.status, 0);
     const parsed = JSON.parse(result.stdout);
     assert.ok(parsed.errors.some((error) => error.includes("product changes require one active")));
@@ -135,7 +132,7 @@ test("workflow checker accepts a product change with task, PRD index, and eviden
       "utf8",
     );
     await writeFile(path.join(root, "src/app.js"), "export const value = 1;\n", "utf8");
-    const result = runJson(checkScript, ["--root", root, "--strict-budget"]);
+    const result = runJson("check", ["--root", root, "--strict-budget"]);
     assert.equal(result.ok, true, JSON.stringify(result.errors));
     assert.ok(result.info.some((item) => item.includes("product synchronization")));
   } finally {
@@ -148,7 +145,7 @@ test("workflow checker rejects product changes with incomplete task synchronizat
   try {
     await mkdir(path.join(root, "src"), { recursive: true });
     await writeFile(path.join(root, "src/app.js"), "export const value = 1;\n", "utf8");
-    const result = spawnSync(process.execPath, [checkScript, "--root", root, "--json"], { encoding: "utf8" });
+    const result = spawnSync(process.execPath, [agentBinary, "check", "--root", root, "--json"], { encoding: "utf8" });
     assert.notEqual(result.status, 0);
     const parsed = JSON.parse(result.stdout);
     assert.equal(parsed.ok, false);
@@ -175,7 +172,7 @@ test("workflow checker evaluates committed product paths with an explicit base",
     git(root, "add", ".");
     git(root, "commit", "-qm", "product increment");
 
-    const result = runJson(checkScript, ["--root", root, "--base", base]);
+    const result = runJson("check", ["--root", root, "--base", base]);
     assert.equal(result.ok, true, JSON.stringify(result.errors));
     assert.ok(result.info.some((item) => item.includes("outgoing scope")));
     assert.ok(result.info.some((item) => item.includes("product synchronization")));
@@ -188,7 +185,7 @@ test("workflow checker rejects broken tracked markdown links", async () => {
   const root = await fixture();
   try {
     await writeFile(path.join(root, "AGENTS.md"), "# Agent Instructions\nRead [missing](missing.md).\n", "utf8");
-    const result = spawnSync(process.execPath, [checkScript, "--root", root, "--json"], { encoding: "utf8" });
+    const result = spawnSync(process.execPath, [agentBinary, "check", "--root", root, "--json"], { encoding: "utf8" });
     assert.notEqual(result.status, 0);
     const parsed = JSON.parse(result.stdout);
     assert.ok(parsed.errors.some((error) => error.includes("broken markdown link")));
@@ -205,7 +202,7 @@ test("workflow checker rejects applied suggestions without a human decision", as
       "# Suggestion\n> **Status:** applied\n\n## Human Decision\n- **Decision:** pending\n",
       "utf8",
     );
-    const result = spawnSync(process.execPath, [checkScript, "--root", root, "--json"], { encoding: "utf8" });
+    const result = spawnSync(process.execPath, [agentBinary, "check", "--root", root, "--json"], { encoding: "utf8" });
     assert.notEqual(result.status, 0);
     const parsed = JSON.parse(result.stdout);
     assert.ok(parsed.errors.some((error) => error.includes("non-pending human decision")));
@@ -219,10 +216,10 @@ test("workflow checker accepts product changes without task in vibe mode", async
   try {
     await mkdir(path.join(root, "src"), { recursive: true });
     await writeFile(path.join(root, "src/app.js"), "export const value = 1;\n", "utf8");
-    const standardResult = spawnSync(process.execPath, [checkScript, "--root", root, "--json"], { encoding: "utf8" });
+    const standardResult = spawnSync(process.execPath, [agentBinary, "check", "--root", root, "--json"], { encoding: "utf8" });
     assert.notEqual(standardResult.status, 0);
 
-    const vibeResult = runJson(checkScript, ["--root", root, "--mode", "vibe"]);
+    const vibeResult = runJson("check", ["--root", root, "--mode", "vibe"]);
     assert.equal(vibeResult.ok, true, JSON.stringify(vibeResult.errors));
     assert.ok(vibeResult.info.some((item) => item.includes("vibe mode active")));
   } finally {
@@ -235,7 +232,7 @@ test("workflow checker in guided mode provides remediation tip", async () => {
   try {
     await mkdir(path.join(root, "src"), { recursive: true });
     await writeFile(path.join(root, "src/app.js"), "export const value = 1;\n", "utf8");
-    const result = spawnSync(process.execPath, [checkScript, "--root", root, "--mode", "guided", "--json"], { encoding: "utf8" });
+    const result = spawnSync(process.execPath, [agentBinary, "check", "--root", root, "--mode", "guided", "--json"], { encoding: "utf8" });
     assert.notEqual(result.status, 0);
     const parsed = JSON.parse(result.stdout);
     assert.ok(parsed.errors.some((error) => error.includes("Guided Tip:")));
@@ -247,15 +244,15 @@ test("workflow checker in guided mode provides remediation tip", async () => {
 test("mode CLI script inspects and switches workflow ceremony mode", async () => {
   const root = await fixture();
   try {
-    const inspectResult = runJson(modeScript, ["--root", root]);
+    const inspectResult = runJson("mode", ["--root", root]);
     assert.equal(inspectResult.ok, true);
     assert.equal(inspectResult.mode, "standard");
 
-    const setResult = runJson(modeScript, ["vibe", "--root", root]);
+    const setResult = runJson("mode", ["vibe", "--root", root]);
     assert.equal(setResult.ok, true);
     assert.equal(setResult.mode, "vibe");
 
-    const recheckResult = runJson(modeScript, ["--root", root]);
+    const recheckResult = runJson("mode", ["--root", root]);
     assert.equal(recheckResult.mode, "vibe");
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -267,7 +264,7 @@ test("workflow checker allows style-only changes under fast path without task", 
   try {
     await mkdir(path.join(root, "src"), { recursive: true });
     await writeFile(path.join(root, "src/styles.css"), "body { color: red; }\n", "utf8");
-    const result = runJson(checkScript, ["--root", root]);
+    const result = runJson("check", ["--root", root]);
     assert.equal(result.ok, true, JSON.stringify(result.errors));
     assert.ok(result.info.some((item) => item.includes("style path(s) changed; fast path active")));
   } finally {
@@ -284,14 +281,14 @@ test("task archiver moves completed tasks older than retention days and keeps re
     await writeFile(newTask, "# New Task\n> **Status:** done\n> **Completed:** 2026-09-03\n", "utf8");
 
     // Run dry-run first
-    const dryRunResult = runJson(archiveScript, ["--dry-run", "--days", "14", "--root", root]);
+    const dryRunResult = runJson("archive", ["--dry-run", "--days", "14", "--root", root]);
     assert.equal(dryRunResult.ok, true);
     assert.equal(dryRunResult.dryRun, true);
     assert.equal(dryRunResult.archived.length, 1);
     assert.equal(dryRunResult.archived[0].file, "done-0001-old.md");
 
     // Run real archive
-    const realResult = runJson(archiveScript, ["--days", "14", "--root", root]);
+    const realResult = runJson("archive", ["--days", "14", "--root", root]);
     assert.equal(realResult.ok, true);
     assert.equal(realResult.archived.length, 1);
     assert.equal(realResult.archived[0].destPath, ".agents/docs/tasks/archived/2026/done-0001-old.md");

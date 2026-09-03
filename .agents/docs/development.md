@@ -10,10 +10,11 @@ Vite 8 is a development dependency. Prefer `npm ci` for the locked set; use `npm
 
 ## Repository documentation layout
 
-Agent Workflow Scrum keeps reusable material under `.agents/`:
+Agent Workflow Scrum keeps project-owned workflow material under `.agents/`; the reusable runtime is installed from the package:
 
 - `.agents/skills/` — executable agent guidance;
-- `.agents/scripts/` — dependency-light tooling and optional providers;
+- `packages/agent-workflow-scrum/` — canonical CLI, engine, providers, and initialization templates;
+- `scripts/` — source-repository build, benchmark, and skill-adapter helpers;
 - `.agents/docs/` — architecture, delivery/testing guidance, PRDs, tasks, suggestions, evidence.
 
 Do not create Agent Workflow Scrum artifacts under a root `docs/` tree. A repository adopting this workflow may still keep its own application/product documentation in `docs/`; only workflow-owned artifacts are reserved for `.agents/docs/`.
@@ -40,14 +41,14 @@ npm test
 npm run build
 npm run workflow:check -- --strict-budget
 npm run docs:check
-bash .agents/scripts/skill.sh check
+bash scripts/skill.sh check
 ```
 
 To complete full local setup, run these additional commands:
 
 ```bash
-bash .agents/scripts/skill.sh init all
-bash .agents/scripts/skill.sh check all
+bash scripts/skill.sh init all
+bash scripts/skill.sh check all
 ```
 
 The skill audit and adapter initialization require a POSIX shell; on Windows, run them from Git Bash.
@@ -133,9 +134,9 @@ Run workflow, documentation, and adapter checks:
 
 ```bash
 npm run workflow:check
-node .agents/scripts/workflow-check.mjs --strict-budget
+npm run workflow:check -- --strict-budget
 npm run docs:check
-bash .agents/scripts/skill.sh check
+bash scripts/skill.sh check
 ```
 
 `workflow:check` validates lifecycle, product task/PRD/evidence synchronization, and context budgets; add `--base <verified-ref>` for committed scope. `docs:check` validates budgets/links, stale inline paths, and the root `docs/` namespace while allowing application docs.
@@ -146,7 +147,7 @@ bash .agents/scripts/skill.sh check
 npm run report
 ```
 
-Open `report/index.html`. It is a generated, ignored convenience view of Git/task/PRD/workflow sources, not canonical evidence. `.agents/scripts/report.mjs` is self-contained and requires no network connection at runtime.
+Open `report/index.html`. It is a generated, ignored convenience view of Git/task/PRD/workflow sources, not canonical evidence. `npm run report` invokes the package CLI and requires no network connection at runtime.
 
 ## Project entry point
 

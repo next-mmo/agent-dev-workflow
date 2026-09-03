@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(testDirectory, "..");
-const contextScript = path.join(repositoryRoot, ".agents/scripts/context.mjs");
+const contextScript = path.join(repositoryRoot, "packages/agent-workflow-scrum/bin/agent-workflow.mjs");
 const docsRoot = ".agents/docs";
 
 async function fixture({ graph = false } = {}) {
@@ -49,7 +49,7 @@ async function fakeCli(source) {
 function runContext(root, args = [], env = {}) {
   return JSON.parse(execFileSync(
     process.execPath,
-    [contextScript, "session timeout", "--root", root, ...args, "--json"],
+    [contextScript, "context", "session timeout", "--root", root, ...args, "--json"],
     { encoding: "utf8", env: { ...process.env, ...env } },
   ));
 }
@@ -184,7 +184,7 @@ test("provider diagnostics redact common secret shapes", async () => {
 });
 
 test("trimToBudget truncates at clean semantic boundaries without cutting words", async () => {
-  const { trimToBudget } = await import("../.agents/scripts/context/providers/common.mjs");
+  const { trimToBudget } = await import("../packages/agent-workflow-scrum/engine/context/providers/common.mjs");
 
   // Case 1: Sentence boundary preferred when complete sentence is available
   const twoSentences = "First sentence completed. Second sentence with important details and words.";
@@ -201,7 +201,7 @@ test("trimToBudget truncates at clean semantic boundaries without cutting words"
 });
 
 test("trimToBudget preserves unclosed markdown code fences when budget permits", async () => {
-  const { trimToBudget } = await import("../.agents/scripts/context/providers/common.mjs");
+  const { trimToBudget } = await import("../packages/agent-workflow-scrum/engine/context/providers/common.mjs");
   const codeBlock = "```javascript\nfunction test() {\n  return 42;\n}\n// trailing content";
   const trimmed = trimToBudget(codeBlock, 12); // 48 chars
   assert.ok(trimmed.length <= 48, `expected <= 48 chars, got ${trimmed.length}`);
@@ -211,7 +211,7 @@ test("trimToBudget preserves unclosed markdown code fences when budget permits",
 // --- Native Memory Provider Tests ---
 
 test("parseFrontmatter extracts YAML fields and body from markdown", async () => {
-  const { parseFrontmatter } = await import("../.agents/scripts/context/providers/memory.mjs");
+  const { parseFrontmatter } = await import("../packages/agent-workflow-scrum/engine/context/providers/memory.mjs");
   const md = `---
 title: Audio Autoplay Fix
 tags: [audio, webaudio, browser]
@@ -232,14 +232,14 @@ Body content here.`;
 });
 
 test("parseFrontmatter returns empty meta for files without frontmatter", async () => {
-  const { parseFrontmatter } = await import("../.agents/scripts/context/providers/memory.mjs");
+  const { parseFrontmatter } = await import("../packages/agent-workflow-scrum/engine/context/providers/memory.mjs");
   const { meta, body } = parseFrontmatter("# Just a heading\n\nSome text.");
   assert.deepEqual(meta, {});
   assert.match(body, /Just a heading/);
 });
 
 test("scoreEntry weights tags > title > body", async () => {
-  const { scoreEntry } = await import("../.agents/scripts/context/providers/memory.mjs");
+  const { scoreEntry } = await import("../packages/agent-workflow-scrum/engine/context/providers/memory.mjs");
   const entry = {
     meta: {
       title: "Web Audio Autoplay Fix",
@@ -260,7 +260,7 @@ test("scoreEntry weights tags > title > body", async () => {
 });
 
 test("retrieveNativeMemory returns scored matches from solutions dir", async () => {
-  const { retrieveNativeMemory } = await import("../.agents/scripts/context/providers/memory.mjs");
+  const { retrieveNativeMemory } = await import("../packages/agent-workflow-scrum/engine/context/providers/memory.mjs");
   const root = await mkdtemp(path.join(os.tmpdir(), "agent-memory-test-"));
   const solutionsDir = path.join(root, ".agents", "docs", "solutions");
   const memoryDir = path.join(root, ".agents", "docs", "memory");
@@ -309,7 +309,7 @@ Always use .mjs extension.
 });
 
 test("retrieveNativeMemory respects budget constraint", async () => {
-  const { retrieveNativeMemory } = await import("../.agents/scripts/context/providers/memory.mjs");
+  const { retrieveNativeMemory } = await import("../packages/agent-workflow-scrum/engine/context/providers/memory.mjs");
   const root = await mkdtemp(path.join(os.tmpdir(), "agent-memory-budget-"));
   const solutionsDir = path.join(root, ".agents", "docs", "solutions");
   await mkdir(solutionsDir, { recursive: true });
@@ -345,6 +345,32 @@ test("native memory provider appears in context output for native mode", async (
     assert.ok(mem, "memory provider should be present in native mode");
     assert.equal(mem.authority, "native-recall");
     assert.ok(["ok", "skipped"].includes(mem.status));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("native recall excludes drafts and template summaries while retaining completed entries", async () => {
+  const { retrieveNativeMemory } = await import("../packages/agent-workflow-scrum/engine/context/providers/memory.mjs");
+  const root = await mkdtemp(path.join(os.tmpdir(), "agent-memory-drafts-"));
+  try {
+    const dir = path.join(root, ".agents/docs/solutions");
+    await mkdir(dir, { recursive: true });
+    const entries = [
+      ['0001-draft.md', 'title: Draft fix\nstatus: draft\nproblem: Windows paths fail\nsolution: Normalize paths'],
+      ['0002-placeholder.md', 'title: Placeholder fix\nproblem: "<One-line explanation of the symptom/error>"\nsolution: "<One-line explanation of the fix>"'],
+      ['0003-ready.md', 'title: Ready fix\nproblem: Windows paths fail\nsolution: Normalize separators'],
+    ];
+    for (const [file, fields] of entries) {
+      await writeFile(path.join(dir, file), `---\n${fields}\ntags: [windows, paths]\n---\nWindows paths.\n`);
+    }
+    const result = await retrieveNativeMemory({ root, scope: 'windows paths', budgetTokens: 300 });
+    assert.match(result.content, /Ready fix/);
+    assert.doesNotMatch(result.content, /Draft fix|Placeholder fix|One-line/);
+    await rm(path.join(dir, '0003-ready.md'));
+    const empty = await retrieveNativeMemory({ root, scope: 'windows paths', budgetTokens: 300 });
+    assert.doesNotMatch(empty.content, /Draft fix|Placeholder fix|One-line/);
+    assert.match(empty.content, /No memory or solution entries/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

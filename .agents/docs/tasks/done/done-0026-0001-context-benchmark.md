@@ -13,7 +13,7 @@ The repository now has a read-only `npm run benchmark:context` command that comp
 ## Change Contract
 
 - **Human outcome:** contributors can measure how much the bounded context router reduces a naive whole-repository text prompt without depending on optional providers.
-- **Acceptance evidence:** the benchmark reports raw tokens, bounded tokens, savings, reduction percentage, and timing; a deterministic fixture proves meaningful reduction and the budget contract.
+- **Acceptance evidence (historical schema v1):** the benchmark reported raw tokens, bounded tokens, savings, reduction percentage, and timing; a deterministic fixture proved meaningful context-size reduction and the budget contract. Schema v2 supersedes the `savings` field and does not claim measured task-level savings.
 - **Non-goals:** do not change product behavior, send repository content to external services, install providers, or treat benchmark output as acceptance authority.
 - **Affected layers:** context tooling, package scripts, verification planning, development/testing guidance, and dependency-free tests.
 - **Risk:** low; filesystem/Git text classification and timing are local benchmark concerns, not product correctness gates.
@@ -32,7 +32,7 @@ The repository now has a read-only `npm run benchmark:context` command that comp
 
 | Claim | Evidence | Result |
 | :--- | :--- | :--- |
-| Raw versus bounded measurement | `npm run benchmark:context -- "feature delivery" --provider local --level 0 --budget 1500 --json` | Raw 102,978 tokens from 98 tracked text files; bounded 639/1,500; savings 99.38% |
+| Raw versus bounded measurement | `npm run benchmark:context -- "feature delivery" --provider local --level 0 --budget 1500 --json` | Historical raw 102,978 tokens from 98 tracked text files; bounded 639/1,500; context-size reduction 99.38% |
 | Benchmark regression | `tests/context-benchmark.test.mjs` deterministic fixture | 3 passed, 0 failed |
 | Budget/provider boundary | Benchmark defaults to `local`; bounded result reports `budgetExceeded: false` | Passed |
 | Verification planner routing | `tests/verify-plan.test.mjs` benchmark-script fixture | Passed; benchmark regression is selected for benchmark tooling changes |
@@ -47,5 +47,5 @@ The repository now has a read-only `npm run benchmark:context` command that comp
 ## Handoff
 
 - Run `npm run benchmark:context -- "<scope>" --provider local --level 1 --budget 1500` for a comparable local measurement.
-- Raw means all tracked UTF-8 text files; bounded means the context router's measured JSON pack. Token savings are comparable; timings vary by machine and filesystem state.
+- Raw means all tracked UTF-8 text files; bounded means the context router's measured JSON pack. The comparison is context-pack size only; it is not equivalent-task token savings. Timings vary by machine and filesystem state.
 - Optional Graphify/OpenViking comparison requires explicit provider selection and should be reported separately from the local baseline.

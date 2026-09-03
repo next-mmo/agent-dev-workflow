@@ -4,7 +4,7 @@
 > **Created:** 2026-09-03
 > **Proposed by:** Human user & Agent
 > **Decision owner:** Human
-> **Canonical targets:** `.agents/scripts/workflow-config.mjs`, `.agents/scripts/workflow-check-core.mjs`, `packages/agent-workflow-scrum/`, `.agents/skills/agent-workflow-scrum/`
+> **Canonical targets:** `packages/agent-workflow-scrum/engine/workflow-config.mjs`, `packages/agent-workflow-scrum/engine/workflow-check-core.mjs`, `packages/agent-workflow-scrum/`, `.agents/skills/agent-workflow-scrum/`
 
 ## Observation
 
@@ -58,5 +58,5 @@ Agent Workflow Scrum strictly enforces full Scrum ceremony—requiring active ta
 
 ## Application Evidence
 
-- Changed canonical files: `.agents/scripts/workflow-config.mjs`, `.agents/scripts/workflow-check-core.mjs`, `.agents/scripts/mode-core.mjs`, `.agents/scripts/mode.mjs`, `packages/agent-workflow-scrum/src/cli.mjs`, `packages/agent-workflow-scrum/src/run-engine.mjs`, `.agents/skills/agent-workflow-scrum/SKILL.md`, `.agents/skills/agent-workflow-scrum/references/commands.md`
+- Changed canonical files: `packages/agent-workflow-scrum/engine/workflow-config.mjs`, `packages/agent-workflow-scrum/engine/workflow-check-core.mjs`, `packages/agent-workflow-scrum/engine/mode-core.mjs`, `packages/agent-workflow-scrum/engine/mode.mjs`, `packages/agent-workflow-scrum/src/cli.mjs`, `packages/agent-workflow-scrum/src/run-engine.mjs`, `.agents/skills/agent-workflow-scrum/SKILL.md`, `.agents/skills/agent-workflow-scrum/references/commands.md`
 - Verification results: All unit and end-to-end tests pass in `tests/workflow-config.test.mjs` and `tests/workflow-tools.test.mjs`; verified CLI mode switching (`npm run workflow:mode`), fast path style bypass, and vibe mode relaxed checks.
