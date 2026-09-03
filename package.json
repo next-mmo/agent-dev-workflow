@@ -30,7 +30,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test tests/*.test.cjs tests/*.test.mjs",
-    "test:compact": "node --test --test-reporter=dot tests/*.test.cjs tests/*.test.mjs"
+    "test:compact": "node --test --test-reporter=dot tests/*.test.cjs tests/*.test.mjs",
+    "test:beta:nestjs": "node scripts/beta-nestjs-smoke.mjs"
   },
   "keywords": [
     "counter",
