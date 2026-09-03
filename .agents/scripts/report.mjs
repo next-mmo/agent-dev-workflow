@@ -689,7 +689,7 @@ function renderHtml(report, documents, taskSlugs, prdSlugs) {
     <title>Agent Workflow Scrum Report</title>
     <style>
       :root {
-        color-scheme: light dark;
+        color-scheme: light;
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         background: #f5f7fb;
         color: #172033;
@@ -747,20 +747,6 @@ function renderHtml(report, documents, taskSlugs, prdSlugs) {
       @media (max-width: 780px) {
         .app { flex-direction: column; }
         .sidebar { width: 100%; flex: 0 0 auto; position: static; height: auto; }
-      }
-      @media (prefers-color-scheme: dark) {
-        :root { background: #111827; color: #e8edf6; }
-        .muted, footer { color: #a7b2c6; }
-        .card, section { background: #1a2435; border-color: #334158; box-shadow: none; }
-        .sidebar { background: #111827; border-color: #334158; }
-        .nav-link { color: #8fb3ff; }
-        .nav-link:hover { background: #1c293e; }
-        .nav-link.active { background: #24324a; color: #c4d6ff; }
-        th, td { border-color: #334158; }
-        th { color: #b5c0d3; }
-        .doc-head { border-color: #334158; }
-        article blockquote { border-color: #3a4a66; color: #b7c1d3; }
-        a { color: #8fb3ff; }
       }
     </style>
   </head>
