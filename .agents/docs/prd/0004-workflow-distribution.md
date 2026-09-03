@@ -1,8 +1,8 @@
 # PRD-0004: Workflow Distribution
 
-> Status: active beta  
-> Created: 2026-09-03  
-> Updated: 2026-09-03  
+> Status: active beta
+> Created: 2026-09-03
+> Updated: 2026-09-03
 > Related Tasks: `.agents/docs/tasks/wip-0028-0001-package-workflow-cli.md`
 
 ## 1. Problem Statement

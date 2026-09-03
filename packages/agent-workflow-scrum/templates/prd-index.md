@@ -1,6 +1,6 @@
 # Product Requirements Index
 
-> Status: living doc  
+> Status: living doc
 > Updated: {{TODAY}}
 
 ## PRD Index

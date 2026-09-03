@@ -1,9 +1,9 @@
 # Task 0028: Package the Workflow CLI and Portable Plugins
 
-> **Status:** wip  
-> **Scrum Artifact:** active increment  
-> **Created:** 2026-09-03  
-> **PRD:** `.agents/docs/prd/0004-workflow-distribution.md`  
+> **Status:** wip
+> **Scrum Artifact:** active increment
+> **Created:** 2026-09-03
+> **PRD:** `.agents/docs/prd/0004-workflow-distribution.md`
 > **Suggestion:** `.agents/docs/suggestions/0006-package-engine-and-portable-plugins.md`
 
 ## Change Contract

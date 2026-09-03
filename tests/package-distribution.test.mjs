@@ -12,16 +12,24 @@ const packageRoot = path.join(repositoryRoot, "packages/agent-workflow-scrum");
 const sourceBinary = path.join(packageRoot, "bin/agent-workflow.mjs");
 const forbidden = [".agents/scripts", ".agents/skills", ".agents/benchmark"];
 
-const npmCli = process.platform === "win32"
-  ? "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js"
-  : "npm";
+function resolveNpmRunner() {
+  if (process.platform !== "win32") return { command: "npm", prefix: [], shell: false };
+  const candidates = [
+    process.env.npm_execpath,
+    path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js"),
+  ].filter((candidate) => candidate && existsSync(candidate));
+  if (candidates.length) return { command: process.execPath, prefix: [candidates[0]], shell: false };
+  return { command: "npm.cmd", prefix: [], shell: true };
+}
+
+const npmRunner = resolveNpmRunner();
 function resolvePnpm() {
-  if (process.platform !== "win32") return { command: "pnpm", prefix: [], shell: false };
+  if (process.platform !== "win32") return { command: "pnpm", prefix: [], shell: false, available: true };
   const configured = process.env.AGENT_WORKFLOW_PNPM_CLI;
   if (configured && existsSync(configured)) {
     return configured.endsWith(".cjs")
-      ? { command: process.execPath, prefix: [configured], shell: false }
-      : { command: configured, prefix: [], shell: true };
+      ? { command: process.execPath, prefix: [configured], shell: false, available: true }
+      : { command: configured, prefix: [], shell: true, available: true };
   }
   const probe = spawnSync("where.exe", ["pnpm"], { encoding: "utf8", windowsHide: true });
   for (const shim of String(probe.stdout || "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean)) {
@@ -30,13 +38,14 @@ function resolvePnpm() {
       const match = content.match(/(?:\$basedir|%~?dp0)[\\/]([^"'\r\n]*pnpm\.cjs)/i);
       if (match) {
         const command = path.resolve(path.dirname(shim), match[1].replaceAll("/", path.sep));
-        if (existsSync(command)) return { command: process.execPath, prefix: [command], shell: false };
+        if (existsSync(command)) return { command: process.execPath, prefix: [command], shell: false, available: true };
       }
     } catch {
       // Continue through PATH candidates; pnpm is optional for this fixture.
     }
   }
-  return { command: "pnpm.cmd", prefix: [], shell: true };
+  if (probe.status !== 0) return { command: "", prefix: [], shell: false, available: false };
+  return { command: "pnpm.cmd", prefix: [], shell: true, available: true };
 }
 
 const pnpm = resolvePnpm();
@@ -59,6 +68,10 @@ function run(command, args, cwd, options = {}) {
 
 function runPnpm(args, cwd) {
   return run(pnpm.command, [...pnpm.prefix, ...args], cwd, { shell: pnpm.shell });
+}
+
+function runNpm(args, cwd) {
+  return run(npmRunner.command, [...npmRunner.prefix, ...args], cwd, { shell: npmRunner.shell });
 }
 
 async function exists(filePath) {
@@ -104,7 +117,7 @@ test("init preserves existing files and creates only project-owned workflow stat
 async function packArtifact(root) {
   const packDirectory = path.join(root, "pack");
   await mkdir(packDirectory);
-  const output = run(process.execPath, [npmCli, "pack", "./packages/agent-workflow-scrum", "--json", "--ignore-scripts", "--pack-destination", packDirectory], repositoryRoot);
+  const output = runNpm(["pack", "./packages/agent-workflow-scrum", "--json", "--ignore-scripts", "--pack-destination", packDirectory], repositoryRoot);
   const start = output.indexOf("[");
   if (start < 0) throw new Error(`npm pack did not return JSON: ${output}`);
   const metadata = JSON.parse(output.slice(start))[0];
@@ -118,7 +131,7 @@ async function exerciseInstalledFixture(manager, tarball, root) {
   git(root, ["config", "user.email", "fixture@example.test"]);
   git(root, ["config", "user.name", "Fixture"]);
   if (manager === "npm") {
-    run(process.execPath, [npmCli, "install", "--save-dev", "--save-exact", tarball], root);
+    runNpm(["install", "--save-dev", "--save-exact", tarball], root);
   } else {
     runPnpm(["add", "--save-dev", "--save-exact", tarball], root);
   }
@@ -158,15 +171,19 @@ test("real npm tarball installs and all public commands run in npm and pnpm fixt
     assert.equal(files.some((file) => /benchmark|counter|\.agents\/docs\/tasks\/done/i.test(file)), false);
     await exerciseInstalledFixture("npm", tarball, path.join(root, "npm-consumer"));
 
-    const pnpmProbe = spawnSync(pnpm.command, [...pnpm.prefix, "--version"], {
-      encoding: "utf8",
-      windowsHide: true,
-      shell: pnpm.shell,
-    });
-    if (pnpmProbe.status !== 0) {
+    if (!pnpm.available) {
       t.diagnostic("pnpm is unavailable; npm tarball fixture passed and pnpm fixture was skipped");
     } else {
-      await exerciseInstalledFixture("pnpm", tarball, path.join(root, "pnpm-consumer"));
+      const pnpmProbe = spawnSync(pnpm.command, [...pnpm.prefix, "--version"], {
+        encoding: "utf8",
+        windowsHide: true,
+        shell: pnpm.shell,
+      });
+      if (pnpmProbe.status !== 0) {
+        t.diagnostic("pnpm is unavailable; npm tarball fixture passed and pnpm fixture was skipped");
+      } else {
+        await exerciseInstalledFixture("pnpm", tarball, path.join(root, "pnpm-consumer"));
+      }
     }
   } finally {
     await rm(root, { recursive: true, force: true });

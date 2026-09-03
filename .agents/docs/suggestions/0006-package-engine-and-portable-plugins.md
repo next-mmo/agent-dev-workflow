@@ -1,9 +1,9 @@
 # Suggestion 0006: Package the Workflow Engine and Keep Consumer Repositories Thin
 
-> **Status:** applied  
-> **Created:** 2026-09-03  
-> **Proposed by:** Human user  
-> **Decision owner:** Human  
+> **Status:** applied
+> **Created:** 2026-09-03
+> **Proposed by:** Human user
+> **Decision owner:** Human
 > **Canonical targets:** `packages/agent-workflow-scrum/`, `plugins/agent-workflow-scrum/`, workflow architecture and onboarding
 
 ## Observation
