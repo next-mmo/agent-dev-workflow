@@ -11,7 +11,7 @@ const engineCommands = new Set(["context", "scope", "verify", "check", "docs", "
 const help = `Agent Workflow Scrum
 
 Usage:
-  agent-workflow init [path] [--existing] [--package-manager npm|pnpm|yarn|bun] [--mode vibe|standard|strict|guided] [--dry-run] [--json]
+  agent-workflow init [path] [--package-manager npm|pnpm|yarn|bun] [--mode vibe|standard|strict|guided] [--dry-run] [--json]
   agent-workflow mode [vibe|standard|strict|guided] [--json]
   agent-workflow archive [--days <N>] [--dry-run] [--json]
   agent-workflow plan <title> [--json]
@@ -27,6 +27,10 @@ Usage:
   agent-workflow docs [--budget-file <path>] [--json]
   agent-workflow report [--output <directory>]
   agent-workflow doctor [path] [--json]
+
+init is safe for existing projects: it preserves existing managed files and appends
+an Agent Workflow Scrum handoff to an existing AGENTS.md instead of overwriting it.
+The legacy --existing flag is still accepted for compatibility but is no longer required.
 
 All repository commands accept --root <path> when targeting a repository other
 than the current working directory. The package owns the runtime; the target
