@@ -240,6 +240,11 @@ async function main() {
     const agents = await readFile(path.join(appRoot, "AGENTS.md"), "utf8");
     assert.match(agents, /Keep this user-owned rule/);
     assert.match(agents, /Agent Workflow Scrum/);
+    assert.match(agents, /vibe.*task\/PRD synchronization optional/i);
+
+    const reinitialized = runPnpmJson(["exec", "agent-workflow", "init", "--mode", "vibe", "--json"], appRoot);
+    assert.deepEqual(reinitialized.updated, []);
+    assert.ok(reinitialized.preserved.includes("AGENTS.md"));
 
     const doctor = runPnpmJson(["exec", "agent-workflow", "doctor", "--json"], appRoot);
     assert.equal(doctor.ok, true, doctor.errors?.join("\n"));
@@ -257,11 +262,15 @@ async function main() {
     assert.equal(check.ok, true, check.errors?.join("\n"));
     assert.ok(check.info.some((line) => line.includes("vibe mode active")), "vibe mode should relax task/PRD sync for a product edit");
 
-    const context = runPnpm(["exec", "agent-workflow", "context", "todo service change", "--level", "0", "--budget", "1200", "--provider", "local"], {
-      cwd: appRoot,
-      capture: true,
-    });
-    assert.ok(context.trim().length > 0, "context command should return a compact context pack");
+    const context = runPnpmJson([
+      "exec", "agent-workflow", "context", "todo service change",
+      "--level", "0", "--budget", "1200", "--provider", "local", "--json",
+    ], appRoot);
+    assert.equal(context.providerMode, "local");
+    assert.equal(context.budgetTokens, 1200);
+    assert.equal(context.budgetExceeded, false);
+    assert.ok(context.estimatedTokens <= 1200, `context exceeded budget: ${context.estimatedTokens}`);
+    assert.ok(context.git.changedPaths.includes("src/todos/todos.service.ts"), "context should include the changed Todo service path");
 
     process.stdout.write("beta:nestjs PASS real NestJS Todo public-beta smoke completed\n");
   } finally {
