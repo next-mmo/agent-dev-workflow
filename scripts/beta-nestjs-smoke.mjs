@@ -68,7 +68,7 @@ export class TodosService {
 `, "utf8");
 
   await writeFile(path.join(todos, "todos.controller.ts"), `import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
-import { TodosService } from './todos.service';
+import { TodosService } from './todos.service.js';
 
 @Controller('todos')
 export class TodosController {
@@ -92,8 +92,8 @@ export class TodosController {
 `, "utf8");
 
   await writeFile(path.join(todos, "todos.module.ts"), `import { Module } from '@nestjs/common';
-import { TodosController } from './todos.controller';
-import { TodosService } from './todos.service';
+import { TodosController } from './todos.controller.js';
+import { TodosService } from './todos.service.js';
 
 @Module({
   controllers: [TodosController],
@@ -102,7 +102,7 @@ import { TodosService } from './todos.service';
 export class TodosModule {}
 `, "utf8");
 
-  await writeFile(path.join(todos, "todos.service.spec.ts"), `import { TodosService } from './todos.service';
+  await writeFile(path.join(todos, "todos.service.spec.ts"), `import { TodosService } from './todos.service.js';
 
 describe('TodosService', () => {
   it('creates, lists, and toggles a todo', () => {
@@ -116,7 +116,7 @@ describe('TodosService', () => {
 `, "utf8");
 
   await writeFile(path.join(root, "src/app.module.ts"), `import { Module } from '@nestjs/common';
-import { TodosModule } from './todos/todos.module';
+import { TodosModule } from './todos/todos.module.js';
 
 @Module({
   imports: [TodosModule],
@@ -125,7 +125,7 @@ export class AppModule {}
 `, "utf8");
 
   await writeFile(path.join(root, "src/main.ts"), `import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { AppModule } from './app.module.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
