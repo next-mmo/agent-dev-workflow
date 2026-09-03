@@ -28,12 +28,24 @@ try {
     if (options.json) {
       process.stdout.write(`${JSON.stringify({ ok: true, mode: current, supportedModes: SUPPORTED_MODES }, null, 2)}\n`);
     } else {
-      process.stdout.write(`current workflow mode: ${current}\n\n`);
-      process.stdout.write(`Switch mode anytime:\n`);
-      process.stdout.write(`  npm run workflow:mode -- vibe       # solo / styling / no task ceremony\n`);
-      process.stdout.write(`  npm run workflow:mode -- standard   # balanced Scrum (tasks + PRD + evidence)\n`);
-      process.stdout.write(`  npm run workflow:mode -- strict     # enterprise (strict budgets + rollback proof)\n`);
-      process.stdout.write(`  npm run workflow:mode -- guided     # learner (tips on check failures)\n`);
+      const isTTY = process.stdout.isTTY;
+      const green = (s) => (isTTY ? `\x1b[32m${s}\x1b[0m` : s);
+      const bold = (s) => (isTTY ? `\x1b[1m${s}\x1b[0m` : s);
+      const dim = (s) => (isTTY ? `\x1b[2m${s}\x1b[0m` : s);
+
+      process.stdout.write(`\n${bold("Workflow Ceremony Mode:")} ${green(current)}\n\n`);
+      process.stdout.write(`Available modes:\n`);
+      const descriptions = {
+        vibe: "solo rapid prototyping; task/PRD sync relaxed",
+        standard: "balanced Scrum; task/PRD/evidence tracking",
+        strict: "regulated enterprise; strict budgets & rollback verification",
+        guided: "learner scaffolding; friendly remediation tips",
+      };
+      for (const m of SUPPORTED_MODES) {
+        const activeMarker = m === current ? green("● [active]") : dim("○         ");
+        process.stdout.write(`  ${activeMarker} ${bold(m.padEnd(9))} ${dim(descriptions[m])}\n`);
+      }
+      process.stdout.write(`\nSwitch anytime: ${bold("agent-workflow mode <mode>")}\n\n`);
     }
   }
 } catch (error) {

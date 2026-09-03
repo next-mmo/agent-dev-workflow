@@ -15,6 +15,10 @@ const entries = {
   archive: "archive.mjs",
   plan: "plan.mjs",
   index: "index.mjs",
+  review: "review.mjs",
+  solve: "solve.mjs",
+  worktree: "worktree.mjs",
+  prdsync: "prd-sync.mjs",
 };
 
 function hasRoot(args) {
