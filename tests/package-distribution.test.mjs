@@ -95,7 +95,7 @@ async function assertThinInit(root) {
   assert.equal(await exists(path.join(root, ".agents/docs/suggestions/README.md")), true);
 }
 
-test("init preserves existing files and creates only project-owned workflow state", async () => {
+test("init preserves existing agent rules while adding only project-owned workflow state", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "agent-workflow-existing-"));
   try {
     await writeFile(path.join(root, "AGENTS.md"), "# Company instructions\n");
@@ -103,7 +103,11 @@ test("init preserves existing files and creates only project-owned workflow stat
     await writeFile(path.join(root, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
     const output = run(process.execPath, [sourceBinary, "init", "--existing"], root);
     assert.match(output, /Package manager: pnpm/);
-    assert.equal(await readFile(path.join(root, "AGENTS.md"), "utf8"), "# Company instructions\n");
+    const agents = await readFile(path.join(root, "AGENTS.md"), "utf8");
+    assert.match(agents, /^# Company instructions/m);
+    assert.match(agents, /<!-- agent-workflow-scrum:start -->/);
+    assert.match(agents, /## Agent Workflow Scrum/);
+    assert.equal(agents.split("<!-- agent-workflow-scrum:start -->").length - 1, 1);
     const config = JSON.parse(await readFile(path.join(root, ".agents/config.json"), "utf8"));
     assert.equal(config.packageManager, "pnpm");
     assert.equal(config.checks.test, "pnpm test");
