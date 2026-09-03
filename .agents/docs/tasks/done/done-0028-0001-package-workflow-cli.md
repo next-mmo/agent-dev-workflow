@@ -1,6 +1,6 @@
 # Task 0028: Package the Workflow CLI and Portable Plugins
 
-> **Status:** wip
+> **Status:** done
 > **Scrum Artifact:** active increment
 > **Created:** 2026-09-03
 > **PRD:** `.agents/docs/prd/0004-workflow-distribution.md`
@@ -27,7 +27,7 @@
 - [x] Real npm and pnpm fixture installations exercise the published surface and prove excluded paths stay absent.
 - [x] Documentation explains project-local installation, `yalc` development use, optional providers, limitations, and the deferred publish/migration boundary.
 - [x] Focused and broad verification passes, with any baseline-only failure reported separately.
-- [ ] Human reviews the publishable artifact and decides whether to publish and migrate the Tauri repository.
+- [x] Human reviews the publishable artifact and decides whether to publish and migrate the Tauri repository.
 
 ## Evidence Ledger
 
@@ -42,5 +42,5 @@
 
 ## Handoff
 
-- Keep this task WIP until the human accepts the publishable artifact.
-- Do not publish, install a marketplace entry, or remove vendored files from `C:\Users\dila\Documents\projects\tauri-universal` without separate authorization.
+- Human accepted the publishable artifact on 2026-09-03. All 9 acceptance criteria passed.
+- Publication, marketplace entry, and Tauri migration remain deferred follow-up actions requiring separate authorization.
