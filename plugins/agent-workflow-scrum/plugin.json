@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "agent-workflow-scrum",
+  "description": "Portable Agent Workflow Scrum skills for project-local context, scope, verification, and evidence workflows",
+  "version": "0.1.0",
+  "author": {
+    "name": "Next MMO"
+  }
+}

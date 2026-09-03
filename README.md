@@ -156,9 +156,23 @@ bash .agents/scripts/skill.sh check all
 
 Never edit generated adapters as the source of truth.
 
-## Move into another repository
+## Start a new project
 
-Copy the workflow foundation:
+For an existing repository, install the pinned package and initialize only the consumer-owned workflow contract:
+
+```bash
+npm install --save-dev --save-exact @next-mmo/agent-workflow-scrum
+npx agent-workflow init --existing
+npx agent-workflow doctor
+```
+
+Use `pnpm add -D @next-mmo/agent-workflow-scrum` and `pnpm exec agent-workflow ...` when the project uses pnpm. `init` preserves existing files and does not copy `.agents/scripts`, `.agents/skills`, benchmarks, the Counter demo, or workflow history. It creates `AGENTS.md`, `CONTEXT.md`, `.agents/config.json`, and empty task/PRD/suggestion entry points. Configure product paths and checks in `.agents/config.json`, then run `agent-workflow context`, `scope`, `verify`, `check`, `docs`, and `report` from the project root.
+
+For local package development, `npm pack` is the release-shaped artifact; `yalc` is useful only for rapid iteration. Cursor and other Agent Plugin hosts can consume the portable bundle under `plugins/agent-workflow-scrum/` without importing consumer state.
+
+## Move the source workflow into another repository
+
+The source repository itself retains the canonical implementation. If a consumer cannot use the package, copy the workflow foundation:
 
 ```text
 .agents/

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "packageManager": "npm",
+  "paths": {
+    "product": ["src/**", "public/**", "index.html"],
+    "tests": ["tests/**", "**/*.test.*", "**/*.spec.*"],
+    "docs": ["README.md", ".agents/docs/**"],
+    "workflow": ["AGENTS.md", "CONTEXT.md", ".agents/**"],
+    "ci": [".github/**"],
+    "build": ["package.json", "package-lock.json", "vite.config.*", "tsconfig*", "Dockerfile*", "docker-compose*"]
+  },
+  "checks": {
+    "test": "npm test",
+    "build": "npm run build",
+    "workflow": "npm run workflow:check --",
+    "docs": "npm run docs:check",
+    "skills": ".agents/scripts/skill.sh check"
+  },
+  "contextBudgets": {
+    "AGENTS.md": 800,
+    "CONTEXT.md": 1400,
+    ".agents/skills/agent-workflow-scrum/SKILL.md": 900
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "agent-workflow-scrum",
+  "version": "0.1.0",
+  "description": "Agent Workflow Scrum skills backed by a project-local CLI",
+  "author": {
+    "name": "Next MMO"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Agent Workflow Scrum",
+    "shortDescription": "Run bounded, evidence-backed repository workflows.",
+    "longDescription": "Agent Workflow Scrum guides Codex through bounded context loading, explicit change scope, risk-scaled delivery, verification evidence, and human-owned acceptance. The reusable engine remains a pinned project dependency instead of copied repository scripts.",
+    "developerName": "Next MMO",
+    "category": "Productivity",
+    "capabilities": ["Repository workflow", "Context routing", "Verification planning"],
+    "defaultPrompt": "Use Agent Workflow Scrum to inspect this repository's active task, load bounded context, and propose the next evidence-backed action."
+  }
+}

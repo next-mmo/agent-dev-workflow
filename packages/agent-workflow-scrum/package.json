@@ -1,0 +1,41 @@
+{
+  "name": "@next-mmo/agent-workflow-scrum",
+  "version": "0.1.0",
+  "description": "Project-local Agent Workflow Scrum engine and initialization CLI",
+  "type": "module",
+  "bin": {
+    "agent-workflow": "./bin/agent-workflow.mjs"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "engine/",
+    "templates/",
+    "plugin/",
+    "README.md"
+  ],
+  "scripts": {
+    "prepack": "node ../../scripts/build-distribution.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "keywords": [
+    "agent-workflow",
+    "scrum",
+    "codex",
+    "cursor",
+    "ai-agents"
+  ],
+  "author": "Next MMO",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/next-mmo/agent-dev-workflow.git",
+    "directory": "packages/agent-workflow-scrum"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

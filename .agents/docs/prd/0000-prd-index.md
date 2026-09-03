@@ -1,7 +1,7 @@
 # PRD-0000: Master PRD Index
 
 > Status: living doc  
-> Updated: 2026-09-02
+> Updated: 2026-09-03
 
 ## Repos / Architecture
 
@@ -15,6 +15,7 @@
 | :--- | :--- | :--- | :--- |
 | **0001** | Counter Core Features | **done** | Stateful counter, preset/custom step controls, localStorage persistence, theme toggle, accessible step selection, and one-level undo |
 | **0002** | Counter History | **done** | Persistent accessible list of the latest ten count-changing actions with explicit clear control |
+| **0004** | Workflow Distribution | **active beta** | Versioned local CLI and portable plugins that keep adopting repositories limited to project-owned workflow state |
 
 ## Authority
 
