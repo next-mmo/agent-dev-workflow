@@ -81,6 +81,23 @@ export class TodoState {
     this.nextId = this.nextId >= Number.MAX_SAFE_INTEGER ? 1 : this.nextId + 1;
   }
 
+  editTask(id, details = {}) {
+    const task = this.tasks.find((entry) => entry.id === id);
+    if (!task) return { ok: false, error: 'This task no longer exists.' };
+    const title = cleanText(details.title, MAX_TITLE_LENGTH);
+    if (!title) return { ok: false, error: 'Enter a task title.' };
+    if (details.dueDate && !validDate(details.dueDate)) return { ok: false, error: 'Enter a valid due date.' };
+    Object.assign(task, {
+      title,
+      project: cleanText(details.project, MAX_PROJECT_LENGTH) || 'Inbox',
+      priority: PRIORITIES.has(details.priority) ? details.priority : 'medium',
+      dueDate: validDate(details.dueDate ?? ''),
+    });
+    this.reconcileProjectFilter();
+    this.notify();
+    return { ok: true, task };
+  }
+
   toggleTask(id) {
     const task = this.tasks.find((entry) => entry.id === id);
     if (!task) return false;

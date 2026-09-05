@@ -1,0 +1,106 @@
+{
+  "measuredAt": "2026-09-05T14:19:40.819Z",
+  "kind": "context-size observation",
+  "limitations": "Characters/4 estimates; routing packs omit implementation detail. Relevant-file selection is subjective. Raw corpus includes irrelevant files and excludes untracked files. No controlled A/B run, billing usage, cache accounting, or actual task-token savings measured.",
+  "relevantFiles": [
+    ".agents/docs/tasks/wip-0031-0005-full-stack-developer-trial.md",
+    ".agents/docs/prd/0005-todo-workspace.md",
+    ".agents/skills/agent-workflow-scrum/SKILL.md",
+    ".agents/skills/agent-workflow-scrum/references/verification.md",
+    "src/todo-state.js",
+    "src/main.js",
+    "src/server-workspace.js",
+    "src/server/task-store.js",
+    "src/server/task-api.js",
+    "tests/full-stack-todo.test.mjs"
+  ],
+  "relevantTokens": 11002,
+  "measurements": [
+    {
+      "scope": "full-stack Todo API persistence editing",
+      "budget": 1500,
+      "packEstimatedTokens": 1198,
+      "selectedPaths": [
+        ".agents/docs/tasks/wip-0031-0005-full-stack-developer-trial.md",
+        ".agents/docs/prd/0004-workflow-distribution.md",
+        ".agents/docs/proposals/0006-package-engine-and-portable-plugins.md",
+        ".agents/docs/plans/0002-package-owned-cli.md",
+        ".agents/docs/prd/0005-todo-workspace.md",
+        ".agents/docs/proposals/0002-progressive-context-router-and-workflow-checks.md",
+        ".agents/docs/proposals/0007-configurable-ceremony-modes.md",
+        ".agents/docs/proposals/0010-package-owned-runtime.md",
+        ".agents/docs/prd/0000-prd-index.md"
+      ],
+      "activeTaskIncluded": true,
+      "todoPrdIncluded": true,
+      "reductionVersusRelevantFilesPercent": 89.11
+    },
+    {
+      "scope": "task 0031 Todo API revision conflict editing",
+      "budget": 1500,
+      "packEstimatedTokens": 1199,
+      "selectedPaths": [
+        ".agents/docs/tasks/wip-0031-0005-full-stack-developer-trial.md",
+        ".agents/docs/prd/0004-workflow-distribution.md",
+        ".agents/docs/proposals/0006-package-engine-and-portable-plugins.md",
+        ".agents/docs/plans/0002-package-owned-cli.md",
+        ".agents/docs/prd/0005-todo-workspace.md",
+        ".agents/docs/proposals/0002-progressive-context-router-and-workflow-checks.md",
+        ".agents/docs/proposals/0007-configurable-ceremony-modes.md",
+        ".agents/docs/proposals/0010-package-owned-runtime.md",
+        ".agents/docs/prd/0000-prd-index.md"
+      ],
+      "activeTaskIncluded": true,
+      "todoPrdIncluded": true,
+      "reductionVersusRelevantFilesPercent": 89.1
+    },
+    {
+      "scope": "task 0031 browser fetch receiver bug verification",
+      "budget": 1500,
+      "packEstimatedTokens": 1222,
+      "selectedPaths": [
+        ".agents/docs/tasks/wip-0031-0005-full-stack-developer-trial.md",
+        ".agents/docs/prd/0004-workflow-distribution.md",
+        ".agents/docs/proposals/0006-package-engine-and-portable-plugins.md",
+        ".agents/docs/proposals/0004-layered-instructions-and-scope-aware-verification.md",
+        ".agents/docs/plans/0002-package-owned-cli.md",
+        ".agents/docs/proposals/0002-progressive-context-router-and-workflow-checks.md",
+        ".agents/docs/proposals/0007-configurable-ceremony-modes.md",
+        ".agents/docs/proposals/0010-package-owned-runtime.md",
+        ".agents/docs/prd/0000-prd-index.md"
+      ],
+      "activeTaskIncluded": true,
+      "todoPrdIncluded": false,
+      "reductionVersusRelevantFilesPercent": 88.89
+    }
+  ],
+  "corpusBenchmark": {
+    "schemaVersion": 2,
+    "measurement": "context-pack-size-comparison",
+    "tokenEstimator": "characters/4",
+    "actualTaskTokenSavings": null,
+    "root": "C:/Users/dila/Documents/GitHub/next-mmo/agent-dev-workflow",
+    "scope": "full-stack Todo API persistence editing",
+    "level": 0,
+    "provider": "local",
+    "raw": {
+      "files": 192,
+      "characters": 706751,
+      "tokens": 176688,
+      "durationMs": 233.14
+    },
+    "bounded": {
+      "tokens": 1198,
+      "budgetTokens": 1500,
+      "budgetExceeded": false,
+      "selectedDocuments": 9,
+      "loadedDocuments": 0,
+      "durationMs": 691.95
+    },
+    "reduction": {
+      "tokens": 175490,
+      "percent": 99.32,
+      "ratio": 0.01
+    }
+  }
+}

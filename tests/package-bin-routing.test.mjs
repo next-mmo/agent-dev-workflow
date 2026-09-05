@@ -41,7 +41,8 @@ test("package bin honors an explicit root for dry-run, plan, PRD sync, and workt
     execFileSync("git", ["init", "-q"], { cwd: root });
 
     const prdSync = JSON.parse(run(["prdsync", "--root", root, "--dry-run", "--json"]));
-    assert.deepEqual(prdSync.syncedPRDs, [], "PRD sync must inspect the explicit root");
+    assert.deepEqual(prdSync.reviews, [], "PRD sync must inspect the explicit root");
+    assert.equal(prdSync.advisory, true);
 
     const plan = JSON.parse(run(["plan", "package root routing", "--root", root, "--json"]));
     assert.equal(plan.relativePath, ".agents/docs/plans/0001-package-root-routing.md");

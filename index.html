@@ -20,6 +20,7 @@
       <button id="theme-toggle" class="icon-button" type="button" aria-label="Switch to light mode">☼</button>
     </header>
     <p id="storage-message" role="status" hidden></p>
+    <p><span id="workspace-mode">Browser workspace</span> · <a id="workspace-switch" href="?storage=server">Use server workspace</a> <button id="refresh-tasks" class="quiet-button" type="button" hidden>Refresh</button></p>
 
     <section class="composer" aria-labelledby="add-task-heading">
       <h2 id="add-task-heading">Plan your next move</h2>
@@ -27,7 +28,8 @@
         <label class="sr-only" for="task-title">Task title</label>
         <div class="title-row">
           <input id="task-title" name="title" type="text" maxlength="160" placeholder="What needs your attention?" autocomplete="off" />
-          <button class="primary-button" type="submit">Add task</button>
+          <button id="save-task" class="primary-button" type="submit">Add task</button>
+          <button id="cancel-edit" class="quiet-button" type="button" hidden>Cancel edit</button>
         </div>
         <div class="details-grid">
           <label>Project <input id="task-project" name="project" type="text" maxlength="40" placeholder="Inbox" autocomplete="off" /></label>
@@ -50,7 +52,7 @@
 
     <section class="task-panel" aria-labelledby="task-list-heading">
       <div class="task-panel-heading">
-        <h2 id="task-list-heading">Tasks</h2>
+        <h2 id="task-list-heading" tabindex="-1">Tasks</h2>
         <button id="clear-completed" class="quiet-button" type="button" disabled>Clear completed</button>
       </div>
       <ul id="task-list" class="task-list" aria-label="Todo tasks"></ul>

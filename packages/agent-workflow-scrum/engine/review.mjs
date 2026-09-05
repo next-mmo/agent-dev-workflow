@@ -4,7 +4,10 @@ import path from "node:path";
 function parseArgs(argv) {
   const options = { root: process.cwd(), base: "", json: false };
   for (let i = 0; i < argv.length; i += 1) {
-    if (argv[i] === "--base") options.base = argv[++i] || "";
+    if (argv[i] === "--base") {
+      options.base = argv[++i] || "";
+      if (!options.base || options.base.startsWith("--")) throw new Error("--base requires a verified ref");
+    }
     else if (argv[i] === "--json") options.json = true;
     else if (argv[i] === "--root") options.root = path.resolve(argv[++i] || "");
     else throw new Error(`unknown option: ${argv[i]}`);

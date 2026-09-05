@@ -7,7 +7,7 @@ import { runMultiAgentReview } from "../packages/agent-workflow-scrum/engine/rev
 import { createSolution } from "../packages/agent-workflow-scrum/engine/solve-core.mjs";
 import { buildNativeCodebaseGraph, queryNativeCodebaseGraph } from "../packages/agent-workflow-scrum/engine/codebase-graph-core.mjs";
 
-test("multi-agent review detects security, simplicity, and parity issues", async () => {
+test("static review detects a configured unsafe execution pattern", async () => {
   const fixtureBase = path.join(process.cwd(), "tests", "fixtures");
   await mkdir(fixtureBase, { recursive: true });
   const tmpDir = await mkdtemp(path.join(fixtureBase, "review-test-"));

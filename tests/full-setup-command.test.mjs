@@ -20,8 +20,8 @@ test("setup modes separate the required baseline from full local setup", async (
 
   assert.match(skill, /`\/kb:setup`/);
   assert.match(skill, /`\/kb:full-setup`/);
-  assert.match(commands, /`\/kb:setup`.*npm\/Git.*npm ci.*optional adapters\/providers/s);
-  assert.match(commands, /`\/kb:full-setup`.*repository-local adapters.*skill\.sh init all.*external providers opt-in/s);
+  assert.match(commands, /`\/kb:setup`.*Node\/Git.*configured package manager.*npm ci.*optional adapters\/providers/s);
+  assert.match(commands, /`\/kb:full-setup`.*source checkout.*skill\.sh init all.*package consumers.*no `skill\.sh`.*external providers opt-in/is);
   for (const required of ["npm ci", "npm test", "npm run build", "npm run workflow:check", "npm run docs:check", "skill.sh check"]) {
     assert.match(development, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }

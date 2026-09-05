@@ -1,36 +1,9 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { loadWorkflowConfigSync, matchesPathGroup } from "./workflow-config.mjs";
-import { loadIgnoreFilterSync } from "./ignore-core.mjs";
-import { readdir } from "node:fs/promises";
-
-async function walkDir(dir, root, ignoreFilter) {
-  const files = [];
-  try {
-    const entries = await readdir(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name);
-      const relPath = path.relative(root, fullPath).replaceAll("\\", "/");
-      if (ignoreFilter.isIgnored(relPath)) continue;
-
-      if (entry.isDirectory()) {
-        files.push(...await walkDir(fullPath, root, ignoreFilter));
-      } else if (entry.isFile() && /\.(js|mjs|ts|jsx|tsx)$/.test(entry.name)) {
-        files.push(relPath);
-      }
-    }
-  } catch {
-    // Directory might not exist
-  }
-  return files;
-}
+import { collectProductCodeFiles } from "./product-files.mjs";
 
 export async function buildCodebaseIndex({ root = process.cwd() } = {}) {
-  const config = loadWorkflowConfigSync(root);
-  const ignoreFilter = loadIgnoreFilterSync(root, config);
-
-  const srcDir = path.join(root, "src");
-  const codeFiles = await walkDir(srcDir, root, ignoreFilter);
+  const codeFiles = await collectProductCodeFiles(root);
 
   const nodes = [];
   const edges = [];
@@ -38,12 +11,7 @@ export async function buildCodebaseIndex({ root = process.cwd() } = {}) {
 
   for (const relPath of codeFiles) {
     const absPath = path.join(root, relPath);
-    let content = "";
-    try {
-      content = await readFile(absPath, "utf8");
-    } catch {
-      continue;
-    }
+    const content = await readFile(absPath, "utf8");
 
     const functions = [];
     const classes = [];

@@ -9,6 +9,10 @@
   "scripts": {
     "pretest": "node scripts/build-distribution.mjs",
     "dev": "vite",
+    "dev:full": "node src/server/start.js --dev",
+    "start": "node src/server/start.js",
+    "local:check": "npm test && npm run build && npm run workflow:check -- --mode strict && npm run docs:check && npm run distribution:check",
+    "trial:measure": "node scripts/developer-trial-measure.mjs",
     "report": "agent-workflow report",
     "context": "agent-workflow context",
     "benchmark:context": "node scripts/context-benchmark.mjs",

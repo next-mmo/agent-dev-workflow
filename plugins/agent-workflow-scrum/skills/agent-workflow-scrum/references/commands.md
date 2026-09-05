@@ -5,8 +5,8 @@ Treat text after a command as the exact scope. Report the selected mode and do n
 | Command | Mode |
 | :--- | :--- |
 | `/kb:help` | List namespaced commands and explain they are skill conventions. |
-| `/kb:setup` | Verify Node/npm/Git, run `npm ci` and required checks, and leave optional adapters/providers untouched. |
-| `/kb:full-setup` | Run `/kb:setup`, initialize all supported repository-local adapters with `skill.sh init all`, then validate them; keep external providers opt-in. |
+| `/kb:setup` | Verify Node/Git and the configured package manager, install locked dependencies (`npm ci` for npm), run `agent-workflow doctor` and configured checks; leave optional adapters/providers untouched. |
+| `/kb:full-setup` | Run `/kb:setup`. In the workflow source checkout, run `bash scripts/skill.sh init all` and `bash scripts/skill.sh check all`. In package consumers, use the installed plugin's skills through the host; no `skill.sh` or copied skills are required. Keep external providers opt-in. |
 | `/kb:mode` | Inspect or switch ceremony mode (`vibe`, `standard`, `strict`, `guided`); scales task/PRD formality to project needs. |
 | `/kb:status` | Read-only task, PRD, branch, checks, blockers, and changes. |
 | `/kb:context` | Generate the smallest useful context pack; pass an explicit verified `--base` when committed outgoing scope matters. |

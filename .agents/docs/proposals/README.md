@@ -39,6 +39,7 @@ Proposals are durable Agent Workflow Scrum policy records and live under `.agent
 | [0008](0008-optional-rtk-command-compression-layer.md) | Optional RTK Command Compression Layer | `proposed` | 2026-09-04 | Optional RTK proxy integration for terminal command output compression |
 | [0009](0009-optional-openviking-semantic-recall.md) | Optional OpenViking Semantic Recall Fallback | `proposed` | 2026-09-04 | OpenViking as optional vector-semantic upgrade over native file-based memory recall |
 | [0011](0011-beta-claim-and-recall-corrections.md) | Beta Measurement and Memory Corrections | `accepted` | 2026-09-04 | Exclude unfinished recall and distinguish context size from task token savings |
+| [0012](0012-readiness-repair-boundaries.md) | Readiness Repair Boundaries | `accepted` | 2026-09-05 | Honest review/PRD evidence, working package defaults, and shared product discovery |
 
 
 ## Proposal Rules

@@ -62,6 +62,10 @@ Copying `.agents/scripts/`, `.agents/skills/`, and `.agents/benchmark/` into eve
 
 ## Application Evidence
 
+### Public beta repair decision, 2026-09-05
+
+The user requested "fix it and license MIT" after a review found missing license text, broken bundled skill references, and an unavailable registry installation path. This authorizes MIT licensing, portable guidance that treats target-specific docs as optional, source-only adapter setup, and documented tarball installation. Task 0030 records verification. Publication and remote writes remain separate decisions.
+
 - Changed canonical files: `packages/agent-workflow-scrum/`, `plugins/agent-workflow-scrum/`, `scripts/build-distribution.mjs`, configured workflow engines, and onboarding/architecture docs; tracked by task 0028.
 - Verification results: 59/59 tests, Vite build, strict workflow/docs checks, distribution drift check, real npm/pnpm packed-fixture command smoke tests, plugin manifest validation, canonical-skill audit, and skill quick validation passed.
 - Follow-up: publish and migrate the Tauri repository only after separate authorization.

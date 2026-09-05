@@ -11,7 +11,7 @@ Optimize for the human outcome, smallest safe change, and sufficient context. Re
 
 For non-trivial work, generate L0 context with project-local `agent-workflow context -- "<scope>"` (`npm run context --` is the source alias). Escalate to L1 only when necessary and L2/`--full` only for deep review or unresolved conflicts. For committed review/push, verify the live base and pass `--base <ref>`. Follow [context routing](references/context-routing.md).
 
-Read [`.agents/docs/architecture.md`](../../docs/architecture.md) before changing workflow/context/provider/verification ownership or extension points. `.agents/docs/` owns workflow docs, PRDs, tasks, suggestions, and evidence; do not recreate a root `docs/` tree. Local retrieval is always on; Graphify/OpenViking are optional. Follow [provider rules](references/providers.md).
+Before changing ownership or extension points, read the target repository's `.agents/docs/architecture.md` if present; otherwise inspect current owners in code. `.agents/docs/` owns workflow docs, PRDs, tasks, suggestions, and evidence; do not recreate a root `docs/` tree. Local retrieval is always on; Graphify/OpenViking are optional. Follow [provider rules](references/providers.md).
 
 Inspect current Git state and affected code before edits. Load only the reference/skill needed for the current mode:
 

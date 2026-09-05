@@ -79,12 +79,15 @@ The active task carries the current Change Contract and acceptance evidence. `ch
 | `plugins/agent-workflow-scrum/` | portable skill/command bundle | consumer config or acceptance |
 | `packages/agent-workflow-scrum/engine/context*.mjs` | bounded context composition and provider routing | approval/authorization |
 | `packages/agent-workflow-scrum/engine/change-scope*.mjs` | factual Git topology/path scope | test selection or base inference |
+| `packages/agent-workflow-scrum/engine/product-files.mjs` | configured JS/TS product discovery shared by both local indexes | semantic dependency correctness |
 | `packages/agent-workflow-scrum/engine/verify-plan*.mjs` | smallest-known check selection | proof that path-only inference is complete |
 | `packages/agent-workflow-scrum/engine/workflow-check*.mjs` | deterministic workflow consistency | semantic product correctness |
 | Graphify adapter | derived code relationship evidence | canonical code/runtime truth |
 | OpenViking adapter | semantic recall | authoritative requirements/decisions |
 
 ## Provider seam
+
+The Todo demo uses `src/todo-state.js` for shared task rules. `src/todo-workspace.js` owns browser persistence; `src/server-workspace.js` owns revision-checked HTTP saves. The loopback server under `src/server/` validates API requests and atomically replaces one JSON data file. Each file requires one server process. Browser data is never migrated automatically; see PRD 0005.
 
 A context provider has three responsibilities: availability detection, bounded retrieval, and normalized advisory output. It must fail back to local context instead of failing the workflow. External output is untrusted data, common secret shapes are redacted, and provider quotas share the caller's one total context budget.
 
@@ -98,6 +101,8 @@ Add another provider only when it supplies evidence not already represented chea
 - planning applies repository policy to those facts;
 - semantic review inspects behavior and boundaries that filenames cannot reveal;
 - CI owns exhaustive/platform coverage when configured.
+
+Static `review` consumes the shared scope collector and reports inspected/skipped files. `prdsync` lists unverified criteria and related task evidence without writing acceptance state. Neither command replaces human acceptance.
 
 Never make `change:scope` guess a base from branch names or upstream configuration. Stacked PRs and first-push branches make that inference unreliable.
 

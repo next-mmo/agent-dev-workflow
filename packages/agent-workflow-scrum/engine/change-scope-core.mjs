@@ -122,12 +122,7 @@ export function collectChangeScope({ root = process.cwd(), base, head = "HEAD" }
   const mergeBaseSha = resolveMergeBase(repoRoot, baseSha, headSha);
   const paths = {
     committed: diffPaths(repoRoot, [mergeBaseSha, headSha], "cannot inspect committed paths"),
-    staged: diffPaths(repoRoot, ["--cached"], "cannot inspect staged paths"),
-    unstaged: diffPaths(repoRoot, [], "cannot inspect unstaged paths"),
-    untracked: parseNulPaths(runGit(repoRoot, ["ls-files", "--others", "--exclude-standard", "-z", "--"], {
-      binary: true,
-      context: "cannot inspect untracked paths",
-    })),
+    ...dirtyPaths(repoRoot),
   };
   const all = [...new Set(Object.values(paths).flat())].sort();
   const config = loadWorkflowConfigSync(repoRoot);
@@ -137,6 +132,32 @@ export function collectChangeScope({ root = process.cwd(), base, head = "HEAD" }
     docsRoot: DOCS_ROOT,
     input: { base, head },
     resolved: { baseSha, headSha, mergeBaseSha },
+    paths: { ...paths, all },
+    layers: classifyChangedPaths(all, config),
+  };
+}
+
+function dirtyPaths(repoRoot) {
+  return {
+    staged: diffPaths(repoRoot, ["--cached"], "cannot inspect staged paths"),
+    unstaged: diffPaths(repoRoot, [], "cannot inspect unstaged paths"),
+    untracked: parseNulPaths(runGit(repoRoot, ["ls-files", "--others", "--exclude-standard", "-z", "--"], {
+      binary: true,
+      context: "cannot inspect untracked paths",
+    })),
+  };
+}
+
+/** Inspect only staged, unstaged and untracked paths; does not infer a branch base. */
+export function collectWorkingTreeScope({ root = process.cwd() } = {}) {
+  const repoRoot = repositoryRoot(root);
+  const paths = dirtyPaths(repoRoot);
+  const all = [...new Set(Object.values(paths).flat())].sort();
+  const config = loadWorkflowConfigSync(repoRoot);
+  return {
+    formatVersion: FORMAT_VERSION,
+    repositoryRoot: repoRoot,
+    docsRoot: DOCS_ROOT,
     paths: { ...paths, all },
     layers: classifyChangedPaths(all, config),
   };

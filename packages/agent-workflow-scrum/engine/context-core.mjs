@@ -158,9 +158,31 @@ function summarize(markdown, max = 220) {
   return `${text.slice(0, cutAt).trimEnd()}…`;
 }
 
-function scoreDocument(document, terms, changedPaths) {
+function linkedPathsFromDocuments(documents) {
+  const linked = new Set();
+  for (const document of documents.filter((item) => item.kind === "active-task")) {
+    const matches = document.content.matchAll(/(?:related\s+prd|prd)\s*:\s*[`<]?((?:\.\/|\.\.\/)*\.agents\/docs\/prd\/[A-Za-z0-9._/-]+\.md)/gi);
+    for (const match of matches) linked.add(match[1].replaceAll("\\", "/").replace(/^\.\//, ""));
+    for (const match of document.content.matchAll(/[`(]((?:\.\/|\.\.\/)*\.agents\/docs\/prd\/[A-Za-z0-9._/-]+\.md)[`)]/gi)) {
+      linked.add(match[1].replaceAll("\\", "/").replace(/^\.\//, ""));
+    }
+  }
+  return linked;
+}
+
+function selectionReason(document, terms, relatedPaths) {
+  if (document.kind === "active-task") return "active-task";
+  if (relatedPaths.has(document.path)) return "linked-prd";
+  if (document.kind === "prd-index") return "prd-index";
+  if (terms.some((term) => document.title.toLowerCase().includes(term))) return "title-match";
+  if (terms.some((term) => document.path.toLowerCase().includes(term))) return "path-match";
+  return "content-match";
+}
+
+function scoreDocument(document, terms, changedPaths, relatedPaths = new Set()) {
   const haystack = `${document.path}\n${document.title}\n${document.content}`.toLowerCase();
   let score = document.kind === "active-task" ? 100 : 0;
+  if (relatedPaths.has(document.path)) score += 180;
   if (document.kind === "prd-index") score += 18;
   if (document.kind === "solution") score += 16;
   if (document.kind === "prd") score += 10;
@@ -334,27 +356,36 @@ async function buildLocalContext({ options, root, branch, changedPaths, scope, l
   const active = documents.filter((document) => document.kind === "active-task");
   const terms = tokenize(scope);
   const ruleHints = classifyRuleHints(terms, changedPaths);
+  const relatedPaths = linkedPathsFromDocuments(active);
 
   const ranked = documents
-    .map((document) => ({ ...document, score: scoreDocument(document, terms, changedPaths) }))
+    .map((document) => ({ ...document, score: scoreDocument(document, terms, changedPaths, relatedPaths) }))
     .sort((a, b) => b.score - a.score || a.path.localeCompare(b.path));
 
-  const selected = ranked.filter((document) => document.score > 0 || document.kind === "active-task").slice(0, 8);
-  if (!selected.some((document) => document.kind === "prd-index")) {
-    const index = ranked.find((document) => document.kind === "prd-index");
-    if (index) selected.push(index);
+  const selected = [];
+  const addSelected = (document) => {
+    if (document && !selected.some((item) => item.path === document.path)) selected.push(document);
+  };
+  for (const task of active) addSelected(ranked.find((document) => document.path === task.path));
+  for (const linkedPath of relatedPaths) addSelected(ranked.find((document) => document.path === linkedPath));
+  for (const document of ranked) {
+    if (selected.length >= 8) break;
+    if (document.score > 0 || document.kind === "active-task") addSelected(document);
   }
+  if (!selected.some((document) => document.kind === "prd-index")) addSelected(ranked.find((document) => document.kind === "prd-index"));
 
   const local = {
     branch,
     changedPaths,
     activeTasks: active.map((task) => ({ path: task.path, title: task.title, status: statusOf(task.content, "active") })),
+    linkedPaths: [...relatedPaths],
     ruleHints,
     selected: selected.map((document) => ({
       path: document.path,
       kind: document.kind,
       title: document.title,
       score: document.score,
+      reason: selectionReason(document, terms, relatedPaths),
       summary: summarize(document.content),
     })),
     documents: [],
@@ -438,6 +469,7 @@ function updateLocalProviderEstimate(result) {
     branch: result.git.branch,
     changedPaths: result.git.changedPaths,
     activeTasks: result.activeTasks,
+    linkedPaths: result.linkedPaths,
     ruleHints: result.ruleHints,
     selected: result.selected,
     documents: result.documents,
@@ -492,6 +524,7 @@ async function buildContext(options) {
       } : {}),
     },
     activeTasks: local.activeTasks,
+    linkedPaths: local.linkedPaths,
     ruleHints: local.ruleHints,
     selected: local.selected,
     documents: local.documents,
@@ -551,13 +584,14 @@ function renderText(result) {
     lines.push(`- Outgoing base: ${result.git.outgoing.base} (merge base ${result.git.outgoing.mergeBaseSha.slice(0, 12)})`);
   }
   if (result.git.changedPaths.length) lines.push(`- Changed paths: ${result.git.changedPaths.join(", ")}`);
+  if (result.linkedPaths.length) lines.push(`- Linked docs: ${result.linkedPaths.join(", ")}`);
   lines.push("", "## Active task", "");
   if (result.activeTasks.length === 0) lines.push("- None detected.");
   else for (const task of result.activeTasks) lines.push(`- ${task.title} (${task.status}) — ${task.path}`);
 
   lines.push("", "## Ranked repository context", "");
   for (const document of result.selected) {
-    lines.push(`- [${document.kind}] ${document.path} — score ${document.score}: ${document.summary}`);
+    lines.push(`- [${document.kind}] ${document.path} — ${document.reason}, score ${document.score}: ${document.summary}`);
   }
 
   const external = result.providers.filter((provider) => provider.name !== "local");

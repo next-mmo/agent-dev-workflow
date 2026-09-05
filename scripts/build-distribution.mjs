@@ -49,6 +49,17 @@ async function copyPlugin() {
   await copyTree(pluginRoot, packagePluginTarget);
 }
 
+async function syncLicenses(check) {
+  const source = await readFile(path.join(repositoryRoot, "LICENSE"));
+  for (const target of [path.join(pluginRoot, "LICENSE"), path.join(packageRoot, "LICENSE")]) {
+    if (check) {
+      if (!source.equals(await readFile(target))) throw new Error(`license is stale: ${target}; run npm run distribution:build`);
+    } else {
+      await writeFile(target, source);
+    }
+  }
+}
+
 async function filesUnder(root) {
   if (!await exists(root)) return [];
   const entries = await readdir(root, { withFileTypes: true });
@@ -77,10 +88,12 @@ async function compareDirectories(source, target, label) {
 }
 
 if (process.argv.includes("--check")) {
+  await syncLicenses(true);
   await compareDirectories(skillSource, pluginSkillsTarget, "plugin skills");
   await compareDirectories(pluginRoot, packagePluginTarget, "package plugin bundle");
   console.log("distribution: generated plugin bundles match canonical sources");
 } else {
+  await syncLicenses(false);
   await copySkills();
   await copyPlugin();
   console.log("distribution: built portable plugin bundles; package engine is canonical source");

@@ -20,10 +20,13 @@ try {
   if (json) {
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   } else {
-    console.log(`Living PRD Sync ${dryRun ? "(DRY RUN)" : ""}:`);
-    for (const item of result.syncedPRDs) {
-      console.log(`- ${item.file}: ${item.updated ? `Synced ${item.syncedCriteria.length} criteria` : "Already up to date"}`);
+    console.log("PRD evidence review (read-only):");
+    for (const item of result.reviews) {
+      console.log(`- ${item.file}: ${item.criteria.length} unchecked criteria; ${item.evidenceCandidates.length} related task records`);
+      for (const criterion of item.criteria) console.log(`  - Line ${criterion.line}: ${criterion.criterion} (unverified)`);
+      for (const file of item.evidenceCandidates) console.log(`  - Inspect evidence: ${file}`);
     }
+    console.log("No files changed. Related records do not prove acceptance; inspect their evidence and obtain the human decision.");
   }
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));

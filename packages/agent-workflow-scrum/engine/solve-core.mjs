@@ -1,5 +1,6 @@
-import { readdir, readFile, writeFile } from "node:fs/promises";
+import { readdir, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { readTemplate } from "./template-core.mjs";
 
 function kebabCase(value) {
   return String(value || "")
@@ -27,13 +28,8 @@ export async function createSolution({
   const solutionsDir = path.join(root, ".agents", "docs", "solutions");
   const templatePath = path.join(solutionsDir, "0000-template.md");
 
-  let template = "";
-  try {
-    template = await readFile(templatePath, "utf8");
-  } catch {
-    throw new Error("solutions template 0000-template.md not found");
-  }
-
+  const template = await readTemplate(templatePath, "solution.md");
+  await mkdir(solutionsDir, { recursive: true });
   const entries = await readdir(solutionsDir, { withFileTypes: true });
   let maxId = 0;
   for (const entry of entries) {
@@ -63,7 +59,7 @@ export async function createSolution({
     .replace(/>\s*\*\*Module:\*\*\s*`[^`]+`/i, `> **Module:** \`${module}\``)
     .replace(/>\s*\*\*Tags:\*\*\s*`[^`]+`/i, `> **Tags:** \`${tagsArray.join("`, `")}\``);
 
-  await writeFile(targetPath, content, "utf8");
+  await writeFile(targetPath, content, { encoding: "utf8", flag: "wx" });
 
   return {
     ok: true,

@@ -95,6 +95,31 @@ async function assertThinInit(root) {
   assert.equal(await exists(path.join(root, ".agents/docs/suggestions/README.md")), true);
 }
 
+async function assertBundledLinks(root) {
+  for (const entry of await readdir(root, { withFileTypes: true })) {
+    const file = path.join(root, entry.name);
+    if (entry.isDirectory()) await assertBundledLinks(file);
+    else if (file.endsWith(".md")) {
+      const content = await readFile(file, "utf8");
+      for (const match of content.matchAll(/\]\(([^)]+)\)/g)) {
+        const target = match[1].split("#")[0];
+        if (!target || /^[a-z]+:/i.test(target)) continue;
+        assert.ok(await exists(path.resolve(root, target)), `${file}: missing bundled reference ${target}`);
+      }
+    }
+  }
+}
+
+test("bundled link check rejects missing documentation", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "agent-workflow-links-"));
+  try {
+    await writeFile(path.join(root, "SKILL.md"), "Read [rules](missing.md).\n");
+    await assert.rejects(assertBundledLinks(root), /missing bundled reference missing.md/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("init preserves existing files and creates only project-owned workflow state", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "agent-workflow-existing-"));
   try {
@@ -145,6 +170,11 @@ async function exerciseInstalledFixture(manager, tarball, root) {
   }
   const installedBinary = path.join(root, "node_modules", "@next-mmo", "agent-workflow-scrum", "bin", "agent-workflow.mjs");
   assert.equal(await exists(installedBinary), true, `${manager} installed package binary`);
+  const installedRoot = path.resolve(path.dirname(installedBinary), "..");
+  const license = await readFile(path.join(repositoryRoot, "LICENSE"), "utf8");
+  assert.equal(await readFile(path.join(installedRoot, "LICENSE"), "utf8"), license);
+  assert.equal(await readFile(path.join(installedRoot, "plugin/LICENSE"), "utf8"), license);
+  await assertBundledLinks(path.join(installedRoot, "plugin/skills"));
   const invoke = (args) => run(process.execPath, [installedBinary, ...args], root);
 
   invoke(["init", "--existing"]);
@@ -159,6 +189,14 @@ async function exerciseInstalledFixture(manager, tarball, root) {
 
   assert.match(invoke(["version"]), /^0\.1\.0/m);
   assert.match(invoke(["doctor"]), /doctor: ready/);
+  const plan = JSON.parse(invoke(["plan", "Consumer plan", "--json"]));
+  assert.match(await readFile(path.join(root, plan.relativePath), "utf8"), /# Plan 0001: Consumer plan/);
+  const solution = JSON.parse(invoke(["solve", "Consumer bug fix", "--json"]));
+  assert.match(await readFile(path.join(root, solution.relativePath), "utf8"), /status: draft/);
+  assert.equal(await exists(path.join(root, ".agents/docs/plans/0000-template.md")), false);
+  assert.equal(JSON.parse(invoke(["prdsync", "--json"])).advisory, true);
+  const review = JSON.parse(invoke(["review", "--base", "HEAD", "--json"]));
+  assert.ok(review.filesReviewed >= 2, "installed review inspects new plan and solution files");
   assert.match(invoke(["context", "fixture verification", "--provider", "local"]), /Agent Context Pack/);
   assert.match(invoke(["scope", "--base", "HEAD"]), /"formatVersion": 2/);
   assert.match(invoke(["verify", "--base", "HEAD"]), /Verification Plan/);
@@ -176,6 +214,8 @@ test("real npm tarball installs and all public commands run in npm and pnpm fixt
     assert.ok(files.includes("bin/agent-workflow.mjs"));
     assert.ok(files.includes("engine/context-core.mjs"));
     assert.ok(files.includes("plugin/plugin.json"));
+    assert.ok(files.includes("LICENSE"));
+    assert.ok(files.includes("plugin/LICENSE"));
     assert.equal(files.some((file) => /benchmark|counter|\.agents\/docs\/tasks\/done/i.test(file)), false);
     await exerciseInstalledFixture("npm", tarball, path.join(root, "npm-consumer"));
 

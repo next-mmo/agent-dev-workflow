@@ -1,26 +1,22 @@
-import { readFile } from "node:fs/promises";
+import { readFile, lstat } from "node:fs/promises";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
 import { loadIgnoreFilterSync } from "./ignore-core.mjs";
+import { collectChangeScope, collectWorkingTreeScope } from "./change-scope-core.mjs";
+import { loadWorkflowConfigSync } from "./workflow-config.mjs";
 
-function getChangedFiles(root = process.cwd(), base = "") {
-  const args = base ? ["diff", "--name-only", base] : ["status", "--short"];
-  const res = spawnSync("git", args, { cwd: root, encoding: "utf8", windowsHide: true });
-  if (res.status !== 0) return [];
-  const lines = String(res.stdout || "").trim().split(/\r?\n/).filter(Boolean);
-  if (base) return lines;
-  return lines.map((l) => l.slice(3).trim());
-}
-
-export async function runMultiAgentReview({
+export async function runStaticReview({
   root = process.cwd(),
   base = "",
   files = null,
 } = {}) {
-  const ignoreFilter = loadIgnoreFilterSync(root);
-  const targetFiles = (files || getChangedFiles(root, base))
-    .filter((f) => !ignoreFilter.isIgnored(f))
-    .filter((f) => /\.(js|mjs|ts|html|css|json|md)$/.test(f));
+  const scope = files === null
+    ? (base ? collectChangeScope({ root, base }) : collectWorkingTreeScope({ root }))
+    : null;
+  root = scope?.repositoryRoot || path.resolve(root);
+  const ignoreFilter = loadIgnoreFilterSync(root, loadWorkflowConfigSync(root));
+  const targetFiles = [...new Set(files ?? scope.paths.all)];
+  const skippedFiles = [];
+  let filesReviewed = 0;
 
   const securityFindings = [];
   const simplicityFindings = [];
@@ -39,18 +35,31 @@ export async function runMultiAgentReview({
   ];
 
   for (const relPath of targetFiles) {
-    if (relPath.includes("review-core.mjs")) continue;
-    const absPath = path.join(root, relPath);
-    let content = "";
-    try {
-      content = await readFile(absPath, "utf8");
-    } catch {
+    if (ignoreFilter.isIgnored(relPath) || !/\.(js|cjs|mjs|jsx|ts|tsx|html|css|json|md|ya?ml)$/.test(relPath)) {
+      skippedFiles.push({ file: relPath, reason: "ignored or unsupported file type" });
       continue;
     }
+    const absPath = path.resolve(root, relPath);
+    const relative = path.relative(root, absPath);
+    if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+      throw new Error(`review path is outside the repository: ${relPath}`);
+    }
+    let content = "";
+    try {
+      if (!(await lstat(absPath)).isFile()) throw new Error("not a regular file");
+      content = await readFile(absPath, "utf8");
+    } catch (error) {
+      if (scope && error.code === "ENOENT") {
+        skippedFiles.push({ file: relPath, reason: "no current file content (deleted or renamed)" });
+        continue;
+      }
+      throw new Error(`cannot inspect ${relPath}: ${error.message}`);
+    }
+    filesReviewed += 1;
 
     const lines = content.split(/\r?\n/);
 
-    // 1. Security Sentinel
+    // Security patterns are heuristics, not proof that a file is safe.
     for (let i = 0; i < lines.length; i += 1) {
       const line = lines[i];
       for (const pattern of secretPatterns) {
@@ -77,7 +86,6 @@ export async function runMultiAgentReview({
       }
     }
 
-    // 2. Simplicity Oracle
     if (relPath.endsWith(".js") || relPath.endsWith(".mjs")) {
       if (lines.length > 300) {
         simplicityFindings.push({
@@ -104,7 +112,6 @@ export async function runMultiAgentReview({
       }
     }
 
-    // 3. Agent-Native Parity Reviewer
     if (relPath === "src/main.js" || relPath.includes("ui") || relPath.includes("controller")) {
       const buttonListeners = content.match(/addEventListener\s*\(\s*['"]click['"]/g) || [];
       const domainMethodCalls = content.match(/state\.[a-zA-Z0-9_$]+\s*\(/g) || [];
@@ -122,8 +129,12 @@ export async function runMultiAgentReview({
   const passed = securityFindings.filter((f) => f.severity === "HIGH").length === 0;
 
   return {
+    schemaVersion: 2,
+    reviewType: "static-pattern-scan",
     ok: passed,
-    filesReviewed: targetFiles.length,
+    filesReviewed,
+    skippedFiles,
+    resolved: scope?.resolved ?? null,
     findings: {
       security: securityFindings,
       simplicity: simplicityFindings,
@@ -133,37 +144,43 @@ export async function runMultiAgentReview({
   };
 }
 
+// Compatibility for existing callers; this function does not invoke agents.
+export const runMultiAgentReview = runStaticReview;
+
 export function formatReviewReport(review) {
   const lines = [
-    "# Multi-Agent Automated Review Report",
+    "# Static Pattern Review Report",
     "",
     `- Files inspected: ${review.filesReviewed}`,
-    `- Overall status: ${review.ok ? "PASS" : "BLOCKING ISSUES DETECTED"}`,
+    `- Overall status: ${!review.filesReviewed ? "NO SUPPORTED FILES INSPECTED" : review.ok ? "NO BLOCKING PATTERN MATCHES" : "BLOCKING PATTERN MATCHES"}`,
     `- Total findings: ${review.totalIssues}`,
+    `- Skipped files: ${review.skippedFiles.length}`,
+    "- Limited pattern scan; independent semantic review and acceptance checks are still required.",
+    ...review.skippedFiles.map((item) => `- Skipped ${item.file}: ${item.reason}`),
     "",
-    "## 1. Security Sentinel",
+    "## Security patterns",
   ];
 
   if (review.findings.security.length === 0) {
-    lines.push("- PASS: Zero secrets, token leaks, or unsafe execution patterns found.");
+    lines.push("- No configured security patterns matched the inspected files.");
   } else {
     for (const f of review.findings.security) {
       lines.push(`- [${f.severity}] ${f.file}:${f.line} — ${f.message}`);
     }
   }
 
-  lines.push("", "## 2. Simplicity Oracle");
+  lines.push("", "## Size and indentation");
   if (review.findings.simplicity.length === 0) {
-    lines.push("- PASS: Code meets size and nesting complexity standards.");
+    lines.push("- No configured size or indentation thresholds exceeded.");
   } else {
     for (const f of review.findings.simplicity) {
       lines.push(`- [${f.severity}] ${f.file}${f.line ? `:${f.line}` : ""} — ${f.message}`);
     }
   }
 
-  lines.push("", "## 3. Agent-Native Parity Reviewer");
+  lines.push("", "## UI/domain heuristic");
   if (review.findings.parity.length === 0) {
-    lines.push("- PASS: All UI actions map cleanly to headless domain state methods.");
+    lines.push("- No configured UI/domain heuristic matched; action coverage is unverified.");
   } else {
     for (const f of review.findings.parity) {
       lines.push(`- [${f.severity}] ${f.file} — ${f.message}`);

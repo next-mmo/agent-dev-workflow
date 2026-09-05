@@ -7,7 +7,7 @@
 
 ## Evidence and Scope
 
-Beta review reproduced recall of an unfinished Vite solution and established that the benchmark compares all tracked text with one context pack. It contains no equivalent-task token accounting. See [task 0029](../tasks/wip-0029-0005-realistic-todo-workspace.md).
+Beta review reproduced recall of an unfinished Vite solution and established that the benchmark compares all tracked text with one context pack. It contains no equivalent-task token accounting. See [task 0029](../tasks/done/done-0029-0005-realistic-todo-workspace.md).
 
 ## Human Decision
 

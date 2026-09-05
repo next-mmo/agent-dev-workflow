@@ -12,7 +12,8 @@
     "engine/",
     "templates/",
     "plugin/",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "prepack": "node ../../scripts/build-distribution.mjs",

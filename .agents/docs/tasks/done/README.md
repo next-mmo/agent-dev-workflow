@@ -1,7 +1,7 @@
 # Completed Tasks Archive Ledger
 
 > Status: cold archive index  
-> Updated: 2026-09-04  
+> Updated: 2026-09-05
 > Retention: Verified increment evidence records  
 
 Completed tasks are stored here as durable verification records. They are retained in **cold storage** and loaded **on-demand** by the context router when querying specific task numbers (e.g. `npm run context -- "done-0007"`) or passing `--include-done`.
@@ -37,3 +37,5 @@ Completed tasks are stored here as durable verification records. They are retain
 | [0025](done-0025-0001-beta-workflow-enforcement.md) | Enforce Beta Workflow Synchronization and Context Limits | 2026-09-02 | - |
 | [0026](done-0026-0001-context-benchmark.md) | Benchmark Raw Versus Bounded Context | 2026-09-02 | - |
 | [0028](done-0028-0001-package-workflow-cli.md) | Package the Workflow CLI and Portable Plugins | 2026-09-03 | [PRD-0004](../../prd/0004-workflow-distribution.md) |
+| [0029](done-0029-0005-realistic-todo-workspace.md) | Build a Realistic Local Todo Workspace | 2026-09-05 | [PRD-0005](../../prd/0005-todo-workspace.md) |
+| [0030](done-0030-0004-public-beta-packaging.md) | Repair Public Beta Packaging | 2026-09-05 | [PRD-0004](../../prd/0004-workflow-distribution.md) |

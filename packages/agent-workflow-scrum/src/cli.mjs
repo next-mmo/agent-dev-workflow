@@ -19,7 +19,7 @@ Usage:
   agent-workflow review [--base <ref>] [--json]
   agent-workflow solve <title> [--module <path>] [--tags <t1,t2>] [--json]
   agent-workflow worktree [list|start|finish] [branch] [--json]
-  agent-workflow prdsync [--dry-run] [--json]
+  agent-workflow prdsync [--dry-run] [--json]  (read-only evidence review)
   agent-workflow context [scope] [--level 0|1|2] [--budget tokens] [--provider mode]
   agent-workflow scope --base <verified-ref> [--head <ref>]
   agent-workflow verify --base <verified-ref> [--head <ref>] [--json]
