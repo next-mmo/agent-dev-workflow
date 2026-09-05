@@ -32,7 +32,7 @@ Init seeds `AGENT-QUICKSTART.md`, `.agents/docs/AGENTS.md`, `agent-workflow.md`,
 
 For local development, the source repository's `npm run local:check` runs the offline tests, build, strict workflow, documentation, and generated-bundle checks. Context output identifies linked PRDs and the reason each selected document was retained; the active task's linked PRD is prioritized over generic workflow history.
 
-The CLI works without host plugins. To use `/kb:*` skill conventions, load this package's `plugin/` through your host's local plugin support, or its `plugin/skills/` through a supported skill loader. In a Git install those paths are under `node_modules/@next-mmo/agent-workflow-scrum/packages/agent-workflow-scrum/`; in a tarball install they are directly under `node_modules/@next-mmo/agent-workflow-scrum/`. npm installation alone does not activate host skills. Never copy workflow `packages/` or `plugins/` into a consumer. Package consumers need no `scripts/skill.sh`; that helper belongs to the source checkout.
+The CLI works without host plugins. Run `npm exec -- agent-workflow skills --json` to discover the installed plugin root and `plugin/skills/` path, then load one through your host's local plugin support or supported skill loader. In a Git install those paths are under `node_modules/@next-mmo/agent-workflow-scrum/packages/agent-workflow-scrum/`; in a tarball install they are directly under `node_modules/@next-mmo/agent-workflow-scrum/`. npm installation alone does not activate host skills. Never copy workflow `packages/`, `plugins/`, or skills into a consumer. Package consumers need no `scripts/skill.sh`; that helper belongs to the source checkout.
 
 Licensed under [MIT](LICENSE), copyright 2026 Next MMO.
 

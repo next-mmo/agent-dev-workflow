@@ -136,7 +136,7 @@ test("distribution builds only package skills and preserves owned plugin files",
     await writeFile(skill, "# Canonical skill\n");
     await writeFile(path.join(root, "LICENSE"), "License fixture\n");
     const plugin = path.join(root, "packages/agent-workflow-scrum/plugin");
-    const owned = ["plugin.json", ".codex-plugin/plugin.json", ".cursor-plugin/plugin.json", "commands/workflow-status.md", "README.md"];
+    const owned = ["plugin.json", ".zcode-plugin/plugin.json", ".codex-plugin/plugin.json", ".cursor-plugin/plugin.json", "commands/workflow-status.md", "README.md"];
     for (const name of owned) {
       await mkdir(path.dirname(path.join(plugin, name)), { recursive: true });
       await writeFile(path.join(plugin, name), `Owned ${name}\n`);
@@ -225,7 +225,8 @@ async function exerciseInstalledFixture(manager, tarball, root, runtimePrefix = 
   const invoke = (args) => run(process.execPath, [installedBinary, ...args], root);
   if (manager === "npm") assert.match(runNpm(["exec", "--offline", "--", "agent-workflow", "version"], root), /^0\.1\.0/m);
 
-  invoke(["init", "--existing"]);
+  const initOutput = invoke(["init", "--existing"]);
+  assert.match(initOutput, /Skills: .*skills --json/);
   await assertThinInit(root);
   const config = JSON.parse(await readFile(path.join(root, ".agents/config.json"), "utf8"));
   assert.equal(config.packageManager, manager);
@@ -237,6 +238,10 @@ async function exerciseInstalledFixture(manager, tarball, root, runtimePrefix = 
 
   assert.match(invoke(["version"]), /^0\.1\.0/m);
   assert.match(invoke(["doctor"]), /doctor: ready/);
+  const skills = JSON.parse(invoke(["skills", "--json"]));
+  assert.equal(skills.skillsAvailable, true);
+  assert.deepEqual(skills.skillNames, ["agent-workflow-prose", "agent-workflow-scrum"]);
+  assert.equal(skills.repositorySkillsPath, null);
   const plan = JSON.parse(invoke(["plan", "Consumer plan", "--json"]));
   assert.match(await readFile(path.join(root, plan.relativePath), "utf8"), /# Plan 0001: Consumer plan/);
   const solution = JSON.parse(invoke(["solve", "Consumer bug fix", "--json"]));

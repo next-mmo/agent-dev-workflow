@@ -19,7 +19,7 @@ Teams need Agent Workflow Scrum's context, scope, verification, documentation, r
 3. Store consumer-specific package manager, paths, and check commands in `.agents/config.json`.
 4. Initialize new or existing repositories without overwriting existing root instructions/context.
 5. Keep `.agents/scripts/`, `.agents/skills/`, `.agents/benchmark/`, demo product code, and source history out of initialized repositories.
-6. Provide portable Agent/Cursor and Codex plugin manifests with reusable skills generated from canonical sources.
+6. Provide portable Agent, ZCode, Cursor, and Codex plugin manifests with reusable skills generated from canonical sources.
 7. Keep optional context providers advisory, local-first, and explicit where external recall is involved.
 8. Verify the actual packed artifact in clean npm and pnpm fixtures before publication.
 9. Planning and solution commands work after thin initialization, using package defaults with optional consumer template overrides.

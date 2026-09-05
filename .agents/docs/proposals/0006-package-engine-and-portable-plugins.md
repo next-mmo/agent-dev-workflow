@@ -22,7 +22,7 @@ Copying `.agents/scripts/`, `.agents/skills/`, and `.agents/benchmark/` into eve
 - Publish the reusable engine as `@next-mmo/agent-workflow-scrum` with the local `agent-workflow` binary.
 - Keep consumer-owned state limited to root instructions/context, `.agents/config.json`, and `.agents/docs/` PRD, task, suggestion, and evidence records.
 - `init` must never copy `.agents/scripts/`, `.agents/skills/`, `.agents/benchmark/`, Counter App code, or this repository's history.
-- Provide portable Agent/Cursor and Codex plugin manifests whose bundled skills call the local engine.
+- Provide portable Agent, ZCode, Cursor, and Codex plugin manifests whose bundled skills call the local engine.
 - Recommend a project-local pinned dependency. Use `yalc` only while developing the package before publication.
 - Keep optional Graphify and OpenViking providers advisory and disabled unless explicitly selected.
 
@@ -61,6 +61,10 @@ Copying `.agents/scripts/`, `.agents/skills/`, and `.agents/benchmark/` into eve
 - **Rationale:** The user approved the isolated package-engine and portable-plugin plan, with publication and Tauri cleanup deferred until the package is proven publishable.
 
 ## Application Evidence
+
+### ZCode plugin manifest decision, 2026-09-06
+
+The user requested ZCode plugin support for the bundle during consumer setup of `awesome-dev`. Add `.zcode-plugin/plugin.json` (skills and commands) alongside the Cursor and Codex manifests; the distribution build preserves it as an owned file. Task 0035 records implementation and verification.
 
 ### Plugin consolidation decision, 2026-09-06
 

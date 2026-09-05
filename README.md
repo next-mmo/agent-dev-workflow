@@ -202,7 +202,7 @@ Keep the tarball at the recorded path alongside the lockfile so clean installs c
 
 `init` preserves existing files and creates root instructions/context, `.agents/config.json`, and empty task/PRD/suggestion entry points. It does not copy reusable skills, scripts, benchmarks, demo code, or workflow history. Configure product paths and checks in `.agents/config.json`, then run the CLI through your package manager. Consumer-owned state stays in `.agents/`.
 
-The npm install provides the CLI; `/kb:*` conventions require the skills to be loaded by your agent host. The portable bundle is at `node_modules/@next-mmo/agent-workflow-scrum/plugin/`. Use your host's local plugin mechanism, or its skill loader for that bundle's `skills/` directory. Availability depends on host support. CLI commands work without plugin activation. Package consumers do not run this checkout's `scripts/skill.sh`.
+The npm install provides the CLI; run `npm exec -- agent-workflow skills --json` to discover the portable bundle and load it through your agent host. `/kb:*` conventions require host activation; CLI commands work without plugin activation. Package consumers do not run this checkout's `scripts/skill.sh`.
 
 For local package development, `npm pack` is the release-shaped artifact; `yalc` is useful only for rapid iteration. Cursor and other Agent Plugin hosts can consume the portable bundle under `packages/agent-workflow-scrum/plugin/` without importing consumer state.
 

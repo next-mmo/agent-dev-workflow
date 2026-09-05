@@ -178,6 +178,7 @@ export async function initializeProject(argv, cwd = process.cwd()) {
     root: options.root.replaceAll("\\", "/"),
     packageManager,
     dryRun: options.dryRun,
+    skillsCommand: `${localRunner} skills --json`,
     created,
     preserved,
     forbiddenDirectoriesCreated: [],
@@ -196,5 +197,6 @@ export async function initializeProject(argv, cwd = process.cwd()) {
   ];
   if (presentForbidden.length) lines.push(`- Existing vendored directories left unchanged: ${presentForbidden.join(", ")}`);
   lines.push(`- Next: ${localRunner} doctor`);
+  lines.push(`- Skills: run ${localRunner} skills --json and load the reported plugin or skills path through your agent host`);
   return { ...result, json: false, output: `${lines.join("\n")}\n` };
 }

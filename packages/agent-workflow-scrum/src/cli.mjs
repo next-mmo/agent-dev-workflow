@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { diagnoseProject } from "./doctor.mjs";
 import { initializeProject } from "./init.mjs";
 import { runEngine } from "./run-engine.mjs";
+import { describeSkills } from "./skills.mjs";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const engineCommands = new Set(["context", "scope", "verify", "check", "docs", "report", "mode", "archive", "plan", "index", "review", "solve", "worktree", "prdsync"]);
@@ -27,6 +28,7 @@ Usage:
   agent-workflow docs [--budget-file <path>] [--json]  (config docBudgets is the default)
   agent-workflow report [--output <directory>]
   agent-workflow doctor [path] [--json]
+  agent-workflow skills [--json]
 
 All repository commands accept --root <path> when targeting a repository other
 than the current working directory. The package owns the runtime; the target
@@ -61,6 +63,12 @@ export async function main(argv, options = {}) {
     const result = await diagnoseProject(args, cwd);
     if (!result.json) process.stdout.write(result.output);
     if (!result.ok) process.exitCode = 1;
+    return;
+  }
+  if (command === "skills") {
+    const result = await describeSkills(args, packageRoot);
+    if (!result.json) process.stdout.write(result.output);
+    if (!result.skillsAvailable) process.exitCode = 1;
     return;
   }
   if (engineCommands.has(command)) {

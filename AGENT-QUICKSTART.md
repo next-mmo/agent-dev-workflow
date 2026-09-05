@@ -18,13 +18,20 @@ This guide is for an AI coding agent working in a repository initialized with Ag
    npm exec -- agent-workflow doctor
    ```
 
-4. For the exact user request, generate bounded context before non-trivial work:
+4. Discover the installed reusable skills and load the reported plugin root or skills path through the agent host when supported:
+
+   ```bash
+   npm exec -- agent-workflow skills --json
+   ```
+
+   npm installation does not activate host skills. If the host cannot load local skills, use the CLI directly; do not create or copy `.agents/skills`.
+5. For the exact user request, generate bounded context before non-trivial work:
 
    ```bash
    npm exec -- agent-workflow context "<task description>"
    ```
 
-5. Inspect the current Git state, the one active task under `.agents/docs/tasks/`, its linked PRD, affected code, and the real test/runtime entry path.
+6. Inspect the current Git state, the one active task under `.agents/docs/tasks/`, its linked PRD, affected code, and the real test/runtime entry path.
 
 If the package is not installed, do not vendor or copy it. Follow the package installation instructions in [`packages/agent-workflow-scrum/README.md`](packages/agent-workflow-scrum/README.md), or report that the project owner must install it.
 
