@@ -5,6 +5,7 @@
 > Updated: 2026-09-05
 > Related Tasks: `.agents/docs/tasks/done/done-0028-0001-package-workflow-cli.md`, `.agents/docs/tasks/done/done-0029-0005-realistic-todo-workspace.md`
 > Packaging follow-up: `.agents/docs/tasks/done/done-0030-0004-public-beta-packaging.md`
+> Consumer initialization: `.agents/docs/tasks/done/done-0032-0004-consumer-initialization.md`
 
 ## 1. Problem Statement
 
@@ -26,6 +27,8 @@ Teams need Agent Workflow Scrum's context, scope, verification, documentation, r
 12. Both local code indexes discover JS/TS files from configured product globs and ignore rules, including `apps/`, `packages/`, and custom roots.
 13. Distribute the MIT license with both npm and portable plugin artifacts; bundled skill links resolve without source-only documents.
 14. Before registry publication, document tarball installation and host skill activation separately. Consumer setup must not require source-only adapter scripts.
+15. Initialize `proposals/` and project-owned workflow, documentation instructions, architecture, defensive patterns, development, testing, and budget files. Exclude model recommendations; preserve existing files and legacy decisions. Doctor reports missing scaffold documents.
+16. Support a commit-pinned Git dependency from the repository root without registry publication or copying workflow `packages/` and `plugins/` into the consumer. The source root exposes the canonical CLI; installed runtime assets belong under `node_modules`.
 
 ## 3. Acceptance Criteria
 

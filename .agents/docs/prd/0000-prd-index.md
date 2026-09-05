@@ -15,7 +15,7 @@
 | :--- | :--- | :--- | :--- |
 | **0001** | Counter Core Features | **done** | Stateful counter, preset/custom step controls, localStorage persistence, theme toggle, accessible step selection, and one-level undo |
 | **0002** | Counter History | **done** | Persistent accessible list of the latest ten count-changing actions with explicit clear control |
-| **0004** | Workflow Distribution | **done** | Versioned local CLI, thin initialization, honest evidence, MIT licensing, and portable tarball onboarding |
+| **0004** | Workflow Distribution | **done** | Local CLI, consumer docs and proposals, pinned Git/tarball onboarding, honest evidence, and MIT licensing |
 | **0005** | Todo Workspace | **in-progress** | Browser tasks plus a local API/disk persistence and editing trial; human acceptance pending |
 
 ## Authority

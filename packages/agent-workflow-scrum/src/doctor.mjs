@@ -2,15 +2,16 @@ import { spawnSync } from "node:child_process";
 import { access } from "node:fs/promises";
 import path from "node:path";
 import { loadWorkflowConfigSync } from "../engine/workflow-config.mjs";
+import { documentationTemplates } from "./scaffold.mjs";
 
 const requiredPaths = [
   "AGENTS.md",
   "CONTEXT.md",
   ".agents/config.json",
   ".agents/docs/prd/0000-prd-index.md",
-  ".agents/docs/tasks/README.md",
+  ...Object.keys(documentationTemplates).filter((name) => name !== ".agents/docs/proposals/README.md"),
 ];
-const vendoredPaths = [".agents/scripts", ".agents/skills", ".agents/benchmark"];
+const vendoredPaths = [".agents/scripts", ".agents/skills", ".agents/benchmark", "packages/agent-workflow-scrum", "plugins/agent-workflow-scrum"];
 
 async function exists(filePath) {
   try {
@@ -51,6 +52,9 @@ export async function diagnoseProject(argv, cwd = process.cwd()) {
     (await exists(path.join(options.root, ".agents/docs/suggestions/README.md")));
   if (!hasProposals) {
     errors.push("missing .agents/docs/proposals/README.md or .agents/docs/suggestions/README.md");
+  }
+  if (await exists(path.join(options.root, ".agents/docs/suggestions"))) {
+    warnings.push("legacy .agents/docs/suggestions exists; new workflow proposals belong in .agents/docs/proposals; preserve existing decisions during migration");
   }
 
   let config = null;

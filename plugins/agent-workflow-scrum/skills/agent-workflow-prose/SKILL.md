@@ -26,11 +26,11 @@ Shorter text is not better if it loses one of these. Keep non-obvious rationale 
 
 ## One home per fact
 
-Follow the target's `.agents/docs/AGENTS.md` ownership table when present. Keep standing instructions compact. Put architecture maps in `.agents/docs/architecture.md`, product requirements in `.agents/docs/prd/`, current increment/evidence in `.agents/docs/tasks/`, reusable workflow rationale in `.agents/docs/suggestions/`, and contributor commands in `.agents/docs/development.md`. Link instead of copying substantial detail.
+Follow the target's `.agents/docs/AGENTS.md` ownership table when present. Keep standing instructions compact. Put architecture maps in `.agents/docs/architecture.md`, product requirements in `.agents/docs/prd/`, current increment/evidence in `.agents/docs/tasks/`, reusable workflow rationale in `.agents/docs/proposals/`, and contributor commands in `.agents/docs/development.md`. Link instead of copying substantial detail.
 
 Paths in this skill are relative to the target repository unless linked as bundled references. Missing project guidance is optional; use these placement defaults until the project defines its own.
 
-Durable docs describe current behavior. Put change history and rejected alternatives in suggestions/tasks/commits rather than scattering “previously/now/no longer” through current-state docs.
+Durable docs describe current behavior. Put change history and rejected alternatives in proposals/tasks/commits rather than scattering “previously/now/no longer” through current-state docs.
 
 ## Required coverage by location
 

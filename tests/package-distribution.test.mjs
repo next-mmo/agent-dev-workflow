@@ -1,16 +1,17 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import test from "node:test";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageRoot = path.join(repositoryRoot, "packages/agent-workflow-scrum");
 const sourceBinary = path.join(packageRoot, "bin/agent-workflow.mjs");
-const forbidden = [".agents/scripts", ".agents/skills", ".agents/benchmark"];
+const forbidden = [".agents/scripts", ".agents/skills", ".agents/benchmark", "packages", "plugins", ".agents/docs/model-recommend.md"];
+const consumerDocs = ["AGENTS.md", "agent-workflow.md", "architecture.md", "defensive-patterns.md", "development.md", "testing.md", "doc-budgets.json"];
 
 function resolveNpmRunner() {
   if (process.platform !== "win32") return { command: "npm", prefix: [], shell: false };
@@ -92,7 +93,10 @@ async function assertThinInit(root) {
   assert.equal(await exists(path.join(root, ".agents/config.json")), true);
   assert.equal(await exists(path.join(root, ".agents/docs/prd/0000-prd-index.md")), true);
   assert.equal(await exists(path.join(root, ".agents/docs/tasks/README.md")), true);
-  assert.equal(await exists(path.join(root, ".agents/docs/suggestions/README.md")), true);
+  assert.equal(await exists(path.join(root, ".agents/docs/proposals/README.md")), true);
+  assert.equal(await exists(path.join(root, ".agents/docs/suggestions")), false);
+  for (const name of consumerDocs) assert.equal(await exists(path.join(root, ".agents/docs", name)), true, name);
+  await assertBundledLinks(path.join(root, ".agents/docs"));
 }
 
 async function assertBundledLinks(root) {
@@ -134,6 +138,14 @@ test("init preserves existing files and creates only project-owned workflow stat
     assert.equal(config.checks.test, "pnpm test");
     assert.equal(config.checks.build, "pnpm build");
     await assertThinInit(root);
+    await writeFile(path.join(root, ".agents/docs/architecture.md"), "# Product-specific architecture\n");
+    await mkdir(path.join(root, ".agents/docs/suggestions"));
+    await writeFile(path.join(root, ".agents/docs/suggestions/0001-decision.md"), "# Existing human decision\n");
+    const configBefore = await readFile(path.join(root, ".agents/config.json"), "utf8");
+    assert.match(run(process.execPath, [sourceBinary, "init", "--existing"], root), /Created: none/);
+    assert.equal(await readFile(path.join(root, ".agents/docs/architecture.md"), "utf8"), "# Product-specific architecture\n");
+    assert.equal(await readFile(path.join(root, ".agents/docs/suggestions/0001-decision.md"), "utf8"), "# Existing human decision\n");
+    assert.equal(await readFile(path.join(root, ".agents/config.json"), "utf8"), configBefore);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -153,7 +165,7 @@ async function packArtifact(root) {
   return { tarball: path.join(packDirectory, metadata.filename), files: metadata.files.map((item) => item.path) };
 }
 
-async function exerciseInstalledFixture(manager, tarball, root) {
+async function exerciseInstalledFixture(manager, tarball, root, runtimePrefix = "") {
   await mkdir(root, { recursive: true });
   await writeFile(path.join(root, "package.json"), `${JSON.stringify({ name: `${manager}-consumer`, private: true }, null, 2)}\n`);
   git(root, ["init"]);
@@ -161,21 +173,23 @@ async function exerciseInstalledFixture(manager, tarball, root) {
   git(root, ["config", "user.name", "Fixture"]);
   if (manager === "npm") {
     runNpm(
-      ["install", "--save-dev", "--save-exact", tarball],
+      ["install", "--offline", "--no-audit", "--no-fund", "--save-dev", "--save-exact", tarball],
       root,
-      { env: { ...process.env, NO_COLOR: "1", NPM_CONFIG_CACHE: path.join(root, "npm-cache") } },
+      { env: { ...process.env, NO_COLOR: "1", ...(runtimePrefix ? {} : { NPM_CONFIG_CACHE: path.join(root, "npm-cache") }) } },
     );
   } else {
     runPnpm(["add", "--save-dev", "--save-exact", tarball], root);
   }
-  const installedBinary = path.join(root, "node_modules", "@next-mmo", "agent-workflow-scrum", "bin", "agent-workflow.mjs");
+  const installedBinary = path.join(root, "node_modules", "@next-mmo", "agent-workflow-scrum", runtimePrefix, "bin", "agent-workflow.mjs");
   assert.equal(await exists(installedBinary), true, `${manager} installed package binary`);
   const installedRoot = path.resolve(path.dirname(installedBinary), "..");
-  const license = await readFile(path.join(repositoryRoot, "LICENSE"), "utf8");
-  assert.equal(await readFile(path.join(installedRoot, "LICENSE"), "utf8"), license);
-  assert.equal(await readFile(path.join(installedRoot, "plugin/LICENSE"), "utf8"), license);
+  // Git checkouts may normalize line endings; verify the complete license text.
+  const license = (await readFile(path.join(repositoryRoot, "LICENSE"), "utf8")).replaceAll("\r\n", "\n");
+  assert.equal((await readFile(path.join(installedRoot, "LICENSE"), "utf8")).replaceAll("\r\n", "\n"), license);
+  assert.equal((await readFile(path.join(installedRoot, "plugin/LICENSE"), "utf8")).replaceAll("\r\n", "\n"), license);
   await assertBundledLinks(path.join(installedRoot, "plugin/skills"));
   const invoke = (args) => run(process.execPath, [installedBinary, ...args], root);
+  if (manager === "npm") assert.match(runNpm(["exec", "--offline", "--", "agent-workflow", "version"], root), /^0\.1\.0/m);
 
   invoke(["init", "--existing"]);
   await assertThinInit(root);
@@ -232,6 +246,64 @@ test("real npm tarball installs and all public commands run in npm and pnpm fixt
       } else {
         await exerciseInstalledFixture("pnpm", tarball, path.join(root, "pnpm-consumer"));
       }
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("init dry-run writes nothing and doctor identifies each missing consumer document", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "agent-workflow-scaffold-"));
+  try {
+    const target = path.join(root, "new-product");
+    const preview = JSON.parse(run(process.execPath, [sourceBinary, "init", target, "--dry-run", "--json"], root));
+    assert.ok(preview.created.includes(".agents/docs/proposals/README.md"));
+    assert.equal(await exists(target), false);
+    run(process.execPath, [sourceBinary, "init", target], root);
+    git(target, ["init"]);
+    for (const name of consumerDocs) {
+      const file = path.join(target, ".agents/docs", name);
+      const content = await readFile(file);
+      await rm(file);
+      const result = spawnSync(process.execPath, [sourceBinary, "doctor", "--json"], { cwd: target, encoding: "utf8", windowsHide: true });
+      assert.equal(result.status, 1, name);
+      assert.ok(JSON.parse(result.stdout).errors.includes(`missing .agents/docs/${name}`));
+      await writeFile(file, content);
+    }
+    const before = await readFile(path.join(target, ".agents/config.json"));
+    run(process.execPath, [sourceBinary, "init", target, "--existing", "--dry-run"], root);
+    assert.deepEqual(await readFile(path.join(target, ".agents/config.json")), before);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("commit-pinned Git dependency installs the root CLI without registry publication or consumer vendoring", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "agent-workflow-git-"));
+  try {
+    const source = path.join(root, "source");
+    await mkdir(source);
+    const manifest = JSON.parse(await readFile(path.join(repositoryRoot, "package.json"), "utf8"));
+    for (const relative of ["package.json", "package-lock.json", "README.md", ...manifest.files]) {
+      const destination = path.join(source, relative);
+      await mkdir(path.dirname(destination), { recursive: true });
+      await cp(path.join(repositoryRoot, relative), destination, { recursive: true });
+    }
+    git(source, ["init"]);
+    git(source, ["config", "user.email", "fixture@example.test"]);
+    git(source, ["config", "user.name", "Fixture"]);
+    git(source, ["add", "."]);
+    git(source, ["commit", "-m", "Git dependency fixture"]);
+    const revision = git(source, ["rev-parse", "HEAD"]).trim();
+    const spec = `@next-mmo/agent-workflow-scrum@git+${pathToFileURL(source).href}#${revision}`;
+    const consumer = path.join(root, "consumer");
+    await exerciseInstalledFixture("npm", spec, consumer, "packages/agent-workflow-scrum");
+    const installedManifest = JSON.parse(await readFile(path.join(consumer, "package.json"), "utf8"));
+    assert.ok(installedManifest.devDependencies["@next-mmo/agent-workflow-scrum"].endsWith(`#${revision}`));
+    assert.equal(await exists(path.join(consumer, "node_modules/vite")), false, "source demo dev dependencies are not installed");
+    const installedRoot = path.join(consumer, "node_modules/@next-mmo/agent-workflow-scrum");
+    for (const file of ["src/main.js", "tests", ".agents", "plugins", "scripts"]) {
+      assert.equal(await exists(path.join(installedRoot, file)), false, `Git package excludes source-only ${file}`);
     }
   } finally {
     await rm(root, { recursive: true, force: true });

@@ -1,6 +1,6 @@
 # Agent Workflow Scrum Architecture
 
-Read this before changing the workflow engine, context router, provider adapters, task/PRD lifecycle, or verification tooling. This page maps current composition and ownership. Decision rationale belongs in `.agents/docs/proposals/`; detailed procedures belong in their owning guides.
+Read this before changing engine, providers, lifecycle, or verification ownership. Rationale belongs in `.agents/docs/proposals/`; procedures belong in their owning guides.
 
 ## Four planes
 
@@ -68,7 +68,7 @@ The active task carries the current Change Contract and acceptance evidence. `ch
 | `AGENTS.md` | minimal standing repository orders | detailed procedures/history |
 | `CONTEXT.md` | durable memory/authority/recovery contract | task-specific implementation detail |
 | `.agents/skills/` | reusable agent workflows and specialized decision standards | product requirements |
-| `packages/agent-workflow-scrum/` | released CLI, workflow engine, provider adapters, and initialization templates | consumer task/PRD state or human approvals |
+| `packages/agent-workflow-scrum/` | CLI, engine, providers, and consumer templates; root manifest exposes CLI for Git installs | consumer state or human approvals |
 | `scripts/` | source-repository build helpers, benchmark harnesses, and skill adapter checks | released workflow runtime |
 | `.agents/docs/` | long-form workflow docs and durable workflow artifacts | executable skill logic |
 | `.agents/docs/prd/` | current product requirements and precedence | implementation evidence |

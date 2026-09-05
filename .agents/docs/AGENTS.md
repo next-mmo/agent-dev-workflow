@@ -13,13 +13,13 @@ Put each durable fact in the document whose job owns it; elsewhere, link rather 
 | `prd/` | current product requirements and precedence | implementation evidence |
 | `tasks/` | current increment, acceptance, recovery state | reusable workflow policy |
 | `tasks/done/` | completed evidence | current task authority |
-| `suggestions/` | workflow rationale, alternatives, human decisions | product requirements |
+| `proposals/` | workflow rationale, alternatives, human decisions | product requirements |
 | `development.md` | setup and daily contributor commands | architecture rationale |
 | root `README.md` | onboarding and navigation | exhaustive copies of deeper rules |
 
 ## Current-state prose
 
-- Durable docs describe current behavior. Put change history, rejected alternatives, and trade-offs in the owning suggestion/task/commit instead of narrating “previously/now/no longer” everywhere.
+- Durable docs describe current behavior. Put change history, rejected alternatives, and trade-offs in the owning proposal/task/commit instead of narrating “previously/now/no longer” everywhere.
 - Preserve complete propositions: actor, action, condition/timing, must/may/never, failure/exception, ownership, and consequence when relevant.
 - Comments/JSDoc explain non-obvious contracts, invariants, ownership, timing, security, or failure behavior. Delete control-flow narration and code restatement.
 - Tests may explain non-obvious fixture/observation design, not walk through the implementation.

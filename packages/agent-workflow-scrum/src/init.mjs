@@ -1,6 +1,7 @@
 import { access, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { documentationTemplates } from "./scaffold.mjs";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const templateRoot = path.join(packageRoot, "templates");
@@ -134,10 +135,9 @@ export async function initializeProject(argv, cwd = process.cwd()) {
     ["AGENTS.md", await renderedTemplate("AGENTS.md", { RUNNER: localRunner })],
     ["CONTEXT.md", await renderedTemplate("CONTEXT.md")],
     [".agents/config.json", `${JSON.stringify(configFor(packageManager, scripts, options.mode), null, 2)}\n`],
-    [".agents/docs/doc-budgets.json", await renderedTemplate("doc-budgets.json")],
     [".agents/docs/prd/0000-prd-index.md", await renderedTemplate("prd-index.md", { TODAY: today })],
-    [".agents/docs/tasks/README.md", await renderedTemplate("tasks-readme.md")],
-    [".agents/docs/suggestions/README.md", await renderedTemplate("suggestions-readme.md")],
+    ...await Promise.all(Object.entries(documentationTemplates).map(async ([target, template]) =>
+      [target, await renderedTemplate(template, { RUNNER: localRunner })])),
   ]);
 
   const created = [];

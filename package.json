@@ -3,6 +3,20 @@
   "version": "1.0.0",
   "description": "Lightweight, stateful counter app with theme toggle and persistence",
   "type": "module",
+  "bin": {
+    "agent-workflow": "./packages/agent-workflow-scrum/bin/agent-workflow.mjs"
+  },
+  "files": [
+    "packages/agent-workflow-scrum/bin/",
+    "packages/agent-workflow-scrum/src/",
+    "packages/agent-workflow-scrum/engine/",
+    "packages/agent-workflow-scrum/templates/",
+    "packages/agent-workflow-scrum/plugin/",
+    "packages/agent-workflow-scrum/package.json",
+    "packages/agent-workflow-scrum/README.md",
+    "packages/agent-workflow-scrum/LICENSE",
+    "LICENSE"
+  ],
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },

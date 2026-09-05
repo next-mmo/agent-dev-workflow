@@ -1,6 +1,16 @@
 # Agent Workflow Scrum CLI
 
-Use the workflow engine as a pinned project dependency. Requires Git and Node `^20.19.0 || >=22.12.0`. This package is not yet publicly published on npm. In the source checkout, run `npm ci` and `npm run distribution:pack`, then copy the resulting tarball into the target Git repository:
+Use the workflow engine as a pinned project dependency. Requires Git and Node `^20.19.0 || >=22.12.0`. Registry publication is not required: once the root CLI entry and templates are committed to GitHub, choose that full commit SHA and install from the repository:
+
+```bash
+npm install --save-dev "@next-mmo/agent-workflow-scrum@git+https://github.com/next-mmo/agent-dev-workflow.git#<full-commit-sha>"
+npm exec -- agent-workflow init --existing
+npm exec -- agent-workflow doctor
+```
+
+Replace `<full-commit-sha>` with a reviewed commit containing this installation support. Commit `package.json` and the lockfile. npm installs the Git repository's root package under the requested dependency name; the root exposes the nested canonical CLI. The root retains the demo package metadata, while `agent-workflow version` reports the workflow package version. Git installation uses npm as the package manager but does not require publishing to the npm registry. npm may install the source's build dependencies in a temporary Git checkout because the root has a build script; they are not consumer dependencies. A Git URL cannot select this repository's nested package via `repository.directory`.
+
+For an uncommitted checkout or a smaller release artifact, run `npm ci` and `npm run distribution:pack` in the source, then copy the resulting tarball into the target Git repository:
 
 ```bash
 npm install --save-dev --save-exact ./next-mmo-agent-workflow-scrum-0.1.0.tgz
@@ -16,11 +26,13 @@ pnpm exec agent-workflow init --existing
 pnpm exec agent-workflow doctor
 ```
 
-Keep the tarball at its recorded path with the lockfile for reproducible installs. Consumer repositories keep project-owned instructions, context, configuration, PRDs, tasks, suggestions, and evidence. Run `agent-workflow help` through your package manager for the command surface. Configure commands and path groups in `.agents/config.json`.
+Keep the tarball at its recorded path with the lockfile for reproducible installs. Consumer repositories keep project-owned instructions, context, configuration, PRDs, tasks, proposals, and evidence. Run `agent-workflow help` through your package manager for the command surface. Configure commands and path groups in `.agents/config.json`.
+
+Init seeds `.agents/docs/AGENTS.md`, `agent-workflow.md`, `architecture.md`, `defensive-patterns.md`, `development.md`, `testing.md`, and `doc-budgets.json`, plus task/proposal guidance and the PRD index. Architecture and contributor guidance must be filled in from the consumer's actual product; source demo details and `model-recommend.md` are not copied. `--dry-run` makes no writes; `--existing` only adds missing files and preserves existing docs/configuration. Doctor reports missing scaffold documents and warns about legacy suggestions and vendored workflow trees. Legacy decision records are never automatically moved or deleted.
 
 For local development, the source repository's `npm run local:check` runs the offline tests, build, strict workflow, documentation, and generated-bundle checks. Context output identifies linked PRDs and the reason each selected document was retained; the active task's linked PRD is prioritized over generic workflow history.
 
-The CLI works without host plugins. To use `/kb:*` skill conventions, load this package's `plugin/` through your host's local plugin support, or its `plugin/skills/` through a supported skill loader. npm installation alone does not activate host skills. Package consumers need no `scripts/skill.sh`; that helper belongs to the source checkout.
+The CLI works without host plugins. To use `/kb:*` skill conventions, load this package's `plugin/` through your host's local plugin support, or its `plugin/skills/` through a supported skill loader. In a Git install those paths are under `node_modules/@next-mmo/agent-workflow-scrum/packages/agent-workflow-scrum/`; in a tarball install they are directly under `node_modules/@next-mmo/agent-workflow-scrum/`. npm installation alone does not activate host skills. Never copy workflow `packages/` or `plugins/` into a consumer. Package consumers need no `scripts/skill.sh`; that helper belongs to the source checkout.
 
 Licensed under [MIT](LICENSE), copyright 2026 Next MMO.
 

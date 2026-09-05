@@ -21,6 +21,8 @@ The repository deliberately has **no root `docs/` tree**. Agent Workflow Scrum d
 
 ## Quick start
 
+For an existing product, install the workflow as a [pinned GitHub dependency or tarball](packages/agent-workflow-scrum/README.md) and run `agent-workflow init --existing`. Registry publication is optional. Do not copy this repository's workflow `packages/`, `plugins/`, or source-specific instructions into the product. The commands below are for developing this source checkout and its demo.
+
 ```bash
 git clone https://github.com/next-mmo/agent-dev-workflow.git
 cd agent-dev-workflow

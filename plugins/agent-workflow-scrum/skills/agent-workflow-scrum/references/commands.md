@@ -36,3 +36,5 @@ Treat text after a command as the exact scope. Report the selected mode and do n
 | `/kb:rollback` | Recover only with an exact authorized target and rollback path. |
 
 Unknown `/kb:*` commands route to `/kb:help`. `/kb:reset`, `/kb:clean`, `/kb:delete`, `/kb:deploy`, and `/kb:publish` never grant destructive or production permission; route them through rollback/release and human approval.
+
+For consumer onboarding, first install `@next-mmo/agent-workflow-scrum` as a pinned project dependency using the package README's GitHub or tarball path, then run `agent-workflow init --existing` and `doctor` through the project package manager. Never bootstrap by copying source `packages/`, `plugins/`, `AGENTS.md`, or `.agents/config.json`. Init creates consumer docs and `proposals/`; existing files are preserved, so review source-specific instructions and legacy `suggestions/` records before any explicit migration. Do not delete product packages or existing decisions.

@@ -39,3 +39,4 @@ Completed tasks are stored here as durable verification records. They are retain
 | [0028](done-0028-0001-package-workflow-cli.md) | Package the Workflow CLI and Portable Plugins | 2026-09-03 | [PRD-0004](../../prd/0004-workflow-distribution.md) |
 | [0029](done-0029-0005-realistic-todo-workspace.md) | Build a Realistic Local Todo Workspace | 2026-09-05 | [PRD-0005](../../prd/0005-todo-workspace.md) |
 | [0030](done-0030-0004-public-beta-packaging.md) | Repair Public Beta Packaging | 2026-09-05 | [PRD-0004](../../prd/0004-workflow-distribution.md) |
+| [0032](done-0032-0004-consumer-initialization.md) | Repair Consumer Initialization and Git Installation | 2026-09-06 | [PRD-0004](../../prd/0004-workflow-distribution.md) |
