@@ -59,6 +59,8 @@ This runs tests, the production build, strict workflow checks, documentation che
 
 For a new developer's required baseline, use `/kb:setup` in an agent session. Use `/kb:full-setup` for all supported repository-local setup, including generated Claude/Cursor adapters. Graphify, OpenViking, and remote services remain explicit opt-in integrations.
 
+For an AI coding agent's first session and task loop, read [`AGENT-QUICKSTART.md`](AGENT-QUICKSTART.md).
+
 ## Smart context
 
 Start non-trivial work with a small routing pack instead of dumping the whole repository history into the model:

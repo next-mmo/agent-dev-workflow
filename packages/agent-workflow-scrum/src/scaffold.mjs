@@ -1,5 +1,6 @@
 // Shared by initialization and diagnostics so missing documentation is observable.
 export const documentationTemplates = {
+  "AGENT-QUICKSTART.md": "AGENT-QUICKSTART.md",
   ".agents/docs/AGENTS.md": "docs-agents.md",
   ".agents/docs/agent-workflow.md": "agent-workflow.md",
   ".agents/docs/architecture.md": "architecture.md",

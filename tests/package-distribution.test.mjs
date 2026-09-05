@@ -94,6 +94,7 @@ async function assertThinInit(root) {
   assert.equal(await exists(path.join(root, ".agents/docs/prd/0000-prd-index.md")), true);
   assert.equal(await exists(path.join(root, ".agents/docs/tasks/README.md")), true);
   assert.equal(await exists(path.join(root, ".agents/docs/proposals/README.md")), true);
+  assert.equal(await exists(path.join(root, "AGENT-QUICKSTART.md")), true);
   assert.equal(await exists(path.join(root, ".agents/docs/suggestions")), false);
   for (const name of consumerDocs) assert.equal(await exists(path.join(root, ".agents/docs", name)), true, name);
   assert.equal(await exists(path.join(root, ".agents/docs/doc-budgets.json")), false);

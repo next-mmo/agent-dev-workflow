@@ -88,7 +88,7 @@ function configFor(packageManager, scripts, mode = "standard") {
     paths: {
       product: ["src/**", "apps/**", "packages/**", "crates/**", "public/**", "index.html"],
       tests: ["tests/**", "**/tests/**", "**/*.test.*", "**/*.spec.*"],
-      docs: ["README.md", ".agents/docs/**"],
+      docs: ["README.md", "AGENT-QUICKSTART.md", ".agents/docs/**"],
       workflow: ["AGENTS.md", "CONTEXT.md", ".agents/**"],
       ci: [".github/**"],
       build: ["package.json", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock*", "Cargo.*", "vite.config.*", "tsconfig*", "Dockerfile*", "docker-compose*"],
@@ -105,6 +105,7 @@ function configFor(packageManager, scripts, mode = "standard") {
       "CONTEXT.md": 1400,
     },
     docBudgets: {
+      "AGENT-QUICKSTART.md": 2200,
       "AGENTS.md": 800,
       "CONTEXT.md": 1400,
       ".agents/docs/prd/0000-prd-index.md": 600,
