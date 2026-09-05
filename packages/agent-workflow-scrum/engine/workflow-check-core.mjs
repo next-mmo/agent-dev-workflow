@@ -314,7 +314,7 @@ async function run(options) {
     }
   }
 
-  for (const [file, budget] of Object.entries(config.contextBudgets)) {
+  for (const [file, budget] of Object.entries(config.docBudgets)) {
     const content = await readText(root, file);
     if (content === null) {
       warnings.push(`${file}: context budget target is missing`);

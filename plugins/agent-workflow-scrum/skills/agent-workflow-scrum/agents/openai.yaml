@@ -1,7 +1,0 @@
-interface:
-  display_name: "Agent Workflow Scrum"
-  short_description: "Track tasks, docs, evidence, and approvals"
-  default_prompt: "Use $agent-workflow-scrum to complete this repository task with traceable scope and verification."
-
-policy:
-  allow_implicit_invocation: true

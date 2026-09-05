@@ -4,6 +4,8 @@ Agent Workflow Scrum is a repository-first delivery workflow for humans and codi
 
 The Todo Workspace is the executable demo; Counter modules remain as regression examples. The workflow is intended to move into existing frontend, backend, desktop, or full-stack repositories.
 
+The official minimal starter is [`examples/vanilla-fullstack`](examples/vanilla-fullstack/): a vanilla browser served by Express with one JSON endpoint and one integration test.
+
 ## Core design
 
 - `.agents/skills/` — canonical executable agent guidance.
@@ -200,7 +202,7 @@ Keep the tarball at the recorded path alongside the lockfile so clean installs c
 
 The npm install provides the CLI; `/kb:*` conventions require the skills to be loaded by your agent host. The portable bundle is at `node_modules/@next-mmo/agent-workflow-scrum/plugin/`. Use your host's local plugin mechanism, or its skill loader for that bundle's `skills/` directory. Availability depends on host support. CLI commands work without plugin activation. Package consumers do not run this checkout's `scripts/skill.sh`.
 
-For local package development, `npm pack` is the release-shaped artifact; `yalc` is useful only for rapid iteration. Cursor and other Agent Plugin hosts can consume the portable bundle under `plugins/agent-workflow-scrum/` without importing consumer state.
+For local package development, `npm pack` is the release-shaped artifact; `yalc` is useful only for rapid iteration. Cursor and other Agent Plugin hosts can consume the portable bundle under `packages/agent-workflow-scrum/plugin/` without importing consumer state.
 
 ## Move the source workflow into another repository
 

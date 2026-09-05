@@ -56,6 +56,8 @@ test("workflow config validates package manager and matches configured paths", (
   assert.equal(matchesPathGroup("nested/root.test.mjs", testConfig, "tests"), true);
   assert.throws(() => normalizeWorkflowConfig({ packageManager: "invalid" }), /packageManager/);
   assert.throws(() => normalizeWorkflowConfig({ paths: { product: "apps" } }), /paths\.product/);
+  assert.deepEqual(normalizeWorkflowConfig({ docBudgets: { "README.md": 500 } }).docBudgets, { "README.md": 500 });
+  assert.throws(() => normalizeWorkflowConfig({ docBudgets: { "README.md": 99 } }), /docBudgets/);
 });
 
 test("workflow config normalizes and validates ceremony modes", () => {

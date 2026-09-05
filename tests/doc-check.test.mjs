@@ -16,10 +16,10 @@ async function fixture() {
   await mkdir(path.join(root, docsRoot), { recursive: true });
   await writeFile(path.join(root, "AGENTS.md"), "# Agents\nRead [guide](.agents/docs/guide.md).\n", "utf8");
   await writeFile(path.join(root, docsRoot, "guide.md"), "# Guide\nUseful current-state guidance.\n", "utf8");
-  await writeFile(path.join(root, docsRoot, "doc-budgets.json"), JSON.stringify({
+  await writeFile(path.join(root, ".agents/config.json"), JSON.stringify({ docBudgets: {
     "AGENTS.md": 100,
     [`${docsRoot}/guide.md`]: 100,
-  }, null, 2), "utf8");
+  } }, null, 2), "utf8");
   return root;
 }
 

@@ -6,6 +6,7 @@
 > Related Tasks: `.agents/docs/tasks/done/done-0028-0001-package-workflow-cli.md`, `.agents/docs/tasks/done/done-0029-0005-realistic-todo-workspace.md`
 > Packaging follow-up: `.agents/docs/tasks/done/done-0030-0004-public-beta-packaging.md`
 > Consumer initialization: `.agents/docs/tasks/done/done-0032-0004-consumer-initialization.md`
+> Plugin consolidation: `.agents/docs/tasks/done/done-0033-0004-single-plugin-bundle.md`
 
 ## 1. Problem Statement
 
@@ -29,6 +30,8 @@ Teams need Agent Workflow Scrum's context, scope, verification, documentation, r
 14. Before registry publication, document tarball installation and host skill activation separately. Consumer setup must not require source-only adapter scripts.
 15. Initialize `proposals/` and project-owned workflow, documentation instructions, architecture, defensive patterns, development, testing, and budget files. Exclude model recommendations; preserve existing files and legacy decisions. Doctor reports missing scaffold documents.
 16. Support a commit-pinned Git dependency from the repository root without registry publication or copying workflow `packages/` and `plugins/` into the consumer. The source root exposes the canonical CLI; installed runtime assets belong under `node_modules`.
+17. Keep one portable plugin bundle at `packages/agent-workflow-scrum/plugin/`. Its manifests and commands are package-owned; the distribution build synchronizes only canonical skills and licenses and never creates a root `plugins/` copy.
+18. Store consumer documentation budgets in `.agents/config.json` under `docBudgets`; initialization must not create `.agents/docs/doc-budgets.json`. The docs checker reads configured budgets by default and accepts `--budget-file` only as an explicit compatibility override.
 
 ## 3. Acceptance Criteria
 

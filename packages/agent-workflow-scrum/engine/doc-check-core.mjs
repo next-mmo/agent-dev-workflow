@@ -1,11 +1,11 @@
 import { access, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadWorkflowConfigSync } from "./workflow-config.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultRoot = process.cwd();
 const DOCS_ROOT = ".agents/docs";
-const DEFAULT_BUDGET_FILE = `${DOCS_ROOT}/doc-budgets.json`;
 const LEGACY_WORKFLOW_PATHS = [
   "docs/AGENTS.md",
   "docs/agent-workflow.md",
@@ -21,7 +21,7 @@ const LEGACY_WORKFLOW_PATHS = [
 ];
 
 function parseArgs(argv) {
-  const options = { root: defaultRoot, json: false, budgetFile: DEFAULT_BUDGET_FILE };
+  const options = { root: defaultRoot, json: false, budgetFile: null };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--json") options.json = true;
@@ -115,11 +115,19 @@ async function loadBudgets(root, relativePath) {
   return parsed;
 }
 
+function configuredBudgets(root) {
+  const config = loadWorkflowConfigSync(root);
+  if (!Object.keys(config.docBudgets).length) throw new Error("documentation budgets are missing from .agents/config.json");
+  return config.docBudgets;
+}
+
 async function run(options) {
   const errors = [];
   const warnings = [];
   const info = [];
-  const budgets = await loadBudgets(options.root, options.budgetFile);
+  const budgets = options.budgetFile
+    ? await loadBudgets(options.root, options.budgetFile)
+    : configuredBudgets(options.root);
 
   const legacyWorkflowPaths = [];
   for (const relativePath of LEGACY_WORKFLOW_PATHS) {

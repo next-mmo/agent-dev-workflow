@@ -49,6 +49,7 @@ const defaultConfig = Object.freeze({
     "AGENTS.md": 800,
     "CONTEXT.md": 1400,
   },
+  docBudgets: {},
 });
 
 const legacyConfig = Object.freeze({
@@ -123,6 +124,17 @@ export function normalizeWorkflowConfig(input = {}) {
     contextBudgets[file.replaceAll("\\", "/")] = budget;
   }
 
+  const sourceDocBudgets = source.docBudgets === undefined
+    ? defaults.docBudgets
+    : objectOrEmpty(source.docBudgets);
+  const docBudgets = {};
+  for (const [file, budget] of Object.entries(sourceDocBudgets)) {
+    if (!file || !Number.isInteger(budget) || budget < 100) {
+      throw new Error(`${CONFIG_PATH}: invalid docBudgets entry for ${file || "<empty>"}`);
+    }
+    docBudgets[file.replaceAll("\\", "/")] = budget;
+  }
+
   const sourceArchive = source.archive === undefined
     ? defaults.archive
     : (typeof source.archive === "boolean"
@@ -151,7 +163,7 @@ export function normalizeWorkflowConfig(input = {}) {
     retentionDays,
   };
 
-  return { schemaVersion: 1, mode, packageManager, paths, ignore, checks, contextBudgets, archive };
+  return { schemaVersion: 1, mode, packageManager, paths, ignore, checks, contextBudgets, docBudgets, archive };
 }
 
 export function loadWorkflowConfigSync(root = process.cwd()) {

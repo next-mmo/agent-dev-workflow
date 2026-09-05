@@ -11,7 +11,7 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 const packageRoot = path.join(repositoryRoot, "packages/agent-workflow-scrum");
 const sourceBinary = path.join(packageRoot, "bin/agent-workflow.mjs");
 const forbidden = [".agents/scripts", ".agents/skills", ".agents/benchmark", "packages", "plugins", ".agents/docs/model-recommend.md"];
-const consumerDocs = ["AGENTS.md", "agent-workflow.md", "architecture.md", "defensive-patterns.md", "development.md", "testing.md", "doc-budgets.json"];
+const consumerDocs = ["AGENTS.md", "agent-workflow.md", "architecture.md", "defensive-patterns.md", "development.md", "testing.md"];
 
 function resolveNpmRunner() {
   if (process.platform !== "win32") return { command: "npm", prefix: [], shell: false };
@@ -96,6 +96,7 @@ async function assertThinInit(root) {
   assert.equal(await exists(path.join(root, ".agents/docs/proposals/README.md")), true);
   assert.equal(await exists(path.join(root, ".agents/docs/suggestions")), false);
   for (const name of consumerDocs) assert.equal(await exists(path.join(root, ".agents/docs", name)), true, name);
+  assert.equal(await exists(path.join(root, ".agents/docs/doc-budgets.json")), false);
   await assertBundledLinks(path.join(root, ".agents/docs"));
 }
 
@@ -119,6 +120,38 @@ test("bundled link check rejects missing documentation", async () => {
   try {
     await writeFile(path.join(root, "SKILL.md"), "Read [rules](missing.md).\n");
     await assert.rejects(assertBundledLinks(root), /missing bundled reference missing.md/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("distribution builds only package skills and preserves owned plugin files", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "agent-workflow-single-plugin-"));
+  try {
+    await mkdir(path.join(root, "scripts"));
+    await cp(path.join(repositoryRoot, "scripts/build-distribution.mjs"), path.join(root, "scripts/build-distribution.mjs"));
+    const skill = path.join(root, ".agents/skills/example/SKILL.md");
+    await mkdir(path.dirname(skill), { recursive: true });
+    await writeFile(skill, "# Canonical skill\n");
+    await writeFile(path.join(root, "LICENSE"), "License fixture\n");
+    const plugin = path.join(root, "packages/agent-workflow-scrum/plugin");
+    const owned = ["plugin.json", ".codex-plugin/plugin.json", ".cursor-plugin/plugin.json", "commands/workflow-status.md", "README.md"];
+    for (const name of owned) {
+      await mkdir(path.dirname(path.join(plugin, name)), { recursive: true });
+      await writeFile(path.join(plugin, name), `Owned ${name}\n`);
+    }
+    const build = (...args) => run(process.execPath, [path.join(root, "scripts/build-distribution.mjs"), ...args], root);
+    build();
+    build("--check");
+    assert.equal(await exists(path.join(root, "plugins")), false);
+    assert.equal(await readFile(path.join(plugin, "skills/example/SKILL.md"), "utf8"), "# Canonical skill\n");
+    for (const name of owned) assert.equal(await readFile(path.join(plugin, name), "utf8"), `Owned ${name}\n`);
+    await writeFile(path.join(plugin, "skills/example/SKILL.md"), "Stale skill\n");
+    assert.throws(() => build("--check"), /plugin skills is stale/);
+    build();
+    await writeFile(path.join(plugin, "LICENSE"), "Stale license\n");
+    assert.throws(() => build("--check"), /license is stale/);
+    assert.equal(await exists(path.join(repositoryRoot, "plugins")), false, "source has no root plugin duplicate");
   } finally {
     await rm(root, { recursive: true, force: true });
   }

@@ -1,0 +1,17 @@
+{
+  "name": "vanilla-fullstack-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "test": "node --test test/server.test.mjs",
+    "workflow": "npm exec -- agent-workflow"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@next-mmo/agent-workflow-scrum": "github:next-mmo/agent-dev-workflow#0a9cb410f3363a5d66f1805151c7b8b0c1cbc1bb"
+  }
+}

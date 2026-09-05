@@ -4,7 +4,7 @@
 > **Created:** 2026-09-03
 > **Proposed by:** Human user
 > **Decision owner:** Human
-> **Canonical targets:** `packages/agent-workflow-scrum/`, `plugins/agent-workflow-scrum/`, workflow architecture and onboarding
+> **Canonical targets:** `packages/agent-workflow-scrum/`, its `plugin/` bundle, workflow architecture and onboarding
 
 ## Observation
 
@@ -61,6 +61,10 @@ Copying `.agents/scripts/`, `.agents/skills/`, and `.agents/benchmark/` into eve
 - **Rationale:** The user approved the isolated package-engine and portable-plugin plan, with publication and Tauri cleanup deferred until the package is proven publishable.
 
 ## Application Evidence
+
+### Plugin consolidation decision, 2026-09-06
+
+The user explicitly requested "fix it keep only packages folder" after reviewing the duplicate plugin bundles. Keep the package's `plugin/` as the only bundle, with owned manifests/commands and skills generated directly from `.agents/skills/`. Remove the root duplicate and preserve Git/tarball installation paths. Task 0033 records implementation and verification. Git history provides rollback; publication remains separate.
 
 ### Public beta repair decision, 2026-09-05
 

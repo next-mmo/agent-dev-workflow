@@ -5,11 +5,11 @@ Use the package manager recorded in `.agents/config.json` and install the projec
 Install `@next-mmo/agent-workflow-scrum` as a project dependency from a pinned release artifact or Git commit. Follow the installed package README for the GitHub install command. Keep `package.json` and its lockfile together. Workflow runtime and plugin assets stay inside the installed dependency; do not copy source `packages/` or `plugins/` directories into this project.
 
 ```bash
-{{RUNNER}} init --existing
-{{RUNNER}} doctor
-{{RUNNER}} context -- "<scope>"
-{{RUNNER}} check
-{{RUNNER}} docs
+npm exec -- agent-workflow init --existing
+npm exec -- agent-workflow doctor
+npm exec -- agent-workflow context -- "<scope>"
+npm exec -- agent-workflow check
+npm exec -- agent-workflow docs
 ```
 
 Initialization adds missing project documents and preserves existing files. Review preserved instructions and `.agents/config.json` when adopting newer defaults; rerunning init does not migrate old content. Put new workflow proposals in `proposals/`; preserve and reconcile legacy `suggestions/` decisions explicitly.

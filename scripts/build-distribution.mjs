@@ -4,10 +4,9 @@ import { fileURLToPath } from "node:url";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const skillSource = path.join(repositoryRoot, ".agents/skills");
-const pluginRoot = path.join(repositoryRoot, "plugins/agent-workflow-scrum");
 const packageRoot = path.join(repositoryRoot, "packages/agent-workflow-scrum");
+const pluginRoot = path.join(packageRoot, "plugin");
 const pluginSkillsTarget = path.join(pluginRoot, "skills");
-const packagePluginTarget = path.join(packageRoot, "plugin");
 
 async function exists(filePath) {
   try {
@@ -19,7 +18,7 @@ async function exists(filePath) {
 }
 
 function assertGeneratedTarget(target) {
-  const allowed = [pluginSkillsTarget, packagePluginTarget];
+  const allowed = [pluginSkillsTarget];
   if (!allowed.includes(path.resolve(target))) throw new Error(`refusing to replace unexpected path: ${target}`);
 }
 
@@ -42,11 +41,6 @@ async function copyTree(source, target) {
 async function copySkills() {
   await replaceDirectory(pluginSkillsTarget);
   await copyTree(skillSource, pluginSkillsTarget);
-}
-
-async function copyPlugin() {
-  await replaceDirectory(packagePluginTarget);
-  await copyTree(pluginRoot, packagePluginTarget);
 }
 
 async function syncLicenses(check) {
@@ -90,11 +84,9 @@ async function compareDirectories(source, target, label) {
 if (process.argv.includes("--check")) {
   await syncLicenses(true);
   await compareDirectories(skillSource, pluginSkillsTarget, "plugin skills");
-  await compareDirectories(pluginRoot, packagePluginTarget, "package plugin bundle");
-  console.log("distribution: generated plugin bundles match canonical sources");
+  console.log("distribution: package plugin skills and licenses match canonical sources");
 } else {
   await syncLicenses(false);
   await copySkills();
-  await copyPlugin();
-  console.log("distribution: built portable plugin bundles; package engine is canonical source");
+  console.log("distribution: built package plugin skills; manifests and commands remain package-owned");
 }

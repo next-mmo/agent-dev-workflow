@@ -24,7 +24,7 @@ Usage:
   agent-workflow scope --base <verified-ref> [--head <ref>]
   agent-workflow verify --base <verified-ref> [--head <ref>] [--json]
   agent-workflow check [--strict-budget] [--mode vibe|standard|strict|guided] [--base <verified-ref>] [--head <ref>] [--json]
-  agent-workflow docs [--budget-file <path>] [--json]
+  agent-workflow docs [--budget-file <path>] [--json]  (config docBudgets is the default)
   agent-workflow report [--output <directory>]
   agent-workflow doctor [path] [--json]
 

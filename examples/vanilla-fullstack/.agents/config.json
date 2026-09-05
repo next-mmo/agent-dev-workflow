@@ -1,15 +1,22 @@
 {
   "schemaVersion": 1,
+  "mode": "standard",
   "packageManager": "npm",
   "paths": {
     "product": [
+      "server.mjs",
+      "public/**",
+      "test/**",
       "src/**",
-      "examples/**",
+      "apps/**",
+      "packages/**",
+      "crates/**",
       "public/**",
       "index.html"
     ],
     "tests": [
       "tests/**",
+      "**/tests/**",
       "**/*.test.*",
       "**/*.spec.*"
     ],
@@ -20,9 +27,7 @@
     "workflow": [
       "AGENTS.md",
       "CONTEXT.md",
-      ".agents/**",
-      "packages/agent-workflow-scrum/**",
-      "scripts/**"
+      ".agents/**"
     ],
     "ci": [
       ".github/**"
@@ -30,6 +35,10 @@
     "build": [
       "package.json",
       "package-lock.json",
+      "pnpm-lock.yaml",
+      "yarn.lock",
+      "bun.lock*",
+      "Cargo.*",
       "vite.config.*",
       "tsconfig*",
       "Dockerfile*",
@@ -38,42 +47,26 @@
   },
   "checks": {
     "test": "npm test",
-    "build": "npm run build",
-    "workflow": "npm run workflow:check --",
-    "docs": "npm run docs:check",
-    "skills": "bash scripts/skill.sh check"
+    "build": null,
+    "workflow": "npm exec -- agent-workflow check",
+    "docs": "npm exec -- agent-workflow docs",
+    "skills": null
   },
   "contextBudgets": {
     "AGENTS.md": 800,
-    "CONTEXT.md": 1400,
-    ".agents/skills/agent-workflow-scrum/SKILL.md": 900
+    "CONTEXT.md": 1400
   },
   "docBudgets": {
     "AGENTS.md": 800,
     "CONTEXT.md": 1400,
-    ".agents/skills/agent-workflow-scrum/SKILL.md": 900,
-    ".agents/skills/agent-workflow-prose/SKILL.md": 1000,
+    ".agents/docs/prd/0000-prd-index.md": 600,
+    ".agents/docs/tasks/README.md": 700,
+    ".agents/docs/proposals/README.md": 700,
     ".agents/docs/AGENTS.md": 900,
+    ".agents/docs/agent-workflow.md": 1400,
     ".agents/docs/architecture.md": 2000,
     ".agents/docs/development.md": 1600,
     ".agents/docs/testing.md": 1200,
-    ".agents/docs/defensive-patterns.md": 1000,
-    "packages/agent-workflow-scrum/engine/AGENTS.md": 700,
-    "tests/AGENTS.md": 700
-  },
-  "ignore": [
-    "dist/**",
-    "coverage/**",
-    "**/*.min.js",
-    "**/*.min.css",
-    "**/*.map",
-    "node_modules/**",
-    ".playwright-mcp/**",
-    "scratch/**"
-  ],
-  "mode": "vibe",
-  "archive": {
-    "autoArchiveDone": true,
-    "retentionDays": 14
+    ".agents/docs/defensive-patterns.md": 1000
   }
 }

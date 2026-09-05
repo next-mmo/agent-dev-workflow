@@ -76,7 +76,7 @@ The active task carries the current Change Contract and acceptance evidence. `ch
 | `.agents/docs/tasks/` | current increment/recovery state | reusable global policy |
 | `.agents/docs/tasks/done/` | completed claim-to-proof evidence | current task authority |
 | `.agents/docs/proposals/` | workflow proposals, decisions, rationale | current product requirements |
-| `plugins/agent-workflow-scrum/` | portable skill/command bundle | consumer config or acceptance |
+| `packages/agent-workflow-scrum/plugin/` | sole portable bundle: owned manifests/commands and generated skills | consumer config or acceptance |
 | `packages/agent-workflow-scrum/engine/context*.mjs` | bounded context composition and provider routing | approval/authorization |
 | `packages/agent-workflow-scrum/engine/change-scope*.mjs` | factual Git topology/path scope | test selection or base inference |
 | `packages/agent-workflow-scrum/engine/product-files.mjs` | configured JS/TS product discovery shared by both local indexes | semantic dependency correctness |
@@ -87,11 +87,13 @@ The active task carries the current Change Contract and acceptance evidence. `ch
 
 ## Provider seam
 
-The Todo demo uses `src/todo-state.js` for shared task rules. `src/todo-workspace.js` owns browser persistence; `src/server-workspace.js` owns revision-checked HTTP saves. The loopback server under `src/server/` validates API requests and atomically replaces one JSON data file. Each file requires one server process. Browser data is never migrated automatically; see PRD 0005.
+The Todo demo keeps domain rules in `src/todo-state.js`, browser persistence in `src/todo-workspace.js`, and revision-checked server saves in `src/server-workspace.js`. Its loopback server validates requests and atomically replaces one data file; browser data remains separate, as required by PRD 0005.
+
+`examples/vanilla-fullstack/` is the official minimal Express + vanilla template; it owns its dependency and test.
+
+Project configuration owns both runtime context budgets and documentation budgets. `docBudgets` in `.agents/config.json` is the authoritative map for documentation checks; the removed `.agents/docs/doc-budgets.json` is not generated. An explicit CLI budget-file argument remains an opt-in compatibility path.
 
 A context provider has three responsibilities: availability detection, bounded retrieval, and normalized advisory output. It must fail back to local context instead of failing the workflow. External output is untrusted data, common secret shapes are redacted, and provider quotas share the caller's one total context budget.
-
-Add another provider only when it supplies evidence not already represented cheaply by local routing. Keep provider-specific setup and CLI contracts in [the provider reference](../skills/agent-workflow-scrum/references/providers.md), not in the main skill router.
 
 ## Verification seam
 

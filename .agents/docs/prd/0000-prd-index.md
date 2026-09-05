@@ -1,7 +1,7 @@
 # PRD-0000: Master PRD Index
 
 > Status: living doc  
-> Updated: 2026-09-05
+> Updated: 2026-09-06
 
 ## Repos / Architecture
 
@@ -15,8 +15,9 @@
 | :--- | :--- | :--- | :--- |
 | **0001** | Counter Core Features | **done** | Stateful counter, preset/custom step controls, localStorage persistence, theme toggle, accessible step selection, and one-level undo |
 | **0002** | Counter History | **done** | Persistent accessible list of the latest ten count-changing actions with explicit clear control |
-| **0004** | Workflow Distribution | **done** | Local CLI, consumer docs and proposals, pinned Git/tarball onboarding, honest evidence, and MIT licensing |
+| **0004** | Workflow Distribution | **done** | Local CLI, one package-owned plugin bundle, consumer docs/proposals, Git/tarball onboarding, and MIT licensing |
 | **0005** | Todo Workspace | **in-progress** | Browser tasks plus a local API/disk persistence and editing trial; human acceptance pending |
+| **0006** | Official Examples | **in-progress** | Minimal runnable templates, starting with vanilla browser plus Express fullstack |
 
 ## Authority
 
