@@ -210,6 +210,23 @@ For local package development, `npm pack` is the release-shaped artifact; `yalc`
 
 Follow [Start a new project](#start-a-new-project), then adapt runtime/build/test rules in `AGENTS.md` and configure the package CLI in the target CI. Keep Graphify and OpenViking optional.
 
+## Release pin maintenance
+
+The official example and package installation guide pin the workflow to a reviewed Git commit. Synchronize every release reference in the source repository to the currently checked-out commit with:
+
+```bash
+bash scripts/bump-release-id.sh
+```
+
+Pass a full 40-character SHA to select a specific release, or use `--check` to verify pins without changing files:
+
+```bash
+bash scripts/bump-release-id.sh <full-commit-sha>
+bash scripts/bump-release-id.sh --check
+```
+
+The script scans tracked and non-ignored files, updates Git dependency pins, lockfile resolutions, and the reviewed-commit line, and never fetches or queries the npm registry.
+
 ## Repository map
 
 ```text
