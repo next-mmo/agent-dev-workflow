@@ -17,10 +17,19 @@
 
 ## Acceptance Criteria
 
-- [ ] `plugin/.zcode-plugin/plugin.json` declares skills and commands and matches the other host manifests' metadata.
-- [ ] The distribution build preserves the manifest as an owned file and drift check still passes.
-- [ ] Packed tarball installs into a consumer and `agent-workflow skills --json` reports the bundle.
+- [x] `plugin/.zcode-plugin/plugin.json` declares skills and commands and matches the other host manifests' metadata.
+- [x] The distribution build preserves the manifest as an owned file and drift check still passes.
+- [x] Packed tarball installs into a consumer and `agent-workflow skills --json` reports the bundle.
 
 ## Evidence Ledger
 
-Pending first gate run; results to be recorded here before handoff.
+| Claim | Evidence | Result |
+| :--- | :--- | :--- |
+| Full local gate | `npm run local:check` (test, build, strict workflow/docs, distribution drift) | Passed; docs headroom warnings pre-existing |
+| Regression suite | `node --test --test-reporter=tap tests/*.test.cjs tests/*.test.mjs` | 114/114 passed (owned-file fixture extended with `.zcode-plugin/plugin.json`) |
+| Tarball ships manifest | `npm pack ./packages/agent-workflow-scrum --dry-run` | 76 files including `plugin/.zcode-plugin/plugin.json` (402B) |
+| Consumer install smoke | Tarball copied to `awesome-dev`, `npm install --save-dev --save-exact --force`, then `npm exec -- agent-workflow skills --json` | `skillsAvailable: true`, both skills listed, `.zcode-plugin/plugin.json` present under consumer `node_modules` |
+
+## Handoff
+
+Implementation and verification complete; awaiting human acceptance and board promotion (working copy also carries prior uncommitted increments). ZCode plugin registration in the consumer host is a separate one-time user action via Settings → Plugin Management.
