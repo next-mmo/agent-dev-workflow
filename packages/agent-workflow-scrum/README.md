@@ -1,14 +1,14 @@
 # Agent Workflow Scrum CLI
 
-Use the workflow engine as a pinned project dependency. Requires Git and Node `^20.19.0 || >=22.12.0`. Registry publication is not required: once the root CLI entry and templates are committed to GitHub, choose that full commit SHA and install from the repository:
+Use the workflow engine as a pinned project dependency. Requires Git and Node `^20.19.0 || >=22.12.0`. Registry publication is not required. The current reviewed commit is `7da209afc5502a03620f473fc660bd013f8753ad`:
 
 ```bash
-npm install --save-dev "@next-mmo/agent-workflow-scrum@git+https://github.com/next-mmo/agent-dev-workflow.git#<full-commit-sha>"
+npm install --save-dev "@next-mmo/agent-workflow-scrum@git+https://github.com/next-mmo/agent-dev-workflow.git#7da209afc5502a03620f473fc660bd013f8753ad"
 npm exec -- agent-workflow init --existing
 npm exec -- agent-workflow doctor
 ```
 
-Replace `<full-commit-sha>` with a reviewed commit containing this installation support. Commit `package.json` and the lockfile. npm installs the Git repository's root package under the requested dependency name; the root exposes the nested canonical CLI. The root retains the demo package metadata, while `agent-workflow version` reports the workflow package version. Git installation uses npm as the package manager but does not require publishing to the npm registry. npm may install the source's build dependencies in a temporary Git checkout because the root has a build script; they are not consumer dependencies. A Git URL cannot select this repository's nested package via `repository.directory`.
+Commit `package.json` and the lockfile in the consumer repository. npm installs the Git repository's root package under the requested dependency name; the root exposes the nested canonical CLI. The root retains the demo package metadata, while `agent-workflow version` reports the workflow package version. Git installation uses npm as the package manager but does not require publishing to the npm registry. npm may install the source's build dependencies in a temporary Git checkout because the root has a build script; they are not consumer dependencies. A Git URL cannot select this repository's nested package via `repository.directory`.
 
 For an uncommitted checkout or a smaller release artifact, run `npm ci` and `npm run distribution:pack` in the source, then copy the resulting tarball into the target Git repository:
 
