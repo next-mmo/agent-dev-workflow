@@ -3,7 +3,7 @@
 Use the workflow engine as a pinned project dependency. Requires Git and Node `^20.19.0 || >=22.12.0`. Registry publication is not required. The current reviewed commit is `7da209afc5502a03620f473fc660bd013f8753ad`:
 
 ```bash
-npm install --save-dev "@next-mmo/agent-workflow-scrum@git+https://github.com/next-mmo/agent-dev-workflow.git#7da209afc5502a03620f473fc660bd013f8753ad"
+npm install --save-dev "@next-mmo/agent-workflow-scrum@git+https://github.com/next-mmo/agent-dev-workflow.git#15d8849ac1c30d312295ebf797b36e9998786c69"
 npm exec -- agent-workflow init --existing
 npm exec -- agent-workflow doctor
 ```
