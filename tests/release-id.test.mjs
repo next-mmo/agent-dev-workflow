@@ -69,6 +69,6 @@ test("release ID bump defaults to HEAD and synchronizes tracked and untracked re
     assert.equal(invalid.status, 2);
     assert.match(invalid.stderr, /full 40-character lowercase commit SHA/);
   } finally {
-    await rm(root, { recursive: true, force: true });
+    await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   }
 });

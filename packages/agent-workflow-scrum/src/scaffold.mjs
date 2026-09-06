@@ -7,6 +7,10 @@ export const documentationTemplates = {
   ".agents/docs/defensive-patterns.md": "defensive-patterns.md",
   ".agents/docs/development.md": "development.md",
   ".agents/docs/testing.md": "testing.md",
+  ".agents/docs/evidence/README.md": "evidence-readme.md",
+  ".agents/docs/memory/README.md": "memory-readme.md",
+  ".agents/docs/plans/README.md": "plans-readme.md",
   ".agents/docs/tasks/README.md": "tasks-readme.md",
   ".agents/docs/proposals/README.md": "proposals-readme.md",
+  ".agents/docs/solutions/README.md": "solutions-readme.md",
 };

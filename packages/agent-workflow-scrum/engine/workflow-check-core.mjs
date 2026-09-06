@@ -297,6 +297,8 @@ async function run(options) {
     `${tasksRoot}/README.md`,
     `${proposalsRoot}/README.md`,
     `${legacySuggestionsRoot}/README.md`,
+    `${DOCS_ROOT}/evidence/README.md`,
+    `${DOCS_ROOT}/memory/README.md`,
     `${plansRoot}/README.md`,
     `${solutionsRoot}/README.md`,
     ".agents/skills/agent-workflow-scrum/SKILL.md",

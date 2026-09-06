@@ -11,7 +11,18 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 const packageRoot = path.join(repositoryRoot, "packages/agent-workflow-scrum");
 const sourceBinary = path.join(packageRoot, "bin/agent-workflow.mjs");
 const forbidden = [".agents/scripts", ".agents/skills", ".agents/benchmark", "packages", "plugins", ".agents/docs/model-recommend.md"];
-const consumerDocs = ["AGENTS.md", "agent-workflow.md", "architecture.md", "defensive-patterns.md", "development.md", "testing.md"];
+const consumerDocs = [
+  "AGENTS.md",
+  "agent-workflow.md",
+  "architecture.md",
+  "defensive-patterns.md",
+  "development.md",
+  "testing.md",
+  "evidence/README.md",
+  "memory/README.md",
+  "plans/README.md",
+  "solutions/README.md",
+];
 
 function resolveNpmRunner() {
   if (process.platform !== "win32") return { command: "npm", prefix: [], shell: false };
@@ -323,11 +334,17 @@ test("commit-pinned Git dependency installs the root CLI without registry public
     const source = path.join(root, "source");
     await mkdir(source);
     const manifest = JSON.parse(await readFile(path.join(repositoryRoot, "package.json"), "utf8"));
-    for (const relative of ["package.json", "package-lock.json", "README.md", ...manifest.files]) {
+    for (const relative of ["README.md", ...manifest.files]) {
       const destination = path.join(source, relative);
       await mkdir(path.dirname(destination), { recursive: true });
       await cp(path.join(repositoryRoot, relative), destination, { recursive: true });
     }
+    // npm prepares Git roots before applying their file list. Keep source-demo
+    // tooling outside this distribution fixture so the test remains offline.
+    const gitManifest = { ...manifest };
+    delete gitManifest.devDependencies;
+    delete gitManifest.scripts;
+    await writeFile(path.join(source, "package.json"), `${JSON.stringify(gitManifest, null, 2)}\n`);
     git(source, ["init"]);
     git(source, ["config", "user.email", "fixture@example.test"]);
     git(source, ["config", "user.name", "Fixture"]);
