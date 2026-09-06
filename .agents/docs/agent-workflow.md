@@ -58,6 +58,8 @@ Agents may facilitate planning, review, and retrospective activities. Agents do 
 
 - Authentication, authorization, payments, destructive data migrations, production infrastructure, secrets, or external side effects.
 - Require explicit human scope, threat/risk review, rollback, staged rollout, observability, and post-deploy verification.
+- Enforce environment separation (dev vs. staging vs. production); local agent runs must never touch production databases or credentials.
+- Local test passes prove code correctness; they do not replace platform rulesets (branch protection, CODEOWNERS, non-bypassable CI) and operational controls required for enterprise production release.
 
 ## Full-Stack Quality Matrix
 
@@ -67,7 +69,7 @@ Agents may facilitate planning, review, and retrospective activities. Agents do 
 | API | Contract, validation, errors, versioning, retries and idempotency? | Contract, integration, negative-path and concurrency tests |
 | Domain | Invariants isolated from frameworks and I/O? | Deterministic unit and property/boundary tests |
 | Data | Constraints, indexes, migration, compatibility, privacy and rollback? | Migration dry run, integration tests, backup/restore or rollback proof |
-| Auth/security | Identity, authorization, trust boundaries, secrets and abuse cases? | Denial-path tests, dependency audit, threat review, secret scan |
+| Auth/security | Identity, authorization, trust boundaries, secrets and abuse cases? | Denial-path tests, dependency audit, threat review, secret scan, zero credentials in AI prompts |
 | Operations | Config, health, metrics, logs, alerts, capacity and rollback? | CI/build, deploy preview, health check, observable success signals |
 
 ## Demo: Counter App Full-Stack Increment

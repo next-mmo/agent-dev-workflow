@@ -341,6 +341,7 @@ async function retrieveProviders({ options, root, scope, changedPaths }) {
         root,
         scope,
         budgetTokens: budgets.memory,
+        changedPaths,
       }));
     } else if (name === "openviking") {
       providers.push(await retrieveOpenViking({

@@ -17,6 +17,7 @@ const entries = {
   index: "index.mjs",
   review: "review.mjs",
   solve: "solve.mjs",
+  compound: "solve.mjs",
   worktree: "worktree.mjs",
   prdsync: "prd-sync.mjs",
   nd: "nd-plugin.mjs",

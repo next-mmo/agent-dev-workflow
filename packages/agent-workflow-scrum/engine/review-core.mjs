@@ -32,10 +32,15 @@ export async function runStaticReview({
     { name: "Dangerous eval invocation", regex: /\beval\s*\(/ },
     { name: "Dynamic Function Constructor", regex: new RegExp(`new\\s+${"Function"}\\s*\\(`) },
     { name: "Raw innerHTML Assignment", regex: /\.innerHTML\s*=\s*[^"'][^;]+/ },
+    { name: "Catastrophic Recursive Deletion", regex: /\b(?:rm\s+-[a-zA-Z]*r[a-zA-Z]*f?|rmdir\s+\/[sq])\s+(?:[/~]|\$HOME|\$\{HOME\}|[a-zA-Z]:\\)(?:\s|$|;)/i },
+    { name: "Destructive SQL Database/Table Drop", regex: /\bDROP\s+(?:DATABASE|SCHEMA|TABLE)\s+(?:IF\s+EXISTS\s+)?['"`\w]+/i },
+    { name: "Destructive SQL Truncate", regex: /\bTRUNCATE\s+(?:TABLE\s+)?['"`\w]+/i },
   ];
 
   for (const relPath of targetFiles) {
-    if (ignoreFilter.isIgnored(relPath) || !/\.(js|cjs|mjs|jsx|ts|tsx|html|css|json|md|ya?ml)$/.test(relPath)) {
+    const baseName = path.basename(relPath);
+    const isEnvFile = /^\.env(?:\.[a-zA-Z0-9_-]+)?$/i.test(baseName);
+    if (ignoreFilter.isIgnored(relPath) || (!/\.(js|cjs|mjs|jsx|ts|tsx|html|css|json|md|ya?ml|sql|sh|bash|ps1)$/.test(relPath) && !isEnvFile)) {
       skippedFiles.push({ file: relPath, reason: "ignored or unsupported file type" });
       continue;
     }
@@ -57,6 +62,16 @@ export async function runStaticReview({
     }
     filesReviewed += 1;
 
+    if (isEnvFile && !relPath.endsWith(".example")) {
+      securityFindings.push({
+        file: relPath,
+        line: 1,
+        severity: "HIGH",
+        rule: "Committed Environment Secret File",
+        message: "Committed .env file detected; environment secrets must never be checked into version control.",
+      });
+    }
+
     const lines = content.split(/\r?\n/);
 
     // Security patterns are heuristics, not proof that a file is safe.
@@ -73,7 +88,7 @@ export async function runStaticReview({
           });
         }
       }
-      if (/\.(js|cjs|mjs|jsx|ts|tsx|html)$/.test(relPath)) {
+      if (/\.(js|cjs|mjs|jsx|ts|tsx|html|sql|sh|bash|ps1)$/.test(relPath)) {
         for (const pattern of dangerousPatterns) {
           if (pattern.regex.test(line)) {
             securityFindings.push({
@@ -81,7 +96,7 @@ export async function runStaticReview({
               line: i + 1,
               severity: "MEDIUM",
               rule: pattern.name,
-              message: `Unsafe dynamic execution or DOM injection pattern: ${pattern.name}`,
+              message: `Unsafe execution, destructive deletion, or database pattern: ${pattern.name}`,
             });
           }
         }

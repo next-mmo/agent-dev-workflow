@@ -10,4 +10,4 @@ Humans own outcomes, priority, acceptance, and workflow policy. Agents implement
 
 For isolated low-risk corrections, use reproduce, fix, and narrow verification. Read the configured ceremony mode in `.agents/config.json` before choosing task formality.
 
-Destructive, production, infrastructure, authentication, and external-system writes require explicit scope and a rollback path. Preserve unrelated changes and user data. Record reusable policy changes as [proposals](proposals/README.md); only humans approve them. Follow [testing](testing.md) and [failure-handling guidance](defensive-patterns.md) for the affected boundary.
+Destructive, production, infrastructure, authentication, and external-system writes require explicit scope, environment isolation, and a rollback path. Local test passes prove code correctness; they do not replace platform rulesets and operational controls for production readiness. Preserve unrelated changes and user data. Record reusable policy changes as [proposals](proposals/README.md); only humans approve them. Follow [testing](testing.md) and [failure-handling guidance](defensive-patterns.md) for the affected boundary.

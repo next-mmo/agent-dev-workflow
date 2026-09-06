@@ -2,7 +2,7 @@
 
 > Status: canonical shared context map
 
-Git-tracked code, PRDs, tasks, decisions, and evidence are durable project memory. Generated context, optional providers, and agent-local memory are advisory recall.
+Git-tracked code, PRDs, tasks, decisions, and evidence are durable project records. Generated context, optional providers, and agent-local memory are advisory recall.
 
 ## Authority
 

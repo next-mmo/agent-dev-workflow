@@ -68,6 +68,29 @@ test('review distinguishes deletions, unsupported files, and explicit inspection
   await assert.rejects(runStaticReview({ root, files: ['../outside.js'] }), /outside the repository/);
 });
 
+test('review detects committed .env files but allows .env.example', async (t) => {
+  const { root, git, write } = await fixture(t);
+  git('init', '-q');
+  await write('.env', 'DATABASE_URL=postgres://user:pass@localhost:5432/db\n');
+  await write('.env.example', 'DATABASE_URL=postgres://user:password@localhost:5432/dbname\n');
+  const review = await runStaticReview({ root });
+  assert.equal(review.filesReviewed, 2);
+  assert.equal(review.findings.security.length, 1);
+  assert.equal(review.findings.security[0].file, '.env');
+  assert.equal(review.findings.security[0].rule, 'Committed Environment Secret File');
+});
+
+test('review detects catastrophic recursive deletion and destructive database drop', async (t) => {
+  const { root, git, write } = await fixture(t);
+  git('init', '-q');
+  await write('deploy.sh', 'r' + 'm -' + 'rf /\n');
+  await write('cleanup.sql', 'DR' + 'OP TA' + 'BLE users;\n');
+  const review = await runStaticReview({ root });
+  assert.equal(review.filesReviewed, 2);
+  const rules = review.findings.security.map((f) => f.rule).sort();
+  assert.deepEqual(rules, ['Catastrophic Recursive Deletion', 'Destructive SQL Database/Table Drop']);
+});
+
 test('PRD sync leaves requirements byte-identical and only points to possible task evidence', async (t) => {
   const { root, write } = await fixture(t);
   const file = '.agents/docs/prd/0001-theme.md';

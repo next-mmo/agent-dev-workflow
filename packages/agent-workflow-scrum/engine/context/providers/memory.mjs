@@ -49,30 +49,51 @@ function tokenizeScope(scope) {
 }
 
 /**
- * Score a memory entry against scope terms.
+ * Score a memory entry against scope terms and changed working-tree paths.
  * Tags weighted 2×, title 1.5×, other fields 1×.
+ * Proactive module match awards up to +3.0 boost.
  */
-function scoreEntry(entry, terms) {
-  if (terms.length === 0) return 0;
-
+function scoreEntry(entry, terms, changedPaths = []) {
   const tagsText = (Array.isArray(entry.meta.tags) ? entry.meta.tags.join(" ") : String(entry.meta.tags || "")).toLowerCase();
   const titleText = String(entry.meta.title || "").toLowerCase();
   const scopeText = String(entry.meta.scope || "").toLowerCase();
+  const moduleText = String(entry.meta.module || "").toLowerCase();
   const problemText = String(entry.meta.problem || "").toLowerCase();
   const solutionText = String(entry.meta.solution || "").toLowerCase();
   const bodyText = entry.body.toLowerCase().slice(0, 500);
 
   let score = 0;
-  for (const term of terms) {
-    if (tagsText.includes(term)) score += 2.0;
-    if (titleText.includes(term)) score += 1.5;
-    if (scopeText.includes(term)) score += 1.2;
-    if (problemText.includes(term)) score += 1.0;
-    if (solutionText.includes(term)) score += 1.0;
-    if (bodyText.includes(term)) score += 0.5;
+  if (terms.length > 0) {
+    for (const term of terms) {
+      if (tagsText.includes(term)) score += 2.0;
+      if (titleText.includes(term)) score += 1.5;
+      if (scopeText.includes(term)) score += 1.2;
+      if (moduleText.includes(term)) score += 1.2;
+      if (problemText.includes(term)) score += 1.0;
+      if (solutionText.includes(term)) score += 1.0;
+      if (bodyText.includes(term)) score += 0.5;
+    }
+    score = score / terms.length;
   }
-  // Normalise by number of terms so longer scopes don't inflate scores
-  return score / terms.length;
+
+  // Proactive path matching: if changedPaths match entry.meta.module or tags, boost score
+  if (changedPaths.length > 0) {
+    let pathScore = 0;
+    for (const rawPath of changedPaths) {
+      const normalizedPath = String(rawPath || "").toLowerCase().replace(/\\/g, "/");
+      if (moduleText && (normalizedPath === moduleText || normalizedPath.endsWith(`/${moduleText}`) || moduleText.endsWith(normalizedPath) || normalizedPath.includes(moduleText))) {
+        pathScore += 3.0;
+      } else {
+        const segments = normalizedPath.split("/").filter((s) => s.length > 2);
+        for (const seg of segments) {
+          if (tagsText.includes(seg)) pathScore += 1.0;
+        }
+      }
+    }
+    score += Math.min(pathScore, 5.0);
+  }
+
+  return score;
 }
 
 /**
@@ -126,13 +147,13 @@ function formatMatches(matches, budgetTokens) {
 }
 
 /**
- * Native memory provider — scans solutions/ and memory/ for scope-relevant recall.
+ * Native memory provider — scans solutions/ for scope-relevant and module-aware recall.
  * Zero-dependency alternative inspired by OpenViking's semantic retrieval pattern.
  */
-export async function retrieveNativeMemory({ root, scope, budgetTokens }) {
+export async function retrieveNativeMemory({ root, scope, budgetTokens, changedPaths = [] }) {
   const provider = baseProvider("memory", budgetTokens, {
     authority: "native-recall",
-    source: "file-based memory and solutions",
+    source: "file-based solutions",
   });
 
   if (budgetTokens < 60) {
@@ -142,28 +163,23 @@ export async function retrieveNativeMemory({ root, scope, budgetTokens }) {
   const start = Date.now();
   const terms = tokenizeScope(scope);
 
-  // Load from both knowledge stores
+  // Load from solutions knowledge store
   const solutionsDir = path.join(root, ".agents", "docs", "solutions");
-  const memoryDir = path.join(root, ".agents", "docs", "memory");
-  const [solutions, memories] = await Promise.all([
-    loadEntries(solutionsDir, "solution"),
-    loadEntries(memoryDir, "memory"),
-  ]);
+  const solutions = await loadEntries(solutionsDir, "solution");
 
-  const allEntries = [...solutions, ...memories];
-  if (allEntries.length === 0) {
+  if (solutions.length === 0) {
     return {
       ...provider,
       status: "ok",
-      content: "No memory or solution entries found.",
-      estimatedTokens: estimateTokens("No memory or solution entries found."),
+      content: "No solution entries found.",
+      estimatedTokens: estimateTokens("No solution entries found."),
       durationMs: Date.now() - start,
     };
   }
 
   // Score and rank
-  const scored = allEntries
-    .map((entry) => ({ ...entry, score: scoreEntry(entry, terms) }))
+  const scored = solutions
+    .map((entry) => ({ ...entry, score: scoreEntry(entry, terms, changedPaths) }))
     .filter((entry) => entry.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, 8);

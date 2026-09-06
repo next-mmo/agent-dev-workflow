@@ -19,7 +19,6 @@ const consumerDocs = [
   "development.md",
   "testing.md",
   "evidence/README.md",
-  "memory/README.md",
   "plans/README.md",
   "solutions/README.md",
 ];
@@ -251,7 +250,13 @@ async function exerciseInstalledFixture(manager, tarball, root, runtimePrefix = 
   assert.match(invoke(["doctor"]), /doctor: ready/);
   const skills = JSON.parse(invoke(["skills", "--json"]));
   assert.equal(skills.skillsAvailable, true);
-  assert.deepEqual(skills.skillNames, ["agent-workflow-prose", "agent-workflow-scrum"]);
+  assert.deepEqual(skills.skillNames, [
+    "agent-workflow-incident",
+    "agent-workflow-prose",
+    "agent-workflow-release",
+    "agent-workflow-scrum",
+    "agent-workflow-security",
+  ]);
   assert.equal(skills.repositorySkillsPath, null);
   const plan = JSON.parse(invoke(["plan", "Consumer plan", "--json"]));
   assert.match(await readFile(path.join(root, plan.relativePath), "utf8"), /# Plan 0001: Consumer plan/);

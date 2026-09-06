@@ -85,9 +85,9 @@ init_claude_target() {
 
 strip_skill_frontmatter() {
   awk '
-    NR == 1 && $0 == "---" { in_frontmatter = 1; next }
-    in_frontmatter && $0 == "---" { in_frontmatter = 0; next }
-    !in_frontmatter { print }
+    NR == 1 && $0 ~ /^---\r?$/ { in_frontmatter = 1; next }
+    in_frontmatter && $0 ~ /^---\r?$/ { in_frontmatter = 0; next }
+    !in_frontmatter { sub(/\r$/, ""); print }
   ' "$1"
 }
 
@@ -221,7 +221,7 @@ check_canonical_source() {
   while IFS= read -r skill_dir; do
     skill_name="$(basename "$skill_dir")"
     skill_file="$skill_dir/SKILL.md"
-    first_line="$(head -n 1 "$skill_file")"
+    first_line="$(head -n 1 "$skill_file" | tr -d '\r')"
 
     if [ "$first_line" != '---' ]; then
       check_error "$skill_name/SKILL.md must start with YAML frontmatter"
@@ -232,7 +232,7 @@ check_canonical_source() {
     if ! grep -Eq '^description:[[:space:]]*[^[:space:]]' "$skill_file"; then
       check_error "$skill_name/SKILL.md is missing a non-empty description field"
     fi
-    if ! awk 'NR > 1 && $0 == "---" { found = 1; exit } END { exit(found ? 0 : 1) }' "$skill_file"; then
+    if ! awk 'NR > 1 && $0 ~ /^---\r?$/ { found = 1; exit } END { exit(found ? 0 : 1) }' "$skill_file"; then
       check_error "$skill_name/SKILL.md is missing a closing frontmatter delimiter"
     fi
   done < <(skill_dirs)
@@ -294,7 +294,7 @@ check_cursor_adapter() {
     rule_file="$CURSOR_RULES_DIR/${skill_name}.generated.mdc"
     if [ ! -f "$rule_file" ]; then
       check_error "missing Cursor rule adapter: .cursor/rules/${skill_name}.generated.mdc"
-    elif ! diff -u <(render_cursor_rule "$skill_name" "$skill_file") "$rule_file" >/dev/null 2>&1; then
+    elif ! diff -u <(render_cursor_rule "$skill_name" "$skill_file" | tr -d '\r') <(tr -d '\r' < "$rule_file") >/dev/null 2>&1; then
       check_error "Cursor rule drift detected: .cursor/rules/${skill_name}.generated.mdc"
     fi
 
@@ -306,7 +306,7 @@ check_cursor_adapter() {
       command_file="$CURSOR_COMMANDS_DIR/${command_name}.generated.md"
       if [ ! -f "$command_file" ]; then
         check_error "missing Cursor command adapter: .cursor/commands/${command_name}.generated.md"
-      elif ! diff -u <(render_cursor_command "$skill_name" "$command") "$command_file" >/dev/null 2>&1; then
+      elif ! diff -u <(render_cursor_command "$skill_name" "$command" | tr -d '\r') <(tr -d '\r' < "$command_file") >/dev/null 2>&1; then
         check_error "Cursor command drift detected: .cursor/commands/${command_name}.generated.md"
       fi
     done <<EOF

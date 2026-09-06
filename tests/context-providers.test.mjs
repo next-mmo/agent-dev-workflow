@@ -259,16 +259,15 @@ test("scoreEntry weights tags > title > body", async () => {
   assert.equal(unrelated, 0);
 });
 
-test("retrieveNativeMemory returns scored matches from solutions dir", async () => {
+test("retrieveNativeMemory returns scored matches from solutions dir and supports proactive module matching", async () => {
   const { retrieveNativeMemory } = await import("../packages/agent-workflow-scrum/engine/context/providers/memory.mjs");
   const root = await mkdtemp(path.join(os.tmpdir(), "agent-memory-test-"));
   const solutionsDir = path.join(root, ".agents", "docs", "solutions");
-  const memoryDir = path.join(root, ".agents", "docs", "memory");
   await mkdir(solutionsDir, { recursive: true });
-  await mkdir(memoryDir, { recursive: true });
 
   await writeFile(path.join(solutionsDir, "0001-audio-fix.md"), `---
 title: Web Audio Autoplay Fix
+module: "src/audio.js"
 tags: [audio, webaudio, autoplay]
 problem: "AudioContext suspended on page load"
 solution: "Resume on user gesture"
@@ -278,11 +277,11 @@ solution: "Resume on user gesture"
 Body content.
 `, "utf8");
 
-  await writeFile(path.join(memoryDir, "0001-esm-pattern.md"), `---
+  await writeFile(path.join(solutionsDir, "0002-esm-pattern.md"), `---
 title: ESM Import Conventions
 tags: [esm, import, javascript]
-scope: "Module system conventions"
-created: 2026-09-04
+problem: "CommonJS syntax causes import errors"
+solution: "Always use .mjs extension and ESM imports"
 ---
 
 # ESM Conventions
@@ -299,6 +298,11 @@ Always use .mjs extension.
     const esmResult = await retrieveNativeMemory({ root, scope: "esm import module", budgetTokens: 200 });
     assert.equal(esmResult.status, "ok");
     assert.match(esmResult.content, /ESM/i);
+
+    // Proactive module matching with empty scope
+    const proactiveResult = await retrieveNativeMemory({ root, scope: "", budgetTokens: 200, changedPaths: ["src/audio.js"] });
+    assert.equal(proactiveResult.status, "ok");
+    assert.match(proactiveResult.content, /Web Audio Autoplay Fix/);
 
     const noMatchResult = await retrieveNativeMemory({ root, scope: "kubernetes deployment", budgetTokens: 200 });
     assert.equal(noMatchResult.status, "ok");
@@ -370,7 +374,7 @@ test("native recall excludes drafts and template summaries while retaining compl
     await rm(path.join(dir, '0003-ready.md'));
     const empty = await retrieveNativeMemory({ root, scope: 'windows paths', budgetTokens: 300 });
     assert.doesNotMatch(empty.content, /Draft fix|Placeholder fix|One-line/);
-    assert.match(empty.content, /No memory or solution entries/);
+    assert.match(empty.content, /No (?:memory or )?solution entries/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

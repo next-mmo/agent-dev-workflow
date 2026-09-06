@@ -1,6 +1,6 @@
 # Task 0031: Full-Stack Developer Trial
 
-> Status: wip
+> Status: todo
 > Created: 2026-09-05
 > Related PRD: `.agents/docs/prd/0005-todo-workspace.md`
 

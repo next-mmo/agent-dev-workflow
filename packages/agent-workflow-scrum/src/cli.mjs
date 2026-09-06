@@ -7,7 +7,7 @@ import { runEngine } from "./run-engine.mjs";
 import { describeSkills } from "./skills.mjs";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const engineCommands = new Set(["context", "scope", "verify", "check", "docs", "report", "mode", "archive", "plan", "index", "review", "solve", "worktree", "prdsync", "nd"]);
+const engineCommands = new Set(["context", "scope", "verify", "check", "docs", "report", "mode", "archive", "plan", "index", "review", "solve", "compound", "worktree", "prdsync", "nd"]);
 
 const help = `Agent Workflow Scrum
 
@@ -19,6 +19,7 @@ Usage:
   agent-workflow index [--json]
   agent-workflow review [--base <ref>] [--json]
   agent-workflow solve <title> [--module <path>] [--tags <t1,t2>] [--json]
+  agent-workflow compound <title> [--module <path>] [--tags <t1,t2>] [--json]
   agent-workflow worktree [list|start|finish] [branch] [--json]
   agent-workflow prdsync [--dry-run] [--json]  (read-only evidence review)
   agent-workflow context [scope] [--level 0|1|2] [--budget tokens] [--provider mode]

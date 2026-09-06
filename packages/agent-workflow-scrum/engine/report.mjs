@@ -28,7 +28,6 @@ const sourceDefinitions = [
   ["Testing guide", ".agents/docs/testing.md"],
   ["Defensive patterns", ".agents/docs/defensive-patterns.md"],
   ["Evidence records", ".agents/docs/evidence/README.md"],
-  ["Memory store", ".agents/docs/memory/README.md"],
   ["PRD index", ".agents/docs/prd/0000-prd-index.md"],
   ["Plans guide", ".agents/docs/plans/README.md"],
   ["Task board guide", ".agents/docs/tasks/README.md"],

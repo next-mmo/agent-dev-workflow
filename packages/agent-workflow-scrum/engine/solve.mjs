@@ -20,7 +20,7 @@ function parseArgs(argv) {
 try {
   const options = parseArgs(process.argv.slice(2));
   if (!options.title) {
-    console.error("Usage: agent-workflow solve <title> [--module <path>] [--tags <t1,t2>] [--json]");
+    console.error("Usage: agent-workflow solve|compound <title> [--module <path>] [--tags <t1,t2>] [--json]");
     process.exitCode = 1;
   } else {
     const result = await createSolution(options);
