@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Full-Stack Tutor</title>
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body class="light-theme">
+    <main class="container">
+      <header>
+        <h1>Full-Stack Tutor</h1>
+        <p class="subtitle">Interactive learning companion</p>
+      </header>
+      <section class="stats-bar">
+        <div class="stat-group">
+          <div class="stat-item">
+            <span class="stat-label">Score</span>
+            <span class="stat-value" id="scoreVal">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Streak</span>
+            <span class="stat-value" id="streakVal">🔥 0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Best Streak</span>
+            <span class="stat-value" id="bestStreakVal">⭐ 0</span>
+          </div>
+        </div>
+        <button class="btn-reset" id="resetStatsBtn" title="Reset all progress">Reset</button>
+      </section>
+
+      <section class="top-bar">
+        <p id="message">Welcome to Full-Stack Tutor</p>
+        <div class="sync-indicator" id="syncIndicator">Synced</div>
+      </section>
+
+      <section class="topic-selector">
+        <label>Select Track:</label>
+        <div class="topic-chips" id="topicChips">
+          <button class="chip active" data-topic="all">All Tracks</button>
+        </div>
+      </section>
+
+      <section class="quiz-card" id="quizCard">
+        <div class="quiz-header">
+          <span class="quiz-topic-tag" id="quizTopicTag">Topic</span>
+          <span class="quiz-counter" id="quizCounter">Question 1</span>
+        </div>
+        <h2 class="question-text" id="questionText">Loading challenge...</h2>
+        <div class="options-container" id="optionsContainer"></div>
+        <div class="feedback-box hidden" id="feedbackBox">
+          <p class="feedback-verdict" id="feedbackVerdict"></p>
+          <p class="feedback-explanation" id="feedbackExplanation"></p>
+          <button class="btn-next" id="nextBtn">Next Challenge →</button>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

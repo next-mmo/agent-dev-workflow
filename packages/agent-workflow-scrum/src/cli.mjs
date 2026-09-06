@@ -45,7 +45,8 @@ async function version() {
 }
 
 export async function main(argv, options = {}) {
-  const [command = "help", ...args] = argv;
+  const cleanArgv = argv.filter((arg) => arg !== "--");
+  const [command = "help", ...args] = cleanArgv;
   const cwd = options.cwd || process.cwd();
   if (["help", "--help", "-h"].includes(command)) {
     process.stdout.write(help);

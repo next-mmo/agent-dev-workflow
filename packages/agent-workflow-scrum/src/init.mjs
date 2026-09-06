@@ -27,6 +27,10 @@ function parseArgs(argv, cwd) {
     else if (arg === "--root") options.root = path.resolve(argv[++index] || "");
     else if (arg === "--package-manager") options.packageManager = argv[++index] || "";
     else if (arg === "--mode") options.mode = argv[++index] || "";
+    else if (arg === "--") {
+      options.positional.push(...argv.slice(index + 1));
+      break;
+    }
     else if (arg.startsWith("--")) throw new Error(`unknown option: ${arg}`);
     else options.positional.push(arg);
   }
@@ -167,6 +171,10 @@ export async function initializeProject(argv, cwd = process.cwd()) {
       await mkdir(path.dirname(absolutePath), { recursive: true });
       await writeFile(absolutePath, content, { encoding: "utf8", flag: "wx" });
     }
+  }
+
+  if (!options.dryRun) {
+    await mkdir(path.join(options.root, ".agents/docs/tasks/done"), { recursive: true });
   }
 
   const presentForbidden = [];

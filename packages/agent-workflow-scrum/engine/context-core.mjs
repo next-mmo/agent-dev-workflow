@@ -64,6 +64,9 @@ function parseArgs(argv) {
       options.base = String(argv[++index] || "");
     } else if (arg === "--head") {
       options.head = String(argv[++index] || "");
+    } else if (arg === "--") {
+      options.scope.push(...argv.slice(index + 1));
+      break;
     } else if (arg.startsWith("--")) {
       throw new Error(`unknown option: ${arg}`);
     } else {
@@ -480,8 +483,24 @@ async function buildContext(options) {
   const root = options.root;
   const config = await loadWorkflowConfig(root);
   const branch = git(root, ["branch", "--show-current"]) || "unavailable";
-  const status = git(root, ["status", "--short"], { trim: false });
-  const worktreeChangedPaths = status.split(/\r?\n/).filter(Boolean).map((line) => line.slice(3).trim()).filter(Boolean);
+  const toplevel = git(root, ["rev-parse", "--show-toplevel"]) || "";
+  let prefix = "";
+  if (toplevel) {
+    const rel = path.relative(path.resolve(toplevel), path.resolve(root)).split(path.sep).join("/");
+    if (rel && rel !== ".") prefix = `${rel}/`;
+  }
+  const status = git(root, ["status", "--short", "--", "."], { trim: false });
+  const worktreeChangedPaths = status
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => {
+      let file = line.slice(3).trim();
+      const rename = file.lastIndexOf(" -> ");
+      if (rename >= 0) file = file.slice(rename + 4);
+      const normalized = file.split(path.sep).join("/");
+      return prefix && normalized.startsWith(prefix) ? normalized.slice(prefix.length) : normalized;
+    })
+    .filter(Boolean);
   const outgoing = options.base
     ? collectChangeScope({ root, base: options.base, head: options.head })
     : null;

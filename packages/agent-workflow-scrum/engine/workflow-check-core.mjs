@@ -75,7 +75,17 @@ function relativeMarkdownLinks(markdown) {
 }
 
 function gitStatusPaths(root) {
-  const result = spawnSync("git", ["-C", root, "-c", "core.fsmonitor=false", "status", "--porcelain=v1", "--untracked-files=all", "--"], {
+  const toplevelResult = spawnSync("git", ["-C", root, "rev-parse", "--show-toplevel"], {
+    encoding: "utf8",
+    windowsHide: true,
+  });
+  let prefix = "";
+  if (toplevelResult.status === 0) {
+    const toplevel = path.resolve(toplevelResult.stdout.trim());
+    const rel = path.relative(toplevel, path.resolve(root)).split(path.sep).join("/");
+    if (rel && rel !== ".") prefix = `${rel}/`;
+  }
+  const result = spawnSync("git", ["-C", root, "-c", "core.fsmonitor=false", "status", "--porcelain=v1", "--untracked-files=all", "--", "."], {
     encoding: "utf8",
     env: { ...process.env, GIT_OPTIONAL_LOCKS: "0", LANG: "C", LC_ALL: "C" },
     windowsHide: true,
@@ -89,7 +99,11 @@ function gitStatusPaths(root) {
     let file = line.slice(3);
     const renameSeparator = file.lastIndexOf(" -> ");
     if (renameSeparator >= 0) file = file.slice(renameSeparator + 4);
-    if (file) paths.push(file.replaceAll("\\", "/"));
+    if (file) {
+      const normalized = file.split(path.sep).join("/");
+      const relToRoot = prefix && normalized.startsWith(prefix) ? normalized.slice(prefix.length) : normalized;
+      paths.push(relToRoot);
+    }
   }
   return [...new Set(paths)].sort();
 }

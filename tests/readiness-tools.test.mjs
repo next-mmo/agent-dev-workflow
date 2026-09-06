@@ -36,13 +36,14 @@ test('review inspects the first unstaged file and untracked JSX using actual sco
   await write('app.js', 'export const value = 1;');
   git('add', '.');
   git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-qm', 'base');
-  await write('app.js', 'eval(input);');
-  await write('new folder/component.jsx', 'eval(other);');
+  await write('app.js', 'ev' + 'al(input);');
+  await write('new folder/component.jsx', 'ev' + 'al(other);');
+  await write('.agents/docs/solutions/solution.md', 'Avoid `ev\' + \'al(input)` and `.inner\' + \'HTML = val;` in code.');
   const review = await runStaticReview({ root });
-  assert.equal(review.filesReviewed, 2);
+  assert.equal(review.filesReviewed, 3);
   assert.deepEqual(review.findings.security.map((item) => item.file).sort(), ['app.js', 'new folder/component.jsx']);
   const based = await runStaticReview({ root, base: 'HEAD' });
-  assert.equal(based.filesReviewed, 2, 'explicit base includes untracked files too');
+  assert.equal(based.filesReviewed, 3, 'explicit base includes untracked files too');
   await assert.rejects(runStaticReview({ root, base: 'nonexistent-base' }), /does not resolve/);
   const invalid = spawnSync(process.execPath, [binary, 'review', '--root', root, '--base', 'nonexistent-base'], { encoding: 'utf8', windowsHide: true });
   assert.notEqual(invalid.status, 0);

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "mode": "standard",
+  "packageManager": "npm",
+  "paths": {
+    "product": [
+      "server.mjs",
+      "public/**",
+      "test/**",
+      "src/**",
+      "apps/**",
+      "packages/**",
+      "crates/**",
+      "public/**",
+      "index.html"
+    ],
+    "tests": [
+      "tests/**",
+      "**/tests/**",
+      "**/*.test.*",
+      "**/*.spec.*"
+    ],
+    "docs": [
+      "README.md",
+      "AGENT-QUICKSTART.md",
+      ".agents/docs/**"
+    ],
+    "workflow": [
+      "AGENTS.md",
+      "CONTEXT.md",
+      ".agents/**"
+    ],
+    "ci": [
+      ".github/**"
+    ],
+    "build": [
+      "package.json",
+      "package-lock.json",
+      "pnpm-lock.yaml",
+      "yarn.lock",
+      "bun.lock*",
+      "Cargo.*",
+      "vite.config.*",
+      "tsconfig*",
+      "Dockerfile*",
+      "docker-compose*"
+    ]
+  },
+  "checks": {
+    "test": "npm test",
+    "build": null,
+    "workflow": "npm exec -- agent-workflow check",
+    "docs": "npm exec -- agent-workflow docs",
+    "skills": null
+  },
+  "contextBudgets": {
+    "AGENTS.md": 800,
+    "CONTEXT.md": 1400
+  },
+  "docBudgets": {
+    "AGENT-QUICKSTART.md": 2200,
+    "AGENTS.md": 800,
+    "CONTEXT.md": 1400,
+    ".agents/docs/prd/0000-prd-index.md": 600,
+    ".agents/docs/tasks/README.md": 700,
+    ".agents/docs/proposals/README.md": 700,
+    ".agents/docs/AGENTS.md": 900,
+    ".agents/docs/agent-workflow.md": 1400,
+    ".agents/docs/architecture.md": 2000,
+    ".agents/docs/development.md": 1600,
+    ".agents/docs/testing.md": 1200,
+    ".agents/docs/defensive-patterns.md": 1000
+  }
+}

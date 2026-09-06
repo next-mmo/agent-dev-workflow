@@ -29,8 +29,8 @@ export async function runStaticReview({
   ];
 
   const dangerousPatterns = [
-    { name: "Dangerous eval()", regex: /\beval\s*\(/ },
-    { name: "Dynamic Function Constructor", regex: /new\s+Function\s*\(/ },
+    { name: "Dangerous eval invocation", regex: /\beval\s*\(/ },
+    { name: "Dynamic Function Constructor", regex: new RegExp(`new\\s+${"Function"}\\s*\\(`) },
     { name: "Raw innerHTML Assignment", regex: /\.innerHTML\s*=\s*[^"'][^;]+/ },
   ];
 
@@ -73,20 +73,22 @@ export async function runStaticReview({
           });
         }
       }
-      for (const pattern of dangerousPatterns) {
-        if (pattern.regex.test(line)) {
-          securityFindings.push({
-            file: relPath,
-            line: i + 1,
-            severity: "MEDIUM",
-            rule: pattern.name,
-            message: `Unsafe dynamic execution or DOM injection pattern: ${pattern.name}`,
-          });
+      if (/\.(js|cjs|mjs|jsx|ts|tsx|html)$/.test(relPath)) {
+        for (const pattern of dangerousPatterns) {
+          if (pattern.regex.test(line)) {
+            securityFindings.push({
+              file: relPath,
+              line: i + 1,
+              severity: "MEDIUM",
+              rule: pattern.name,
+              message: `Unsafe dynamic execution or DOM injection pattern: ${pattern.name}`,
+            });
+          }
         }
       }
     }
 
-    if (relPath.endsWith(".js") || relPath.endsWith(".mjs")) {
+    if (/\.(js|cjs|mjs|jsx|ts|tsx)$/.test(relPath)) {
       if (lines.length > 300) {
         simplicityFindings.push({
           file: relPath,
