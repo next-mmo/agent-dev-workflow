@@ -19,6 +19,7 @@ const entries = {
   solve: "solve.mjs",
   worktree: "worktree.mjs",
   prdsync: "prd-sync.mjs",
+  nd: "nd-plugin.mjs",
 };
 
 function hasRoot(args) {

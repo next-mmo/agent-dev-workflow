@@ -7,7 +7,7 @@ import { runEngine } from "./run-engine.mjs";
 import { describeSkills } from "./skills.mjs";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const engineCommands = new Set(["context", "scope", "verify", "check", "docs", "report", "mode", "archive", "plan", "index", "review", "solve", "worktree", "prdsync"]);
+const engineCommands = new Set(["context", "scope", "verify", "check", "docs", "report", "mode", "archive", "plan", "index", "review", "solve", "worktree", "prdsync", "nd"]);
 
 const help = `Agent Workflow Scrum
 
@@ -29,6 +29,7 @@ Usage:
   agent-workflow report [--output <directory>]
   agent-workflow doctor [path] [--json]
   agent-workflow skills [--json]
+  agent-workflow nd <detect|snapshot|context> [--task <key>] [--budget <tokens>] [--json]  (read-only ND plugin protocol)
 
 All repository commands accept --root <path> when targeting a repository other
 than the current working directory. The package owns the runtime; the target

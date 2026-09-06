@@ -18,6 +18,7 @@
 | **0004** | Workflow Distribution | **done** | Local CLI, one package-owned plugin bundle, consumer docs/proposals, Git/tarball onboarding, and MIT licensing |
 | **0005** | Todo Workspace | **in-progress** | Browser tasks plus a local API/disk persistence and editing trial; human acceptance pending |
 | **0006** | Official Examples | **in-progress** | Minimal runnable templates, starting with vanilla browser plus Express fullstack |
+| **0007** | ND Workflow Plugin | **in-progress** | Versioned read-only protocol (`nd detect/snapshot/context`) so the ND host can detect repositories, mirror the board, and inject bounded workflow context |
 
 ## Authority
 

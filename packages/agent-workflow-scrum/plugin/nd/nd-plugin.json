@@ -1,0 +1,58 @@
+{
+  "protocol": "nd.workflow/1",
+  "id": "agent-workflow-scrum",
+  "version": "0.1.0",
+  "surface": "plugin",
+  "ndApiVersion": "1",
+  "description": "Read-only Agent Workflow Scrum workflow contribution: detection, board snapshot, and bounded context for the ND host",
+  "contributions": [
+    {
+      "kind": "workflow",
+      "id": "scrum",
+      "protocolVersion": 1,
+      "methods": ["detect", "readSnapshot", "buildContext"]
+    },
+    {
+      "kind": "context",
+      "id": "active-increment",
+      "protocolVersion": 1
+    },
+    {
+      "kind": "command",
+      "id": "workflow-status",
+      "hostCommand": "kb:workflow-status"
+    }
+  ],
+  "requestedPermissions": [
+    "project.workflow.read",
+    "board.project",
+    "context.contribute"
+  ],
+  "transport": {
+    "kind": "cli",
+    "invocation": "{packageManager} exec -- agent-workflow nd <method> --root <projectRoot> --json",
+    "requirements": {
+      "shell": false,
+      "fixedArgv": true,
+      "timeoutMs": 15000,
+      "maxOutputBytes": 1048576,
+      "noInstall": true
+    },
+    "methods": {
+      "detect": "detect",
+      "readSnapshot": "snapshot",
+      "buildContext": "context"
+    }
+  },
+  "upstream": {
+    "package": "@next-mmo/agent-workflow-scrum",
+    "supportedConfigSchemas": [1],
+    "supportedModes": ["vibe", "standard", "strict", "guided"],
+    "taskPrefixes": ["todo-", "wip-", "blocked-", "done-"]
+  },
+  "limitations": [
+    "read-only: this plugin never mutates the target repository",
+    "no execution: configured project checks are reported, never run, by this plugin",
+    "completion and human acceptance are source-reported facts, not host actions"
+  ]
+}
