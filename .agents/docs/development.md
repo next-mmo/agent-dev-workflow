@@ -130,6 +130,8 @@ For async/resource-owning tests or CI, use `.agents/skills/agent-workflow-scrum/
 
 ## Workflow and documentation consistency
 
+For event comparison bases, enforced CI mode, and missing-history recovery, see [CI scope and modes](ci.md).
+
 Run workflow, documentation, and adapter checks:
 
 ```bash

@@ -2,7 +2,7 @@
 
 > Status: in-progress
 > Created: 2026-09-03
-> Updated: 2026-09-05
+> Updated: 2026-09-07
 > Related Tasks: `.agents/docs/tasks/done/done-0028-0001-package-workflow-cli.md`, `.agents/docs/tasks/done/done-0029-0005-realistic-todo-workspace.md`
 > Packaging follow-up: `.agents/docs/tasks/done/done-0030-0004-public-beta-packaging.md`
 > Consumer initialization: `.agents/docs/tasks/done/done-0032-0004-consumer-initialization.md`
@@ -33,6 +33,7 @@ Teams need Agent Workflow Scrum's context, scope, verification, documentation, r
 16. Support a commit-pinned Git dependency from the repository root without registry publication or copying workflow `packages/` and `plugins/` into the consumer. The source root exposes the canonical CLI; installed runtime assets belong under `node_modules`.
 17. Keep one portable plugin bundle at `packages/agent-workflow-scrum/plugin/`. Its manifests and commands are package-owned; the distribution build synchronizes only canonical skills and licenses and never creates a root `plugins/` copy.
 18. Store consumer documentation budgets in `.agents/config.json` under `docBudgets`; initialization must not create `.agents/docs/doc-budgets.json`. The docs checker reads configured budgets by default and accepts `--budget-file` only as an explicit compatibility override.
+19. Source CI validates committed PR/push scope using exact event commits and explicitly selects strict mode; unavailable scope fails rather than falling back to the working tree. Local/consumer mode defaults remain configurable. See [CI scope and modes](../ci.md).
 
 ## 3. Acceptance Criteria
 
@@ -48,3 +49,4 @@ Teams need Agent Workflow Scrum's context, scope, verification, documentation, r
 - [x] PRD-sync output remains advisory and PRD bytes remain unchanged.
 - [x] Both indexes include configured product files and exclude ignored/non-product files.
 - [x] MIT terms and self-contained guidance ship in the tested artifact; unpublished onboarding uses a reproducible tarball path.
+- [x] Source CI uses exact event commits and strict mode; regression fixtures reject missing scope and incomplete product task metadata.

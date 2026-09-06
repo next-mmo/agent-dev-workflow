@@ -41,6 +41,7 @@ Proposals are durable Agent Workflow Scrum policy records and live under `.agent
 | [0011](0011-beta-claim-and-recall-corrections.md) | Beta Measurement and Memory Corrections | `accepted` | 2026-09-04 | Exclude unfinished recall and distinguish context size from task token savings |
 | [0012](0012-readiness-repair-boundaries.md) | Readiness Repair Boundaries | `accepted` | 2026-09-05 | Honest review/PRD evidence, working package defaults, and shared product discovery |
 | [0013](0013-unified-memory-and-compounding-loop.md) | Unified Institutional Memory & Compounding Loop | `applied` | 2026-09-07 | Consolidate memory/ into solutions/ and enable proactive path-based recall |
+| [0014](0014-ci-scope-and-mode.md) | Explicit CI Scope and Mode | `applied` | 2026-09-07 | Verify event commits and enforce strict workflow checks in source CI |
 
 
 ## Proposal Rules
