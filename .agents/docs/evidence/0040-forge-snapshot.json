@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-09-07T01:06:10.698Z",
+  "repository": "next-mmo/agent-dev-workflow",
+  "main": {
+    "sha": "a24ec8bf15b1a6d18cde1ab0f3397324f7de2b2a",
+    "protected": false
+  },
+  "rulesets": [],
+  "releases": [],
+  "ciFix": {
+    "pullRequest": 9,
+    "draft": true,
+    "merged": false,
+    "sha": "a8dee57553ba8d59d7eb7d3041136ac3e9014579",
+    "ciConclusion": "success"
+  },
+  "sources": [
+    "https://api.github.com/repos/next-mmo/agent-dev-workflow/branches/main",
+    "https://api.github.com/repos/next-mmo/agent-dev-workflow/rulesets",
+    "https://api.github.com/repos/next-mmo/agent-dev-workflow/releases?per_page=5",
+    "https://api.github.com/repos/next-mmo/agent-dev-workflow/pulls/9",
+    "https://github.com/next-mmo/agent-dev-workflow/actions/runs/34057426049"
+  ],
+  "note": "Read-only snapshot. Repository settings and main were not modified."
+}

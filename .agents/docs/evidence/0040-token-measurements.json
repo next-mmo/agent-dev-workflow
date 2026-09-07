@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "a8dee57553ba8d59d7eb7d3041136ac3e9014579",
+  "tiktokenVersion": "0.14.0",
+  "measurement": "emitted-context-tokenization",
+  "actualTaskTokenSavings": null,
+  "limitations": [
+    "Tokenizer counts are not billed API usage; no inference requests were made.",
+    "No equivalent end-to-end task pairs, completion tokens, cache accounting, or defect outcomes.",
+    "The repository documents characters/4 as a heuristic; these counts test its practical limits.",
+    "Source routing includes the audit worktree; the release package code is unchanged."
+  ],
+  "measurements": [
+    {
+      "scenario": "source: release security verification",
+      "level": 0,
+      "budget": 1500,
+      "reportedHeuristicTokens": 1187,
+      "emittedJsonCharacterEstimate": 1387,
+      "selectedDocuments": 8,
+      "loadedDocuments": 0,
+      "tokenizers": {
+        "cl100k_base": {
+          "emittedJsonTokens": 1508,
+          "compactJsonTokens": 1182,
+          "emittedTextTokens": 867
+        },
+        "o200k_base": {
+          "emittedJsonTokens": 1502,
+          "compactJsonTokens": 1184,
+          "emittedTextTokens": 866
+        }
+      }
+    },
+    {
+      "scenario": "source: release security verification",
+      "level": 1,
+      "budget": 1500,
+      "reportedHeuristicTokens": 1482,
+      "emittedJsonCharacterEstimate": 1690,
+      "selectedDocuments": 8,
+      "loadedDocuments": 1,
+      "tokenizers": {
+        "cl100k_base": {
+          "emittedJsonTokens": 1750,
+          "compactJsonTokens": 1413,
+          "emittedTextTokens": 1089
+        },
+        "o200k_base": {
+          "emittedJsonTokens": 1743,
+          "compactJsonTokens": 1415,
+          "emittedTextTokens": 1087
+        }
+      }
+    },
+    {
+      "scenario": "source: consumer initialization package distribution",
+      "level": 0,
+      "budget": 1500,
+      "reportedHeuristicTokens": 1243,
+      "emittedJsonCharacterEstimate": 1456,
+      "selectedDocuments": 9,
+      "loadedDocuments": 0,
+      "tokenizers": {
+        "cl100k_base": {
+          "emittedJsonTokens": 1587,
+          "compactJsonTokens": 1242,
+          "emittedTextTokens": 919
+        },
+        "o200k_base": {
+          "emittedJsonTokens": 1591,
+          "compactJsonTokens": 1254,
+          "emittedTextTokens": 924
+        }
+      }
+    },
+    {
+      "scenario": "source: consumer initialization package distribution",
+      "level": 1,
+      "budget": 1500,
+      "reportedHeuristicTokens": 1496,
+      "emittedJsonCharacterEstimate": 1717,
+      "selectedDocuments": 9,
+      "loadedDocuments": 1,
+      "tokenizers": {
+        "cl100k_base": {
+          "emittedJsonTokens": 1817,
+          "compactJsonTokens": 1462,
+          "emittedTextTokens": 1130
+        },
+        "o200k_base": {
+          "emittedJsonTokens": 1821,
+          "compactJsonTokens": 1475,
+          "emittedTextTokens": 1135
+        }
+      }
+    },
+    {
+      "scenario": "source: context budgeting providers token savings",
+      "level": 0,
+      "budget": 1500,
+      "reportedHeuristicTokens": 1254,
+      "emittedJsonCharacterEstimate": 1469,
+      "selectedDocuments": 9,
+      "loadedDocuments": 0,
+      "tokenizers": {
+        "cl100k_base": {
+          "emittedJsonTokens": 1576,
+          "compactJsonTokens": 1228,
+          "emittedTextTokens": 902
+        },
+        "o200k_base": {
+          "emittedJsonTokens": 1576,
+          "compactJsonTokens": 1236,
+          "emittedTextTokens": 906
+        }
+      }
+    },
+    {
+      "scenario": "source: context budgeting providers token savings",
+      "level": 1,
+      "budget": 1500,
+      "reportedHeuristicTokens": 1475,
+      "emittedJsonCharacterEstimate": 1697,
+      "selectedDocuments": 9,
+      "loadedDocuments": 1,
+      "tokenizers": {
+        "cl100k_base": {
+          "emittedJsonTokens": 1762,
+          "compactJsonTokens": 1403,
+          "emittedTextTokens": 1071
+        },
+        "o200k_base": {
+          "emittedJsonTokens": 1762,
+          "compactJsonTokens": 1412,
+          "emittedTextTokens": 1075
+        }
+      }
+    },
+    {
+      "scenario": "English",
+      "level": 0,
+      "budget": 1500,
+      "reportedHeuristicTokens": 427,
+      "emittedJsonCharacterEstimate": 550,
+      "selectedDocuments": 4,
+      "loadedDocuments": 0,
+      "tokenizers": {
+        "cl100k_base": {
+          "emittedJsonTokens": 588,
+          "compactJsonTokens": 378,
+          "emittedTextTokens": 204
+        },
+        "o200k_base": {
+          "emittedJsonTokens": 590,
+          "compactJsonTokens": 387,
+          "emittedTextTokens": 206
+        }
+      }
+    },
+    {
+      "scenario": "English",
+      "level": 1,
+      "budget": 1500,
+      "reportedHeuristicTokens": 758,
+      "emittedJsonCharacterEstimate": 908,
+      "selectedDocuments": 4,
+      "loadedDocuments": 4,
+      "tokenizers": {
+        "cl100k_base": {
+          "emittedJsonTokens": 868,
+          "compactJsonTokens": 623,
+          "emittedTextTokens": 424
+        },
+        "o200k_base": {
+          "emittedJsonTokens": 871,
+          "compactJsonTokens": 634,
+          "emittedTextTokens": 427
+        }
+      }
+    },
+    {
+      "scenario": "English",
+      "level": 2,
+      "budget": 1500,
+      "reportedHeuristicTokens": 1484,
+      "emittedJsonCharacterEstimate": 1614,
+      "selectedDocuments": 4,
+      "loadedDocuments": 1,
+      "tokenizers": {
+        "cl100k_base": {
+          "emittedJsonTokens": 1294,
+          "compactJsonTokens": 1074,
+          "emittedTextTokens": 850
+        },
+        "o200k_base": {
+          "emittedJsonTokens": 1296,
+          "compactJsonTokens": 1084,
+          "emittedTextTokens": 852
+        }
+      }
+    },
+    {
+      "scenario": "Khmer",
+      "level": 0,
+      "budget": 1500,
+      "reportedHeuristicTokens": 427,
+      "emittedJsonCharacterEstimate": 550,
+      "selectedDocuments": 4,
+      "loadedDocuments": 0,
+      "tokenizers": {
+        "cl100k_base": {
+          "emittedJsonTokens": 905,
+          "compactJsonTokens": 695,
+          "emittedTextTokens": 521
+        },
+        "o200k_base": {
+          "emittedJsonTokens": 688,
+          "compactJsonTokens": 485,
+          "emittedTextTokens": 303
+        }
+      }
+    },
+    {
+      "scenario": "Khmer",
+      "level": 1,
+      "budget": 1500,
+      "reportedHeuristicTokens": 607,
+      "emittedJsonCharacterEstimate": 757,
+      "selectedDocuments": 4,
+      "loadedDocuments": 4,
+      "tokenizers": {
+        "cl100k_base": {
+          "emittedJsonTokens": 1718,
+          "compactJsonTokens": 1472,
+          "emittedTextTokens": 1281
+        },
+        "o200k_base": {
+          "emittedJsonTokens": 1064,
+          "compactJsonTokens": 826,
+          "emittedTextTokens": 620
+        }
+      }
+    },
+    {
+      "scenario": "Khmer",
+      "level": 2,
+      "budget": 1500,
+      "reportedHeuristicTokens": 1484,
+      "emittedJsonCharacterEstimate": 1614,
+      "selectedDocuments": 4,
+      "loadedDocuments": 1,
+      "tokenizers": {
+        "cl100k_base": {
+          "emittedJsonTokens": 7604,
+          "compactJsonTokens": 7384,
+          "emittedTextTokens": 7155
+        },
+        "o200k_base": {
+          "emittedJsonTokens": 3226,
+          "compactJsonTokens": 3014,
+          "emittedTextTokens": 2719
+        }
+      }
+    },
+    {
+      "scenario": "Chinese",
+      "level": 0,
+      "budget": 1500,
+      "reportedHeuristicTokens": 427,
+      "emittedJsonCharacterEstimate": 550,
+      "selectedDocuments": 4,
+      "loadedDocuments": 0,
+      "tokenizers": {
+        "cl100k_base": {
+          "emittedJsonTokens": 747,
+          "compactJsonTokens": 537,
+          "emittedTextTokens": 364
+        },
+        "o200k_base": {
+          "emittedJsonTokens": 683,
+          "compactJsonTokens": 480,
+          "emittedTextTokens": 300
+        }
+      }
+    },
+    {
+      "scenario": "Chinese",
+      "level": 1,
+      "budget": 1500,
+      "reportedHeuristicTokens": 551,
+      "emittedJsonCharacterEstimate": 701,
+      "selectedDocuments": 4,
+      "loadedDocuments": 4,
+      "tokenizers": {
+        "cl100k_base": {
+          "emittedJsonTokens": 1051,
+          "compactJsonTokens": 805,
+          "emittedTextTokens": 614
+        },
+        "o200k_base": {
+          "emittedJsonTokens": 922,
+          "compactJsonTokens": 684,
+          "emittedTextTokens": 485
+        }
+      }
+    },
+    {
+      "scenario": "Chinese",
+      "level": 2,
+      "budget": 1500,
+      "reportedHeuristicTokens": 1398,
+      "emittedJsonCharacterEstimate": 1548,
+      "selectedDocuments": 4,
+      "loadedDocuments": 4,
+      "tokenizers": {
+        "cl100k_base": {
+          "emittedJsonTokens": 4062,
+          "compactJsonTokens": 3816,
+          "emittedTextTokens": 3529
+        },
+        "o200k_base": {
+          "emittedJsonTokens": 2899,
+          "compactJsonTokens": 2661,
+          "emittedTextTokens": 2366
+        }
+      }
+    }
+  ]
+}
