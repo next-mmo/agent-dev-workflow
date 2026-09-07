@@ -15,6 +15,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -32,7 +35,7 @@ jobs:
         run: npm run build
 
       - name: Workflow consistency
-        run: npm run workflow:check -- --strict-budget
+        run: node scripts/ci-workflow-check.mjs
 
       - name: Documentation budgets and links
         run: npm run docs:check

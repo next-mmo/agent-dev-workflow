@@ -1,0 +1,339 @@
+{
+  "schemaVersion": 1,
+  "auditedAt": "2026-09-07T01:02:29.344Z",
+  "sourceCommit": "a8dee57553ba8d59d7eb7d3041136ac3e9014579",
+  "artifact": {
+    "filename": "next-mmo-agent-workflow-scrum-0.1.0.tgz",
+    "sha256": "fda76cd5651ee30bdf1806da96dcc1fe4fad4bbb7f0543b2a1c98324b7f74571"
+  },
+  "runtime": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "timezone": "America/New_York"
+  },
+  "scope": "packaged CLI acceptance probes; synthetic owned fixtures; no production or live model calls",
+  "summary": {
+    "passed": 17,
+    "failed": 14
+  },
+  "checks": [
+    {
+      "id": "consumer-repeat-init-preserves-policy",
+      "status": "passed",
+      "evidence": {
+        "created": 0
+      }
+    },
+    {
+      "id": "consumer-doctor",
+      "status": "passed",
+      "evidence": {
+        "profile": "npm monorepo"
+      }
+    },
+    {
+      "id": "real-http-tenant-and-idempotency-tests",
+      "status": "passed",
+      "evidence": {
+        "exitCode": 0,
+        "scenarios": [
+          "unauthenticated",
+          "invalid input",
+          "concurrent duplicate",
+          "cross-tenant denial",
+          "owner access"
+        ]
+      }
+    },
+    {
+      "id": "monorepo-verification-selects-project-checks",
+      "status": "passed",
+      "evidence": {
+        "commands": [
+          "git diff --check",
+          "git diff --cached --check",
+          "npm test",
+          "npm run build"
+        ]
+      }
+    },
+    {
+      "id": "release-skill-command-is-executable",
+      "status": "failed",
+      "evidence": {
+        "exitCode": 1,
+        "diagnostic": "verify-plan: missing required --base <ref>; verify the live PR base or stack parent instead of guessing"
+      }
+    },
+    {
+      "id": "strict-gate-rejects-unchecked-done-task",
+      "status": "failed",
+      "evidence": {
+        "exitCode": 0,
+        "acceptanceUnchecked": true,
+        "evidenceIsUnverifiedText": true
+      }
+    },
+    {
+      "id": "prd-sync-preserves-human-acceptance",
+      "status": "passed",
+      "evidence": {
+        "readOnly": true
+      }
+    },
+    {
+      "id": "scanner-detects-basic-credential",
+      "status": "passed",
+      "evidence": {
+        "exitCode": 1
+      }
+    },
+    {
+      "id": "scanner-does-not-suppress-example-lines",
+      "status": "failed",
+      "evidence": {
+        "exitCode": 0,
+        "scenario": "credential shares a line with example URL"
+      }
+    },
+    {
+      "id": "scanner-covers-multi-suffix-env",
+      "status": "failed",
+      "evidence": {
+        "exitCode": 0,
+        "skippedFiles": [
+          {
+            "file": ".env.production.local",
+            "reason": "ignored or unsupported file type"
+          }
+        ]
+      }
+    },
+    {
+      "id": "scanner-covers-python-credential",
+      "status": "failed",
+      "evidence": {
+        "exitCode": 0,
+        "skippedFiles": [
+          {
+            "file": "secrets.py",
+            "reason": "ignored or unsupported file type"
+          }
+        ]
+      }
+    },
+    {
+      "id": "context-respects-agentignore",
+      "status": "failed",
+      "evidence": {
+        "syntheticCanaryEmitted": true
+      }
+    },
+    {
+      "id": "context-redacts-common-credentials",
+      "status": "failed",
+      "evidence": {
+        "syntheticCanaryEmitted": true
+      }
+    },
+    {
+      "id": "plan-writes-stay-inside-project",
+      "status": "failed",
+      "evidence": {
+        "exitCode": 0,
+        "wroteOutsideProject": true,
+        "externalTargetWasOwnedTemporaryDirectory": true
+      }
+    },
+    {
+      "id": "worktree-finish-rejects-parent-traversal",
+      "status": "failed",
+      "evidence": {
+        "exitCode": 0,
+        "removedOutsideProject": true,
+        "externalTargetWasOwnedTemporaryWorktree": true
+      }
+    },
+    {
+      "id": "archive-preserves-existing-evidence",
+      "status": "failed",
+      "evidence": {
+        "exitCode": 0,
+        "existingEvidenceOverwritten": true
+      }
+    },
+    {
+      "id": "archive-year-is-timezone-independent",
+      "status": "failed",
+      "evidence": {
+        "recordedDate": "2020-01-01",
+        "timezone": "Pacific/Honolulu",
+        "selectedYear": "2019"
+      }
+    },
+    {
+      "id": "report-escapes-active-markup",
+      "status": "passed",
+      "evidence": {
+        "exitCode": 0
+      }
+    },
+    {
+      "id": "real-sqlite-constraints-and-rollback",
+      "status": "passed",
+      "evidence": {
+        "exitCode": 0,
+        "scenarios": [
+          "unique tenant/key",
+          "positive amount",
+          "rollback",
+          "tenant query"
+        ]
+      }
+    },
+    {
+      "id": "python-defaults-select-owning-test",
+      "status": "failed",
+      "evidence": {
+        "commands": [
+          "git diff --check",
+          "git diff --cached --check"
+        ],
+        "limitation": "non-JS consumers require explicit configuration"
+      }
+    },
+    {
+      "id": "python-configured-selects-owning-test",
+      "status": "passed",
+      "evidence": {
+        "commands": [
+          "git diff --check",
+          "git diff --cached --check",
+          "npm exec -- agent-workflow check --strict-budget --base 5482bcf1c8ca5081fe297d0af23f534afaaabf01",
+          "python3 -m unittest discover -s tests"
+        ]
+      }
+    },
+    {
+      "id": "auto-provider-never-calls-openviking",
+      "status": "passed",
+      "evidence": {
+        "called": false
+      }
+    },
+    {
+      "id": "explicit-provider-invocation",
+      "status": "passed",
+      "evidence": {
+        "exitCode": 0,
+        "called": true
+      }
+    },
+    {
+      "id": "provider-timeout-keeps-local-context",
+      "status": "passed",
+      "evidence": {
+        "exitCode": 0,
+        "statuses": [
+          {
+            "name": "local",
+            "status": "ok"
+          },
+          {
+            "name": "openviking",
+            "status": "timeout"
+          }
+        ]
+      }
+    },
+    {
+      "id": "malformed-provider-keeps-local-context",
+      "status": "passed",
+      "evidence": {
+        "statuses": [
+          {
+            "name": "local",
+            "status": "ok"
+          },
+          {
+            "name": "openviking",
+            "status": "error"
+          }
+        ]
+      }
+    },
+    {
+      "id": "benchmark-respects-configured-exclusions",
+      "status": "failed",
+      "evidence": {
+        "rawBefore": 22104,
+        "rawAfter": 48104,
+        "excludedFileCharacters": 26000
+      }
+    },
+    {
+      "id": "context-budget-500",
+      "status": "passed",
+      "evidence": {
+        "budget": 500,
+        "reportedEstimate": 387,
+        "serializedEstimate": 481
+      }
+    },
+    {
+      "id": "context-budget-1500",
+      "status": "passed",
+      "evidence": {
+        "budget": 1500,
+        "reportedEstimate": 388,
+        "serializedEstimate": 482
+      }
+    },
+    {
+      "id": "context-budget-5000",
+      "status": "passed",
+      "evidence": {
+        "budget": 5000,
+        "reportedEstimate": 388,
+        "serializedEstimate": 482
+      }
+    },
+    {
+      "id": "benchmark-does-not-claim-task-savings",
+      "status": "passed",
+      "evidence": {
+        "measurement": "context-pack-size-comparison",
+        "raw": {
+          "files": 292,
+          "characters": 1055921,
+          "tokens": 263981,
+          "durationMs": 15.74
+        },
+        "bounded": {
+          "tokens": 1114,
+          "budgetTokens": 1500,
+          "budgetExceeded": false,
+          "selectedDocuments": 8,
+          "loadedDocuments": 0,
+          "durationMs": 240.04
+        },
+        "reduction": {
+          "tokens": 262867,
+          "percent": 99.58,
+          "ratio": 0
+        },
+        "actualTaskTokenSavings": null
+      }
+    },
+    {
+      "id": "populated-context-bounds-emitted-json",
+      "status": "failed",
+      "evidence": {
+        "budget": 1500,
+        "reportedEstimate": 1496,
+        "emittedEstimate": 1717
+      }
+    }
+  ]
+}
