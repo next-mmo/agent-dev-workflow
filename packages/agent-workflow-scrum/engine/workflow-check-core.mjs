@@ -64,6 +64,15 @@ function statusOf(markdown) {
     || "";
 }
 
+function failedEvidenceResults(evidence) {
+  return evidence.split(/\r?\n/)
+    .filter((line) => /^\s*\|/.test(line))
+    .map((line) => line.split("|").slice(1, -1).map((cell) => cell.trim()))
+    .filter((cells) => cells.length >= 3 && !cells.every((cell) => /^:?-{3,}:?$/.test(cell)))
+    .filter((cells) => !/^claim$/i.test(cells[0]) && /^(?:pending|fail(?:ed)?|inconclusive|blocked|unverified)$/i.test(cells.at(-1)))
+    .map((cells) => cells.at(-1));
+}
+
 function relativeMarkdownLinks(markdown) {
   const links = [];
   const regex = /\[[^\]]*\]\(([^)]+\.md)(?:#[^)]+)?\)/g;
@@ -196,7 +205,12 @@ async function validateProductSynchronization({ root, changedPaths, active, erro
     ? task.slice((evidenceHeading.index || 0) + evidenceHeading[0].length).replace(/^\s+/, "").split(/^##\s+/m, 1)[0].trim()
     : "";
   if (!evidence) errors.push(`${taskFile}: product task must include a non-empty Evidence Ledger section`);
-  else if (/\/tasks\/done\//.test(taskFile) && /\bpending\b/i.test(evidence)) errors.push(`${taskFile}: completed product task evidence cannot remain pending`);
+  else if (/\/tasks\/done\//.test(taskFile)) {
+    const failedResults = failedEvidenceResults(evidence);
+    if (failedResults.length) {
+      errors.push(`${taskFile}: completed product task evidence cannot report ${failedResults.join(", ")} results`);
+    }
+  }
 }
 
 async function exists(absolutePath) {

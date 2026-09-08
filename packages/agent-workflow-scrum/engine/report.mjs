@@ -46,8 +46,10 @@ const navGroupOrder = [
   "Workflow sources",
   "Project docs",
   "PRDs",
+  "Backlog",
   "Active tasks",
   "Completed tasks",
+  "Archived tasks",
   "Proposals",
 ];
 
@@ -98,16 +100,22 @@ async function readText(relativePath) {
   }
 }
 
-async function markdownFiles(directory) {
+async function markdownFiles(directory, recursive = false) {
   try {
     const entries = await readdir(path.join(repositoryRoot, directory), {
       withFileTypes: true,
     });
 
-    return entries
+    const files = entries
       .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
       .map((entry) => normalizePath(path.join(directory, entry.name)))
       .sort();
+    if (recursive) {
+      for (const entry of entries.filter((item) => item.isDirectory())) {
+        files.push(...await markdownFiles(normalizePath(path.join(directory, entry.name)), true));
+      }
+    }
+    return files.sort();
   } catch (error) {
     if (error?.code === "ENOENT") {
       return [];
@@ -121,7 +129,7 @@ function firstHeading(markdown, fallback) {
 }
 
 function taskStatus(markdown, lifecycle) {
-  const status = markdown.match(/^>\s+\*\*Status:\*\*\s*(.+)$/im)?.[1];
+  const status = markdown.match(/^>\s+(?:\*\*)?Status:(?:\*\*)?\s*(.+)$/im)?.[1];
   return stripMarkdown(status || lifecycle);
 }
 
@@ -386,10 +394,13 @@ function renderMarkdown(markdown, docBySlug, sourcePath) {
 }
 
 async function loadTasks() {
-  const activePaths = (await markdownFiles(".agents/docs/tasks")).filter((filePath) =>
-    /\/(?:todo|wip|blocked)-[^/]+\.md$/.test(`/${filePath}`),
-  );
+  const rootPaths = await markdownFiles(".agents/docs/tasks");
+  const activePaths = rootPaths.filter((filePath) => /\/(?:wip|blocked)-[^/]+\.md$/.test(`/${filePath}`));
+  const backlogPaths = rootPaths.filter((filePath) => /\/todo-[^/]+\.md$/.test(`/${filePath}`));
   const completedPaths = (await markdownFiles(".agents/docs/tasks/done")).filter((filePath) =>
+    /\/done-[^/]+\.md$/.test(`/${filePath}`),
+  );
+  const archivedPaths = (await markdownFiles(".agents/docs/tasks/archived", true)).filter((filePath) =>
     /\/done-[^/]+\.md$/.test(`/${filePath}`),
   );
 
@@ -400,16 +411,19 @@ async function loadTasks() {
       id: taskId(filePath),
       title: markdown ? firstHeading(markdown, fallback) : fallback,
       status: markdown ? taskStatus(markdown, lifecycle) : lifecycle,
+      lifecycle,
       path: filePath,
     };
   }
 
-  const [active, completed] = await Promise.all([
-    Promise.all(activePaths.map((filePath) => loadTask(filePath, "active"))),
+  const [active, completed, backlog, archived] = await Promise.all([
+    Promise.all(activePaths.map((filePath) => loadTask(filePath, path.basename(filePath).split("-")[0]))),
     Promise.all(completedPaths.map((filePath) => loadTask(filePath, "done"))),
+    Promise.all(backlogPaths.map((filePath) => loadTask(filePath, "todo"))),
+    Promise.all(archivedPaths.map((filePath) => loadTask(filePath, "archived"))),
   ]);
 
-  return { active, completed };
+  return { active, completed, backlog, archived };
 }
 
 function parsePrdIndex(markdown, prdPaths) {
@@ -419,8 +433,14 @@ function parsePrdIndex(markdown, prdPaths) {
 
   const rows = markdown
     .split(/\r?\n/)
-    .filter((line) => /^\|\s*\*\*\d{4}\*\*/.test(line))
-    .map((line) => line.split("|").slice(1, -1).map(stripMarkdown));
+    .filter((line) => /^\s*\|/.test(line))
+    .map((line) => splitTableRow(line).map(stripMarkdown))
+    .map(([id, ...fields]) => {
+      const label = id.replace(/^\[([^\]]+)\]\([^)]+\)$/, "$1");
+      const match = label.match(/^(?:PRD-)?(\d{4})$/i);
+      return match ? [match[1], ...fields] : null;
+    })
+    .filter(Boolean);
 
   return rows.map(([id, title, status, summary]) => {
     const normalizedId = id || "—";
@@ -529,24 +549,16 @@ async function collectDocuments() {
     add(`PRD ${taskId(filePath)}`, filePath, "PRDs");
   }
 
-  const activeTasks = (await markdownFiles(".agents/docs/tasks")).filter((filePath) =>
-    /\/(?:todo|wip|blocked)-[^/]+\.md$/.test(`/${filePath}`),
-  );
-  const completedTasks = (await markdownFiles(".agents/docs/tasks/done")).filter((filePath) =>
-    /\/done-[^/]+\.md$/.test(`/${filePath}`),
-  );
-  for (const filePath of activeTasks) {
-    add(`Task ${taskId(filePath)}`, filePath, "Active tasks");
-  }
-  for (const filePath of completedTasks) {
-    add(`Task ${taskId(filePath)}`, filePath, "Completed tasks");
+  const tasks = await loadTasks();
+  for (const [key, group] of [["backlog", "Backlog"], ["active", "Active tasks"], ["completed", "Completed tasks"], ["archived", "Archived tasks"]]) {
+    for (const task of tasks[key]) add(`Task ${task.id}`, task.path, group);
   }
 
-  const suggestions = (await markdownFiles(".agents/docs/suggestions")).filter(
-    (filePath) => !/README\.md$/.test(filePath),
+  const suggestions = [...await markdownFiles(".agents/docs/proposals"), ...await markdownFiles(".agents/docs/suggestions")].filter(
+    (filePath) => !/(?:README|0000-template)\.md$/.test(filePath),
   );
   for (const filePath of suggestions) {
-    add(`Suggestion ${taskId(filePath)}`, filePath, "Proposals");
+    add(`Proposal ${taskId(filePath)}`, filePath, "Proposals");
   }
   for (const filePath of await markdownFiles(".agents/skills/agent-workflow-scrum/references")) {
     add(`Workflow reference: ${path.basename(filePath, ".md")}`, filePath, "Workflow references");
@@ -666,6 +678,12 @@ function renderDashboard(report, documents, taskSlugs, prdSlugs) {
         </table>
       </section>
 
+      <h2>Backlog</h2>
+      <section><table>
+        <thead><tr><th>ID</th><th>Task</th><th>Status</th><th>Source</th></tr></thead>
+        <tbody>${renderTaskRows(report.tasks.backlog, taskSlugs)}</tbody>
+      </table></section>
+
       <h2>Completed tasks</h2>
       <section>
         <table>
@@ -673,6 +691,12 @@ function renderDashboard(report, documents, taskSlugs, prdSlugs) {
           <tbody>${renderTaskRows(report.tasks.completed, taskSlugs)}</tbody>
         </table>
       </section>
+
+      <h2>Archived tasks</h2>
+      <section><table>
+        <thead><tr><th>ID</th><th>Task</th><th>Status</th><th>Source</th></tr></thead>
+        <tbody>${renderTaskRows(report.tasks.archived, taskSlugs)}</tbody>
+      </table></section>
 
       <h2>PRD index</h2>
       <section>
@@ -810,7 +834,7 @@ async function main() {
 
   const { documents, docBySlug } = collected;
   const taskSlugs = {};
-  for (const task of [...tasks.active, ...tasks.completed]) {
+  for (const task of Object.values(tasks).flat()) {
     taskSlugs[task.path] = slugForPath(task.path);
   }
   const prdSlugs = {};
@@ -828,12 +852,14 @@ async function main() {
   );
 
   const report = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     generatedAt: new Date().toISOString(),
     repository: path.basename(repositoryRoot),
     git: gitSnapshot(),
     summary: {
       activeTasks: tasks.active.length,
+      backlogTasks: tasks.backlog.length,
+      archivedTasks: tasks.archived.length,
       completedTasks: tasks.completed.length,
       prds: prds.length,
       documents: documents.length,

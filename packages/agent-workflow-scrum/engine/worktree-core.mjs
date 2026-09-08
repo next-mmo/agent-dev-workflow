@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import path from "node:path";
-import { existsSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 
 function runGit(cwd, args) {
   const result = spawnSync("git", args, {
@@ -13,6 +13,46 @@ function runGit(cwd, args) {
     throw new Error(`git ${args.join(" ")} failed: ${errorMsg}`);
   }
   return String(result.stdout || "").trim();
+}
+
+function normalizeBranch(repoRoot, branch) {
+  const cleanBranch = String(branch || "").trim().replace(/^refs\/heads\//, "");
+  if (!cleanBranch) throw new Error("branch name is required");
+  if (path.isAbsolute(cleanBranch) || cleanBranch.includes("\\")) {
+    throw new Error(`invalid branch name for a managed worktree: ${cleanBranch}`);
+  }
+  try {
+    runGit(repoRoot, ["check-ref-format", "--branch", cleanBranch]);
+  } catch {
+    throw new Error(`invalid branch name for a managed worktree: ${cleanBranch}`);
+  }
+  return cleanBranch;
+}
+
+function assertContained(parent, candidate, label) {
+  const relative = path.relative(path.resolve(parent), path.resolve(candidate));
+  if (!relative || relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw new Error(`${label} must remain inside ${path.resolve(parent)}`);
+  }
+}
+
+function managedWorktreePath(repoRoot, branch) {
+  const worktreeRoot = path.resolve(repoRoot, ".worktrees");
+  assertContained(repoRoot, worktreeRoot, "managed worktree directory");
+  if (existsSync(worktreeRoot)) {
+    assertContained(repoRoot, realpathSync(worktreeRoot), "managed worktree directory");
+  }
+
+  const worktreeDir = path.resolve(worktreeRoot, branch);
+  assertContained(worktreeRoot, worktreeDir, "worktree path");
+  if (existsSync(worktreeDir)) {
+    assertContained(worktreeRoot, realpathSync(worktreeDir), "worktree path");
+  }
+  return worktreeDir;
+}
+
+function samePath(left, right) {
+  return path.relative(path.resolve(left), path.resolve(right)) === "";
 }
 
 export function listWorktrees(repoRoot = process.cwd()) {
@@ -45,10 +85,8 @@ export function createWorktree({
   branch,
   base = "HEAD",
 } = {}) {
-  const cleanBranch = String(branch || "").trim().replace(/^refs\/heads\//, "");
-  if (!cleanBranch) throw new Error("branch name is required to create a worktree");
-
-  const worktreeDir = path.join(repoRoot, ".worktrees", cleanBranch);
+  const cleanBranch = normalizeBranch(repoRoot, branch);
+  const worktreeDir = managedWorktreePath(repoRoot, cleanBranch);
   const relativePath = path.relative(repoRoot, worktreeDir).replaceAll("\\", "/");
 
   // Check if branch already exists
@@ -66,6 +104,11 @@ export function createWorktree({
     runGit(repoRoot, ["worktree", "add", "-b", cleanBranch, worktreeDir, base]);
   }
 
+  const registered = listWorktrees(repoRoot).find((item) => samePath(item.path, worktreeDir) && item.branch === cleanBranch);
+  if (!registered) {
+    throw new Error(`git did not register the managed worktree for branch ${cleanBranch}`);
+  }
+
   return {
     ok: true,
     branch: cleanBranch,
@@ -80,10 +123,13 @@ export function removeWorktree({
   deleteBranch = false,
   force = false,
 } = {}) {
-  const cleanBranch = String(branch || "").trim();
-  if (!cleanBranch) throw new Error("branch name is required");
+  const cleanBranch = normalizeBranch(repoRoot, branch);
+  const worktreeDir = managedWorktreePath(repoRoot, cleanBranch);
+  const registered = listWorktrees(repoRoot).find((item) => samePath(item.path, worktreeDir));
+  if (!registered || registered.isMain || registered.branch !== cleanBranch) {
+    throw new Error(`refusing to remove an unregistered or mismatched managed worktree: ${cleanBranch}`);
+  }
 
-  const worktreeDir = path.join(repoRoot, ".worktrees", cleanBranch);
   const args = ["worktree", "remove"];
   if (force) args.push("--force");
   args.push(worktreeDir);

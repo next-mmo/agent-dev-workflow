@@ -11,7 +11,11 @@ const requiredPaths = [
   ".agents/docs/prd/0000-prd-index.md",
   ...Object.keys(documentationTemplates).filter((name) => name !== ".agents/docs/proposals/README.md"),
 ];
-const vendoredPaths = [".agents/scripts", ".agents/skills", ".agents/benchmark", "packages/agent-workflow-scrum", "plugins/agent-workflow-scrum"];
+const vendoredPaths = [
+  ".agents/scripts", ".agents/benchmark", "packages/agent-workflow-scrum", "plugins/agent-workflow-scrum",
+  ...["agent-workflow-scrum", "agent-workflow-prose", "agent-workflow-security", "agent-workflow-release", "agent-workflow-incident"]
+    .map((name) => `.agents/skills/${name}/SKILL.md`),
+];
 
 async function exists(filePath) {
   try {
@@ -83,7 +87,7 @@ export async function diagnoseProject(argv, cwd = process.cwd()) {
 
   for (const relativePath of vendoredPaths) {
     if (await exists(path.join(options.root, relativePath))) {
-      warnings.push(`${relativePath} is vendored; package/plugin mode does not require it`);
+      warnings.push(`${relativePath} matches a workflow-owned source path; package/plugin consumers do not require a local copy (source checkouts may own it intentionally)`);
     }
   }
   const result = {

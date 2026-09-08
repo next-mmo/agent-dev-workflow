@@ -143,12 +143,14 @@ export async function runStaticReview({
     }
   }
 
-  const passed = securityFindings.filter((f) => f.severity === "HIGH").length === 0;
+  const hasBlockingFindings = securityFindings.filter((f) => f.severity === "HIGH").length > 0;
+  const status = filesReviewed === 0 ? "inconclusive" : hasBlockingFindings ? "failed" : "passed";
 
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     reviewType: "static-pattern-scan",
-    ok: passed,
+    status,
+    ok: status === "passed",
     filesReviewed,
     skippedFiles,
     resolved: scope?.resolved ?? null,
@@ -169,7 +171,7 @@ export function formatReviewReport(review) {
     "# Static Pattern Review Report",
     "",
     `- Files inspected: ${review.filesReviewed}`,
-    `- Overall status: ${!review.filesReviewed ? "NO SUPPORTED FILES INSPECTED" : review.ok ? "NO BLOCKING PATTERN MATCHES" : "BLOCKING PATTERN MATCHES"}`,
+    `- Overall status: ${review.status === "inconclusive" ? "INCONCLUSIVE — NO SUPPORTED FILES INSPECTED" : review.status === "passed" ? "NO BLOCKING PATTERN MATCHES" : "BLOCKING PATTERN MATCHES"}`,
     `- Total findings: ${review.totalIssues}`,
     `- Skipped files: ${review.skippedFiles.length}`,
     "- Limited pattern scan; independent semantic review and acceptance checks are still required.",

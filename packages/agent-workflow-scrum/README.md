@@ -38,7 +38,15 @@ Licensed under [MIT](LICENSE), copyright 2026 Next MMO.
 
 `plan <title>` and `solve <title>` use bundled templates when no consumer `0000-template.md` exists. Existing templates take precedence; unreadable templates fail rather than being replaced. Solution drafts are excluded from recall until completed with evidence.
 
-`review` scans staged, unstaged, and untracked files. Pass `--base <verified-ref>` to include committed changes from the merge base. Invalid refs or unreadable files fail; deleted, ignored, and unsupported files are listed separately from actual inspections. Review JSON schema v2 identifies a limited static pattern scan, not semantic acceptance or a security guarantee.
+`review` scans staged, unstaged, and untracked files. Pass `--base <verified-ref>` to include committed changes from the merge base. Invalid refs or unreadable files fail; deleted, ignored, and unsupported files are listed separately from actual inspections. Review JSON schema v3 reports `status` as `passed`, `failed`, or `inconclusive`; zero supported files is inconclusive and is not a pass. The scan is limited to static patterns, not semantic acceptance or a security guarantee.
+
+`report` writes a local HTML snapshot and `report.json`. Report JSON schema v3 separates `tasks.backlog` (todo), `tasks.active` (wip/blocked), `tasks.completed` (done directory), and `tasks.archived` (archived history). Corresponding summary counts are separate; consumers of v2 must stop treating `active` as all unfinished tasks. Each record includes its lifecycle and declared status. Linked, plain, and bold PRD IDs are supported, along with plain/bold Status labels. Canonical proposals and legacy suggestions both remain navigable. Counts describe repository records, not verified feature delivery or human acceptance.
+
+Doctor permits project-owned skills under `.agents/skills/`. It warns about specific workflow-owned source paths; source checkouts may own those intentionally. A missing local skill copy does not determine whether a host plugin is installed.
+
+`worktree start` accepts valid Git branch names, keeps managed paths under `.worktrees/`, and verifies Git registration after creation. `worktree finish` removes only the exact registered worktree for the requested branch; it refuses unregistered, mismatched, or main-checkout paths.
+
+In strict synchronization checks, a completed task's Evidence Ledger table cannot end with `pending`, `failed`, `inconclusive`, `blocked`, or `unverified`. This validates the declared final result only; it does not prove an external approval, revision identity, or semantic acceptance.
 
 `prdsync` is read-only, including without `--dry-run`. JSON schema v2 lists unchecked criteria under `reviews`, possible task evidence under `evidenceCandidates`, and an empty `changedFiles` array. It replaces the former `syncedPRDs` result. Related task records may be incomplete; humans decide acceptance after inspecting evidence.
 

@@ -62,8 +62,10 @@ test('review distinguishes deletions, unsupported files, and explicit inspection
   await write('asset.svg', '<svg/>');
   const review = await runStaticReview({ root });
   assert.equal(review.filesReviewed, 0);
+  assert.equal(review.status, 'inconclusive');
+  assert.equal(review.ok, false);
   assert.equal(review.skippedFiles.length, 2);
-  assert.match(formatReviewReport(review), /NO SUPPORTED FILES INSPECTED/);
+  assert.match(formatReviewReport(review), /INCONCLUSIVE.*NO SUPPORTED FILES INSPECTED/);
   await assert.rejects(runStaticReview({ root, files: ['missing.js'] }), /cannot inspect/);
   await assert.rejects(runStaticReview({ root, files: ['../outside.js'] }), /outside the repository/);
 });

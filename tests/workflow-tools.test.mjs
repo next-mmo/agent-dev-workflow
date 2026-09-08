@@ -140,6 +140,26 @@ test("workflow checker accepts a product change with task, PRD index, and eviden
   }
 });
 
+test("workflow checker rejects completed product evidence with a failed result", async () => {
+  const root = await fixture();
+  try {
+    await rm(path.join(root, docsRoot, "tasks/wip-0001-0001-auth.md"));
+    await writeFile(
+      path.join(root, docsRoot, "tasks/done/done-0001-0001-auth.md"),
+      "# Task Auth\n> **Status:** done\n> **PRD:** `.agents/docs/prd/0001-auth.md`\n\n## Acceptance Criteria\n\n- [x] Session timeout is verified.\n\n## Recovery\n\nRevert the increment.\n\n## Evidence Ledger\n\n| Claim | Evidence | Result |\n| :--- | :--- | :--- |\n| Session behavior | Focused tests | Failed |\n",
+      "utf8",
+    );
+    await mkdir(path.join(root, "src"), { recursive: true });
+    await writeFile(path.join(root, "src/app.js"), "export const value = 1;\n", "utf8");
+    const result = spawnSync(process.execPath, [agentBinary, "check", "--root", root, "--json"], { encoding: "utf8" });
+    assert.notEqual(result.status, 0);
+    const parsed = JSON.parse(result.stdout);
+    assert.ok(parsed.errors.some((error) => /completed product task evidence cannot report .* results/i.test(error)), JSON.stringify(parsed.errors));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("workflow checker rejects product changes with incomplete task synchronization", async () => {
   const root = await fixture();
   try {
@@ -298,6 +318,3 @@ test("task archiver moves completed tasks older than retention days and keeps re
     await rm(root, { recursive: true, force: true });
   }
 });
-
-
-

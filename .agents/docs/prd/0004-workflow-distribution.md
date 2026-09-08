@@ -37,6 +37,8 @@ Teams need Agent Workflow Scrum's context, scope, verification, documentation, r
 
 ## 3. Acceptance Criteria
 
+Consumer report/diagnostic follow-up: [task 0041](../tasks/wip-0041-0004-consumer-feedback.md). Report JSON schema 3 separates `tasks.backlog` and `tasks.archived` from `tasks.active` (wip/blocked) and `tasks.completed`; summaries expose matching counts. PRD IDs accept linked/plain/bold forms, task labels accept plain/bold Status fields, and proposal discovery includes canonical and legacy stores. Doctor identifies specific workflow-owned paths instead of treating every project skill as vendored. Review JSON schema 3 reports `passed`, `failed`, or `inconclusive`; zero supported files cannot be treated as a successful review. Managed worktrees validate branch/path containment and cleanup requires exact Git registration; concurrent claims and dirty-state policy remain outside this correction. Completed-task Evidence Ledger table results reject unresolved or failed values; external approval identity/revision remains outside the local validator.
+
 - [x] The packed package contains only the declared runtime, templates, plugin bundle, metadata, license, and user documentation.
 - [x] A clean fixture and a non-empty existing fixture initialize without destructive overwrite.
 - [x] Consumer configuration changes path classification and emitted verification commands.
