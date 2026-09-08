@@ -1,9 +1,9 @@
 # Agent Workflow Scrum CLI
 
-Use the workflow engine as a pinned project dependency. Requires Git and Node `^20.19.0 || >=22.12.0`. Registry publication is not required. The current reviewed commit is `318b0aa47bf74c58b11da468219e2fe6e828ea47`:
+Use the workflow engine as a pinned project dependency. Requires Git and Node `^20.19.0 || >=22.12.0`. Registry publication is not required. The current reviewed commit is `1d4bb8e7102bddab1cc18c04b2f6f4e7d4aba4e6`:
 
 ```bash
-npm install --save-dev "@next-mmo/agent-workflow-scrum@git+https://github.com/next-mmo/agent-dev-workflow.git#318b0aa47bf74c58b11da468219e2fe6e828ea47"
+npm install --save-dev "@next-mmo/agent-workflow-scrum@git+https://github.com/next-mmo/agent-dev-workflow.git#1d4bb8e7102bddab1cc18c04b2f6f4e7d4aba4e6"
 npm exec -- agent-workflow init --existing
 npm exec -- agent-workflow doctor
 ```

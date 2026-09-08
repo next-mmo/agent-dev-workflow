@@ -12,6 +12,6 @@
     "express": "^5.1.0"
   },
   "devDependencies": {
-    "@next-mmo/agent-workflow-scrum": "github:next-mmo/agent-dev-workflow#318b0aa47bf74c58b11da468219e2fe6e828ea47"
+    "@next-mmo/agent-workflow-scrum": "github:next-mmo/agent-dev-workflow#1d4bb8e7102bddab1cc18c04b2f6f4e7d4aba4e6"
   }
 }
